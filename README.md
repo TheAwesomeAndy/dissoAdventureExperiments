@@ -346,18 +346,18 @@ python run_chapter4_observations.py [--output_dir pictures/chLSMEmbeddings]
 
 ```bash
 # Full experimental pipeline (7-row baseline table + GNN experiments):
-python run_chapter5_experiments.py \
+python chapter5Experiments/run_chapter5_experiments.py \
     --data_dir /path/to/shape_eeg_files/ \
     [--demo]  # optional: run with synthetic data for testing
 
 # Standalone reproducibility script:
-python reproduce_chapter5.py \
+python chapter5Experiments/reproduce_chapter5.py \
     --data_dir /path/to/shape_eeg_files/ \
     --labels /path/to/SHAPE_Community_Andrew_Psychopathology.xlsx \
     --output_dir ./figures/ch5/
 ```
 
-**`--demo` mode:** If you don't have the SHAPE dataset, `run_chapter5_experiments.py --demo` generates synthetic data to verify the pipeline runs end-to-end.
+**`--demo` mode:** If you don't have the SHAPE dataset, `chapter5Experiments/run_chapter5_experiments.py --demo` generates synthetic data to verify the pipeline runs end-to-end.
 
 ### Chapter 5 Experiments: The 7-Row Baseline Table
 
