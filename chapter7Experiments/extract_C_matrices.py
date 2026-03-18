@@ -15,7 +15,7 @@ import numpy as np
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PKL_FILE = os.path.join(SCRIPT_DIR, 'chapter7_results', 'ch7_full_results.pkl')
-OUT_FILE = '/mnt/user-data/outputs/C_matrices.csv'
+OUT_FILE = os.path.join(SCRIPT_DIR, 'chapter7_results', 'C_matrices.csv')
 
 r = pickle.load(open(PKL_FILE, 'rb'))
 subjects = sorted(r['completed_subjects'])

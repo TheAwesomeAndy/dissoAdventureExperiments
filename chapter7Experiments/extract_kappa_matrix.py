@@ -6,7 +6,10 @@ Usage:
   python3 extract_kappa_matrix.py
 """
 import pickle, numpy as np
-r = pickle.load(open('/home/claude/ch7_full_results.pkl', 'rb'))
+import os
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PKL_FILE = os.path.join(SCRIPT_DIR, 'chapter7_results', 'ch7_full_results.pkl')
+r = pickle.load(open(PKL_FILE, 'rb'))
 subjects = sorted(r['completed_subjects'])
 cats = ['Threat', 'Mutilation', 'Cute', 'Erotic']
 print(f"subject,Threat,Mutilation,Cute,Erotic")
