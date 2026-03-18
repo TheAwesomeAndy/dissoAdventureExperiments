@@ -312,10 +312,10 @@ Both have noise (σ=0.5), amplitude jitter (±30%), and timing jitter (±5 steps
 
 ```bash
 # Experimental results (7 experiments, all figures):
-python run_chapter4_experiments.py
+python chapter4Experiments/run_chapter4_experiments.py
 
 # Raw observation figures (6 detailed visualization figures):
-python run_chapter4_observations.py [--output_dir pictures/chLSMEmbeddings]
+python chapter4Experiments/run_chapter4_observations.py [--output_dir pictures/chLSMEmbeddings]
 ```
 
 **No command-line arguments required** — Chapter 4 uses synthetic data only.
