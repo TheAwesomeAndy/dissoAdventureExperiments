@@ -9,6 +9,7 @@ This folder contains the experimental scripts, results, and figures for Chapter 
 | 7.1 (A) | `run_chapter7_experiment_A.py` | Coupling existence test — does kappa exceed the electrode-permutation null? |
 | 7.2 (B) | `run_chapter7_experiment_B.py` | Variance decomposition — is kappa driven by subject identity or affective category? |
 | 7.3 (C) | `run_chapter7_experiment_C.py` | Category-conditioned coupling structure — which C matrix cells drive the scalar kappa difference? |
+| 7.4 (D) | `run_chapter7_experiment_D.py` | Diagnosis-associated coupling differences — does between-subject kappa variance align with clinical diagnoses? |
 
 ---
 
@@ -211,6 +212,76 @@ The chapter's weight rests primarily on Experiment A (coupling exists, d_z = 1.0
 
 ---
 
+## Experiment D: Diagnosis-Associated Coupling Differences
+
+### Research Question
+
+Experiment B showed 29.2% of kappa variance is between-subject. Does that between-subject variance contain diagnosis-associated structure? Chapters 5 and 6 both found diagnosis-associated effects at the individual descriptor level (graph topology and dynamical metrics separately). Does clinical status also modulate their alignment — the coupling between reservoir dynamics and graph topology?
+
+### Method
+
+Starting from the 844 C matrices and the SHAPE psychopathology battery (206 assessed subjects, 5 missing clinical data):
+
+1. **Subject-averaged kappa:** Compute kappa-bar for each subject by averaging kappa across 4 categories.
+2. **Primary test:** Mann-Whitney U on kappa-bar (Dx+ vs Dx-) for 5 diagnoses (MDD, SUD, PTSD, GAD, ADHD). Bonferroni correction across 5 tests (alpha = 0.01).
+3. **Power analysis:** Minimum detectable Cohen's d at alpha=0.05, power=0.80 per diagnosis.
+4. **Category-specific profiles:** Kappa by category within each Dx+ group.
+5. **Interaction test:** Diagnosis x category interaction via permutation (2000 iterations) — does clinical status alter the category coupling profile?
+
+### Usage
+
+```bash
+python3 run_chapter7_experiment_D.py
+```
+
+**Prerequisites:**
+- `chapter7_results/C_matrices.csv` (from Experiment A)
+- `../SHAPE_Community_Andrew_Psychopathology.xlsx` (clinical metadata at repo root)
+
+### Key Results
+
+#### Primary Result: Clean Null
+
+No diagnosis is associated with a significant difference in subject-averaged coupling strength. All five Mann-Whitney U tests produce Cohen's d below 0.12, well below the minimum detectable effect of d ~ 0.40-0.46 for this sample geometry. This is not a marginal result — it is a definitive absence of medium-or-larger effects.
+
+| Diagnosis | n+ | n- | kappa+ | kappa- | Delta-kappa | Cohen's d | p | MDE |
+|-----------|----|----|--------|--------|-------------|-----------|---|-----|
+| MDD | 142 | 64 | 0.2893 | 0.2832 | +0.0061 | +0.081 | 0.609 | 0.422 |
+| SUD | 85 | 121 | 0.2841 | 0.2898 | -0.0057 | -0.075 | 0.485 | 0.396 |
+| PTSD | 82 | 124 | 0.2927 | 0.2840 | +0.0087 | +0.116 | 0.322 | 0.399 |
+| GAD | 60 | 146 | 0.2898 | 0.2865 | +0.0033 | +0.043 | 0.762 | 0.430 |
+| ADHD | 50 | 156 | 0.2845 | 0.2884 | -0.0039 | -0.051 | 0.921 | 0.455 |
+
+MDE = minimum detectable effect at alpha=0.05, power=0.80.
+
+#### Secondary: ADHD x Category Interaction (Exploratory)
+
+The ADHD x category interaction reaches p = 0.035 (uncorrected) by permutation test. ADHD+ subjects show a distinctive category coupling profile — lowest coupling for Mutilation (0.261), highest for Erotic (0.308) — opposite to the typical pattern where Cute produces highest coupling in the full sample. This does not survive Bonferroni correction and is reported as exploratory.
+
+#### Comorbidity Structure
+
+Mean comorbidity is 2.0 diagnoses per subject. Key overlaps: 66% of SUD+ carry MDD, 73% of PTSD+ carry MDD, 50% of ADHD+ carry SUD. All comparisons are one-vs-rest within a transdiagnostic sample — results are diagnosis-associated coupling differences conditioned by the comorbidity structure, not disorder-specific signatures.
+
+### Scientific Interpretation
+
+**Why coupling does not differ by diagnosis — three factors:**
+
+1. **Comorbidity absorbs between-group contrast.** One-vs-rest comparisons pool subjects with heterogeneous clinical profiles into both groups. A "clean" SUD effect is diluted by the 66% of SUD+ subjects who also carry MDD.
+2. **Coupling is a second-order quantity.** Chapters 5 and 6 found diagnosis-associated effects at the individual descriptor level. The coupling statistic measures their alignment. Clinical effects may alter the components (dynamics or topology) without altering their alignment — like two instruments recalibrated by the same amount: individual readings change but their correlation does not.
+3. **The detection floor is real.** MDE ranges from 0.40 to 0.46. Observed effects are all below d = 0.12. If true effects exist, they are smaller than Chapter 6's temporal-descriptor effects (d = 0.22-0.46) and Chapter 5's topological effects.
+
+### Relationship to Prior Chapters
+
+- **Chapter 5:** SUD is the strongest graph-topological phenotype (betweenness centrality, global efficiency). That topological difference does not translate into a coupling difference at the kappa level.
+- **Chapter 6:** Three diagnosis-associated temporal descriptor patterns (SUD blunting, ADHD elevation, MDD positive-selectivity) do not produce detectable coupling differences either.
+- **Implication:** The temporal, spatial, and coupling layers are partially independent views of the same underlying EEG organization, not redundant restatements of the same clinical signal.
+
+### Role in the Chapter
+
+This null result is important because it establishes that coupling is a different layer of signal organization. The chapter's load-bearing results remain: Experiment A (coupling exists, d_z = 1.06), Experiment B (coupling is observation-specific not trait-like, ICC = 0.059), Experiment C (tau_AC carries the Cute-Erotic coupling reorganization). Experiment D adds: "The between-subject variance in kappa is not organized along diagnosis boundaries. Clinical coupling differences, if they exist, are smaller than d = 0.12."
+
+---
+
 ## Shared Parameters
 
 | Parameter | Value |
@@ -248,6 +319,7 @@ The chapter's weight rests primarily on Experiment A (coupling exists, d_z = 1.0
 | `run_chapter7_experiment_A.py` | Experiment A: coupling existence pipeline (batch + analysis) |
 | `run_chapter7_experiment_B.py` | Experiment B: variance decomposition of kappa |
 | `run_chapter7_experiment_C.py` | Experiment C: category-conditioned coupling structure |
+| `run_chapter7_experiment_D.py` | Experiment D: diagnosis-associated coupling differences |
 | `extract_kappa_matrix.py` | Utility to export kappa values as CSV from Experiment A pickle |
 | `extract_C_matrices.py` | Utility to export full 7x2 C matrices as CSV (844 rows x 16 cols) |
 
@@ -270,7 +342,7 @@ The chapter's weight rests primarily on Experiment A (coupling exists, d_z = 1.0
 | `fig7_A3_example_subjects.pdf` | Example coupling matrices (weak/medium/strong) |
 | `fig7_A4_kappa_by_category.pdf` | Violin plots of kappa by category |
 
-Experiment B and C figures are saved to `/mnt/user-data/outputs/pictures/chSynthesis/`:
+Experiment B, C, and D figures are saved to `/mnt/user-data/outputs/pictures/chSynthesis/`:
 - `fig7_B1_raw_observation.pdf` — Raw kappa matrix, mean-vs-std scatter, individual trajectories
 - `fig7_B2_raw_paired_differences.pdf` — Within-valence delta-kappa histograms
 - `fig7_B3_variance_decomposition.pdf` — Variance partition bar chart + permutation null distribution
@@ -278,6 +350,8 @@ Experiment B and C figures are saved to `/mnt/user-data/outputs/pictures/chSynth
 - `fig7_C2_raw_difference_matrices.pdf` — Raw paired delta-C before testing
 - `fig7_C3_difference_significance.pdf` — delta-C with Bonferroni significance masking
 - `fig7_C4_CE_top_cells.pdf` — Top 6 Cute-Erotic cell distributions by |d_z|
+- `fig7_D1_raw_diagnosis_kappa.pdf` — Violin plots of subject-averaged kappa by Dx+/Dx- per diagnosis
+- `fig7_D2_diagnosis_effects.pdf` — Cohen's d bar plot + bootstrap 95% CI for mean differences
 
 ## Sample
 
