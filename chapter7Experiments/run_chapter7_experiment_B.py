@@ -40,7 +40,7 @@ import time
 # CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-KAPPA_FILE = os.path.join(SCRIPT_DIR, 'kappa_matrix.csv')
+KAPPA_FILE = os.path.join(SCRIPT_DIR, 'chapter7_results', 'kappa_matrix.csv')
 FIGURE_DIR = '/mnt/user-data/outputs/pictures/chSynthesis'
 RESULTS_FILE = os.path.join(SCRIPT_DIR, 'chapter7_results', 'ch7_expB_results.npz')
 N_PERM = 5000
