@@ -10,6 +10,7 @@ This folder contains the experimental scripts, results, and figures for Chapter 
 | 7.2 (B) | `run_chapter7_experiment_B.py` | Variance decomposition — is kappa driven by subject identity or affective category? |
 | 7.3 (C) | `run_chapter7_experiment_C.py` | Category-conditioned coupling structure — which C matrix cells drive the scalar kappa difference? |
 | 7.4 (D) | `run_chapter7_experiment_D.py` | Diagnosis-associated coupling differences — does between-subject kappa variance align with clinical diagnoses? |
+| 7.5 (E) | `run_chapter7_experiment_E.py` | Augmentation ablation — do dynamical descriptors add discriminative value beyond topology-only features? |
 
 ---
 
@@ -282,6 +283,46 @@ This null result is important because it establishes that coupling is a differen
 
 ---
 
+## Experiment E: Augmentation Ablation
+
+### Research Question
+
+Do the validated dynamical descriptors from Chapter 6 add discriminative information when combined with topological features, or is their value purely explanatory? This separates descriptor value from architecture effects using a graph-agnostic baseline.
+
+### Method
+
+Four feature conditions using per-electrode D and T matrices (not the C matrix correlations):
+
+| Condition | Features | Dimensionality |
+|-----------|----------|---------------|
+| T-only | 34 electrodes x 2 topology metrics (strength, clustering) | 68 |
+| D-only | 34 electrodes x 7 dynamical metrics | 238 |
+| T+D | Concatenation of both | 306 |
+| kappa-augmented | T+D plus subject-averaged coupling strength | 307 |
+
+**Primary task:** SUD detection (binary, strongest prior signal from Chapter 5).
+
+**Primary readout:** L2-regularized logistic regression with subject-level 5-fold CV. This is the graph-agnostic baseline — separates descriptor value from architecture effects.
+
+### Outcome Interpretation
+
+- **T+D > T and T+D > D:** The two descriptor families carry complementary information
+- **D ~ T+D and both > T:** Dynamics subsume topology
+- **T ~ T+D and both > D:** Topology subsumes dynamics
+- **T ~ D ~ T+D:** Both carry the same signal, no complementarity
+- **All near chance:** Coupling descriptors are explanatory, not discriminative
+
+### Data
+
+- `chapter7_results/subject_features.csv` — Primary: subject-averaged features (211 rows x 307 columns)
+- `chapter7_results/observation_features.csv` — Secondary: per-observation features (844 rows x 308 columns)
+
+### Status
+
+Data extracted from `ch7_full_results.pkl`. Experiment script pending.
+
+---
+
 ## Shared Parameters
 
 | Parameter | Value |
@@ -322,6 +363,7 @@ This null result is important because it establishes that coupling is a differen
 | `run_chapter7_experiment_D.py` | Experiment D: diagnosis-associated coupling differences |
 | `extract_kappa_matrix.py` | Utility to export kappa values as CSV from Experiment A pickle |
 | `extract_C_matrices.py` | Utility to export full 7x2 C matrices as CSV (844 rows x 16 cols) |
+| `extract_features_for_expE.py` | Utility to extract per-electrode D and T matrices from pickle for Experiment E |
 
 ### Data (`chapter7_results/`)
 
@@ -332,6 +374,8 @@ This null result is important because it establishes that coupling is a differen
 | `ch7_expB_results.npz` | Experiment B variance decomposition results |
 | `kappa_matrix.csv` | Per-subject kappa values (211 subjects x 4 categories) |
 | `C_matrices.csv` | Full C matrices — 844 rows x 16 columns (14 correlation values per observation) |
+| `subject_features.csv` | Subject-averaged per-electrode features — 211 rows x 307 columns (238 D + 68 T) |
+| `observation_features.csv` | Per-observation per-electrode features — 844 rows x 308 columns |
 
 ### Figures (`chapter7_results/figures/`)
 
