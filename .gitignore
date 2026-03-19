@@ -1,1 +1,5 @@
 __pycache__/
+
+# Raw EEG data files (too large for git)
+chapter5Experiments/CategoryFiles/categoriesbatch*/
+chapter5Experiments/CategoryFiles/*.zip
