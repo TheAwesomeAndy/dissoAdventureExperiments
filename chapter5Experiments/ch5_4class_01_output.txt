@@ -1,0 +1,90 @@
+======================================================================
+CHAPTER 5 -- 4-CLASS FEATURE EXTRACTION
+======================================================================
+
+Scanning ./CategoryFiles for EEG files...
+  Found 844 files
+  211 unique subjects (after excluding {127})
+
+  Total observations: 844
+  Expected: 211 subjects x 4 categories = 844
+
+Initializing LIF reservoir: N=256, beta=0.05, theta=0.5, seed=42
+
+Processing 844 observations (34 channels each)...
+  Reservoir: 256 neurons x 256 timesteps per channel
+  BSC6: bins [10-70], 6 bins
+
+  [  20/844] Subject  10 Erotic       | 4s elapsed, ~166s remaining (5.0 obs/s)
+  [  40/844] Subject  15 Erotic       | 8s elapsed, ~164s remaining (4.9 obs/s)
+  [  60/844] Subject  20 Erotic       | 12s elapsed, ~161s remaining (4.9 obs/s)
+  [  80/844] Subject  25 Erotic       | 16s elapsed, ~156s remaining (4.9 obs/s)
+  [ 100/844] Subject  32 Erotic       | 20s elapsed, ~152s remaining (4.9 obs/s)
+  [ 120/844] Subject  37 Erotic       | 24s elapsed, ~147s remaining (4.9 obs/s)
+  [ 140/844] Subject  43 Erotic       | 29s elapsed, ~143s remaining (4.9 obs/s)
+  [ 160/844] Subject  48 Erotic       | 33s elapsed, ~139s remaining (4.9 obs/s)
+  [ 180/844] Subject  53 Erotic       | 37s elapsed, ~135s remaining (4.9 obs/s)
+  [ 200/844] Subject  58 Erotic       | 41s elapsed, ~131s remaining (4.9 obs/s)
+  [ 220/844] Subject  66 Erotic       | 45s elapsed, ~127s remaining (4.9 obs/s)
+  [ 240/844] Subject  72 Erotic       | 49s elapsed, ~123s remaining (4.9 obs/s)
+  [ 260/844] Subject  77 Erotic       | 53s elapsed, ~119s remaining (4.9 obs/s)
+  [ 280/844] Subject  83 Erotic       | 57s elapsed, ~115s remaining (4.9 obs/s)
+  [ 300/844] Subject  88 Erotic       | 61s elapsed, ~111s remaining (4.9 obs/s)
+  [ 320/844] Subject  94 Erotic       | 65s elapsed, ~107s remaining (4.9 obs/s)
+  [ 340/844] Subject 104 Erotic       | 70s elapsed, ~103s remaining (4.9 obs/s)
+  [ 360/844] Subject 110 Erotic       | 74s elapsed, ~99s remaining (4.9 obs/s)
+  [ 380/844] Subject 120 Erotic       | 78s elapsed, ~95s remaining (4.9 obs/s)
+  [ 400/844] Subject 126 Erotic       | 82s elapsed, ~91s remaining (4.9 obs/s)
+  [ 420/844] Subject 134 Erotic       | 86s elapsed, ~87s remaining (4.9 obs/s)
+  [ 440/844] Subject 141 Erotic       | 90s elapsed, ~83s remaining (4.9 obs/s)
+  [ 460/844] Subject 148 Erotic       | 95s elapsed, ~79s remaining (4.9 obs/s)
+  [ 480/844] Subject 153 Erotic       | 99s elapsed, ~75s remaining (4.9 obs/s)
+  [ 500/844] Subject 159 Erotic       | 103s elapsed, ~71s remaining (4.9 obs/s)
+  [ 520/844] Subject 164 Erotic       | 107s elapsed, ~67s remaining (4.9 obs/s)
+  [ 540/844] Subject 171 Erotic       | 111s elapsed, ~63s remaining (4.9 obs/s)
+  [ 560/844] Subject 177 Erotic       | 115s elapsed, ~59s remaining (4.9 obs/s)
+  [ 580/844] Subject 189 Erotic       | 120s elapsed, ~54s remaining (4.8 obs/s)
+  [ 600/844] Subject 194 Erotic       | 124s elapsed, ~50s remaining (4.8 obs/s)
+  [ 620/844] Subject 203 Erotic       | 128s elapsed, ~46s remaining (4.8 obs/s)
+  [ 640/844] Subject 208 Erotic       | 132s elapsed, ~42s remaining (4.8 obs/s)
+  [ 660/844] Subject 215 Erotic       | 136s elapsed, ~38s remaining (4.8 obs/s)
+  [ 680/844] Subject 225 Erotic       | 140s elapsed, ~34s remaining (4.8 obs/s)
+  [ 700/844] Subject 232 Erotic       | 144s elapsed, ~30s remaining (4.9 obs/s)
+  [ 720/844] Subject 257 Erotic       | 148s elapsed, ~26s remaining (4.9 obs/s)
+  [ 740/844] Subject 262 Erotic       | 153s elapsed, ~21s remaining (4.9 obs/s)
+  [ 760/844] Subject 282 Erotic       | 157s elapsed, ~17s remaining (4.8 obs/s)
+  [ 780/844] Subject 290 Erotic       | 161s elapsed, ~13s remaining (4.8 obs/s)
+  [ 800/844] Subject 295 Erotic       | 165s elapsed, ~9s remaining (4.8 obs/s)
+  [ 820/844] Subject 305 Erotic       | 170s elapsed, ~5s remaining (4.8 obs/s)
+  [ 840/844] Subject 313 Erotic       | 174s elapsed, ~1s remaining (4.8 obs/s)
+  [ 844/844] Subject 317 Erotic       | 175s elapsed, ~0s remaining (4.8 obs/s)
+
+  Feature extraction complete: 174.8s (2.9 min)
+
+  BSC6 raw: shape=(844, 34, 1536), mean=1.239, zeros=42.3%
+
+Fitting PCA-64 on pooled BSC6 features...
+  PCA-64: 71.5% variance explained
+  Embeddings: shape=(844, 34, 64)
+
+======================================================================
+DATA INTEGRITY CHECK
+======================================================================
+  X_ds shape:          (844, 256, 34)
+  X_ds mean:           0.000000 (expected ~0)
+  X_ds std:            0.999983 (expected ~1)
+  y distribution:      {np.int64(0): np.int64(211), np.int64(1): np.int64(211), np.int64(2): np.int64(211), np.int64(3): np.int64(211)}
+  subjects unique:     211
+  lsm_bsc6_pca shape:  (844, 34, 64)
+  lsm_bsc6_raw shape:  (844, 34, 1536)
+  conv_feats shape:    (844, 34, 5)
+  lsm_mfr shape:       (844, 34, 256)
+
+  Saved: ./shape_features_4class.pkl (463.5 MB)
+
+======================================================================
+FEATURE EXTRACTION COMPLETE
+======================================================================
+  844 observations x 34 channels x 64 PCA dimensions
+  4 classes: Threat (211), Mutilation (211), Cute (211), Erotic (211)
+  Ready for: ch5_4class_classification.py
