@@ -159,7 +159,7 @@ def extract_band_power(signal, fs):
     for i, (lo, hi) in enumerate(bands):
         mask = (freqs >= lo) & (freqs <= hi)
         if mask.any():
-            powers[i] = np.trapz(psd[mask], freqs[mask])
+            powers[i] = np.trapezoid(psd[mask], freqs[mask])
     return powers
 # ===================================================================
 # DATA LOADING
@@ -203,9 +203,11 @@ def preprocess_eeg(raw, downsample_factor=4, target_T=256):
         (target_T, 34) preprocessed EEG
     """
     n_ch = raw.shape[1]
-    # Decimate each channel
-    ds = np.zeros((raw.shape[0] // downsample_factor, n_ch))
-    for ch in range(n_ch):
+    # Decimate each channel — let scipy determine output length
+    ch0 = decimate(raw[:, 0], downsample_factor)
+    ds = np.zeros((len(ch0), n_ch))
+    ds[:, 0] = ch0
+    for ch in range(1, n_ch):
         ds[:, ch] = decimate(raw[:, ch], downsample_factor)
 
     # Truncate or pad to target_T

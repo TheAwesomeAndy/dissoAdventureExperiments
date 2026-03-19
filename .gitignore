@@ -3,3 +3,6 @@ __pycache__/
 # Raw EEG data files (too large for git)
 chapter5Experiments/CategoryFiles/categoriesbatch*/
 chapter5Experiments/CategoryFiles/*.zip
+
+# Large generated pickle files
+chapter5Experiments/shape_features_4class.pkl
