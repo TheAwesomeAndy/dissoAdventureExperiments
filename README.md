@@ -158,7 +158,7 @@ pip install numpy scipy scikit-learn matplotlib pandas openpyxl
 
 ## Input Data Format
 
-This project was built for the [**SHAPE dataset**](https://lab-can.com/shape/). If you have different EEG data, you will need to adapt the loading code. Here is exactly what the code expects:
+This project was developed in collaboration with the [**SHAPE dataset**](https://lab-can.com/shape/). If you have different EEG data, you will need to adapt the loading code. Here is exactly what the code expects:
 
 ### Broad-Condition EEG Files
 
