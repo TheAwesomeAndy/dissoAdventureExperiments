@@ -1,7 +1,7 @@
 # Chapters 6 & 7 — 3-Class Experimental Pipeline
 
 ## Overview
-This pipeline extracts dynamical and topological features from the SHAPE Community EEG dataset at 3-class granularity (Negative/Neutral/Pleasant) for Chapters 6 (Dynamical Characterization) and 7 (Structure-Function Coupling).
+This pipeline extracts dynamical and topological features from the [SHAPE EEG dataset](https://lab-can.com/shape/) at 3-class granularity (Negative/Neutral/Pleasant) for Chapters 6 (Dynamical Characterization) and 7 (Structure-Function Coupling).
 
 ## Dissertation Context
 The 3-class problem is the primary experimental vehicle for Chapters 6 and 7. Variance decomposition (Chapter 5) establishes that condition-related signal accounts for 8.7% of total embedding variance at 3-class versus 2.4% at 4-class — a 3.6x signal advantage. Classification accuracy with subject-centering reaches 79.4% at 3-class. Every experiment in this pipeline operates in the stronger signal regime.
@@ -81,5 +81,5 @@ Note: This script uses functional-style reservoir (init_reservoir/run_reservoir)
 numpy, scipy, scikit-learn, matplotlib, pandas, pickle
 
 ## Data Requirements
-SHAPE Community 3-class EEG files in `batch_data/`. Each file: (1229, 34) float64.
+SHAPE 3-class EEG files in `batch_data/`. Each file: (1229, 34) float64.
 Clinical metadata: `clinical_profile.csv` in `data/` directory.

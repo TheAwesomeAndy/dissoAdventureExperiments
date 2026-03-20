@@ -19,4 +19,4 @@ The `chapter*Experiments/` directories at the repository root contain the origin
 
 ## Data Requirements
 
-All scripts require the SHAPE Community EEG dataset (not included in repository). See the root README for data format specifications.
+All scripts require the [SHAPE EEG dataset](https://lab-can.com/shape/) (not included in repository). See the root README for data format specifications.

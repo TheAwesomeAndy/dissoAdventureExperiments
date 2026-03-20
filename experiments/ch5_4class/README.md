@@ -52,4 +52,4 @@ Note: One numpy compatibility fix was applied — `np.trapz` replaced with `np.t
 numpy, scipy, scikit-learn, matplotlib, pandas, pickle
 
 ## Data Requirements
-SHAPE Community EEG subcategory files in `categoriesbatch{1-4}/` directories. Each file: (1229, 34) float64, baseline-corrected, trial-averaged microvolts.
+SHAPE EEG subcategory files in `categoriesbatch{1-4}/` directories. Each file: (1229, 34) float64, baseline-corrected, trial-averaged microvolts.

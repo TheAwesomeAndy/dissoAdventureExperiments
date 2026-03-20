@@ -1,6 +1,6 @@
 # Chapter 5: Clinical EEG Classification with ARSPI-Net
 
-This folder contains the experimental scripts, results archive, and figures for Chapter 5 of the ARSPI-Net dissertation. Chapter 5 validates the full ARSPI-Net pipeline on real clinical EEG data — classifying affective responses (Negative/Neutral/Pleasant) from the SHAPE Community IAPS emotional picture viewing dataset.
+This folder contains the experimental scripts, results archive, and figures for Chapter 5 of the ARSPI-Net dissertation. Chapter 5 validates the full ARSPI-Net pipeline on real clinical EEG data — classifying affective responses (Negative/Neutral/Pleasant) from the [SHAPE dataset](https://lab-can.com/shape/).
 
 ## Experiment Overview
 
@@ -205,7 +205,7 @@ Over-smoothing is a known failure mode for deep GNNs on small graphs. With 34 el
 
 ## Data Specification
 
-### SHAPE Community IAPS EEG Dataset
+### SHAPE EEG Dataset
 
 | Property | Value |
 |----------|-------|
@@ -335,7 +335,7 @@ Verified components:
 - **Graph readout (1 test):** Mean readout produces 64-dim vector
 - **Classification (3 tests):** Full CV pipeline runs, returns accuracy and predictions
 
-Full end-to-end verification requires the SHAPE Community EEG dataset. Use `--demo` mode for pipeline testing:
+Full end-to-end verification requires the SHAPE EEG dataset. Use `--demo` mode for pipeline testing:
 ```bash
 python chapter5Experiments/run_chapter5_experiments.py --demo
 ```
@@ -356,7 +356,7 @@ The `experiments/ch5_4class/` directory extends this 3-class pipeline to 4 IAPS 
 
 ## Sample
 
-- 80+ subjects from the SHAPE Community dataset
+- 80+ subjects from the [SHAPE dataset](https://lab-can.com/shape/)
 - 3 affective conditions: Negative, Neutral, Pleasant (IAPS picture viewing)
 - Subject-stratified cross-validation prevents data leakage
 - Demo mode available with `--demo` flag for pipeline testing without SHAPE data access
