@@ -4,7 +4,7 @@
 ### Independent Code Analysis, Testing, and Scientific Rigor Assessment
 
 **Report Date:** 2026-03-17
-**Reviewer:** Automated Scientific Verification (Claude Code)
+**Reviewer:** Andrew Lane — Automated Scientific Verification Pipeline
 **Scope:** All 7 Chapter 6 experiment scripts + standalone reproducibility pipeline (8 files total)
 **Methodology:** Static code analysis, synthetic unit tests, algorithmic correctness verification, scientific rigor assessment
 
