@@ -299,21 +299,3 @@ git add .gitignore
 git commit -m "Update .gitignore for large data files"
 ```
 
----
-
-## What Is Still Missing (TODO after repo update)
-
-These items are identified but not yet built:
-
-1. **EEGNet + GRU/LSTM baselines** — must-do for committee positioning
-2. **Chapter 8 (Conclusion)** — not yet written
-3. **Revised Chapter 5 LaTeX** — incorporating 4-class results into
-   the existing 3-class chapter as paired-granularity design
-4. **Revised Chapter 6 LaTeX** — converting spec into results chapter
-   using Script 03 data
-5. **Revised Chapter 7 LaTeX** — integrating 3-class results alongside
-   existing 4-class text
-6. **Bibliography update** — ch7_new_bib_entries.bib needs to be
-   appended to Disso.bib
-7. **Cross-chapter reference audit** — ensure all \ref{} and \cite{}
-   resolve correctly

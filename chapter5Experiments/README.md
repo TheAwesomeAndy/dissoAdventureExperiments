@@ -315,6 +315,37 @@ arspi_net_chapter5_complete/
 
 ---
 
+## Verification Results
+
+<!-- Last run: 2026-03-20, Result: 32/32 PASS -->
+
+```bash
+python chapter5Experiments/verify_chapter5.py
+```
+
+**Result: 32/32 PASS.** The verification script tests all core infrastructure components on synthetic data without requiring the SHAPE EEG dataset.
+
+Verified components:
+- **Script import:** `run_chapter5_experiments.py` imports successfully
+- **LIF Reservoir (7 tests):** Instantiation, weight shapes, forward pass shapes, binary spikes, non-zero activity, sparsity
+- **Feature extraction (4 tests):** BSC6 produces 384-dim vector with non-negative values; MFR produces 64-dim vector in [0,1]
+- **Conventional features (3 tests):** BandPower shape (2, 34, 5), non-negative; Hjorth shape (2, 34, 3)
+- **Graph construction (6 tests):** 34 electrode positions, spatial adjacency (symmetric, binary, no self-loops), functional adjacency
+- **GNN propagation (5 tests):** GCN preserves shape, GraphSAGE doubles features, GAT returns features + attention matrices, attention rows sum to ~1
+- **Graph readout (1 test):** Mean readout produces 64-dim vector
+- **Classification (3 tests):** Full CV pipeline runs, returns accuracy and predictions
+
+Full end-to-end verification requires the SHAPE Community EEG dataset. Use `--demo` mode for pipeline testing:
+```bash
+python chapter5Experiments/run_chapter5_experiments.py --demo
+```
+
+### Relationship to Extended 4-Class Experiments
+
+The `experiments/ch5_4class/` directory extends this 3-class pipeline to 4 IAPS subcategories (Threat, Mutilation, Cute, Erotic). That extension includes its own verification script (`verify_ch5_4class.py`, 25/25 PASS) testing the same infrastructure components plus band power extraction and 4-category configuration.
+
+---
+
 ## Relationship to Other Chapters
 
 - **Chapter 3** established the LIF reservoir parameters (256 neurons, beta=0.05, threshold=0.5, spectral radius=0.9) through systematic characterization.
