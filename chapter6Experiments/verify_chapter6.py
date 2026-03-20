@@ -45,10 +45,10 @@ def main():
     # ── 1. Syntax check all scripts ──
     print("\n--- Script Syntax Validation ---")
     scripts = [
-        "run_chapter6_exp1_esp (1).py",
-        "run_chapter6_exp2_reliability (1).py",
-        "run_chapter6_exp3_surrogate (1).py",
-        "run_chapter6_exp3_valueadd (1).py",
+        "run_chapter6_exp1_esp.py",
+        "run_chapter6_exp2_reliability.py",
+        "run_chapter6_exp3_surrogate.py",
+        "run_chapter6_exp3_valueadd.py",
         "run_chapter6_exp4_dissociation.py",
         "run_chapter6_exp5_interaction.py",
         "run_chapter6_exp6_temporal.py",
@@ -69,7 +69,7 @@ def main():
     # ── 2. Reservoir implementation test ──
     print("\n--- LIF Reservoir (from Exp 6.1) ---")
     # Load exp1 to get the Reservoir class
-    exp1_path = os.path.join(base, "run_chapter6_exp1_esp (1).py")
+    exp1_path = os.path.join(base, "run_chapter6_exp1_esp.py")
     try:
         spec = importlib.util.spec_from_file_location("exp1", exp1_path)
         exp1 = importlib.util.module_from_spec(spec)
