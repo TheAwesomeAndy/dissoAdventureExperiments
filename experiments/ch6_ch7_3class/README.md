@@ -59,6 +59,24 @@ ARSPI-Net is a three-stage hybrid neuromorphic architecture:
   - EXP-7.4: Augmentation ablation (T-only vs D-only vs T+D)
   - EXP-7.5: Within-valence coupling structure (uses 4-class results)
 
+## Verification Results
+
+<!-- Last run: 2026-03-20, Result: 28/28 PASS -->
+
+```bash
+python experiments/ch6_ch7_3class/verify_ch6_ch7_3class.py
+```
+
+**Result: 28/28 PASS.** Infrastructure tests on synthetic data:
+
+- **Syntax validation (4 tests):** All 4 scripts parse without errors
+- **LIF Reservoir (8 tests):** Module imports, init_reservoir returns weights, W_in (64,1) and W_rec (64,64) shapes, spike shape (64,256) and membrane shape (64,256), binary spikes, non-silent
+- **Dynamical metrics (8 tests):** total_spikes, MFR, population rate shape, rate entropy, rate variance, tau_ac, permutation entropy in (0,1], temporal sparsity in [0,1]
+- **Topological metrics (5 tests):** tPLV matrix shape (34,34), values in [0,1], symmetric, node strength shape (34,), clustering coefficient computable
+- **Configuration (3 tests):** N_RES=256, BETA=0.05, THRESHOLD=0.5
+
+Note: This script uses functional-style reservoir (init_reservoir/run_reservoir) rather than a class, with output shape (n_res, T) transposed from the chapter4/5 convention (T, n_res).
+
 ## Dependencies
 numpy, scipy, scikit-learn, matplotlib, pandas, pickle
 
