@@ -58,7 +58,7 @@ p_{s,c} = \frac{1 + \#\{\kappa_{s,c}^{(\pi)} \ge \kappa_{s,c}\}}{1 + 2000}.
 \section{Data and Experimental Protocol}
 \label{sec:ch7_protocol}
 
-All experiments use the SHAPE dataset: $N = 211$ subjects (excluding subject~127), four IAPS subcategories (Threat, Mutilation, Cute, Erotic), yielding 844 subject--category observations. Each observation is a $1229 \times 34$ category-level trial-averaged EEG epoch at 1024~Hz, consistent with the data format in Chapters~\ref{chap:dynamics} and~5.
+All experiments use the SHAPE Community dataset: $N = 211$ subjects (excluding subject~127), four IAPS subcategories (Threat, Mutilation, Cute, Erotic), yielding 844 subject--category observations. Each observation is a $1229 \times 34$ category-level trial-averaged EEG epoch at 1024~Hz, consistent with the data format in Chapters~\ref{chap:dynamics} and~5.
 
 For each observation, the reservoir processes all 34 channels independently (28,696 total reservoir runs across the dataset). The tPLV matrix is computed from the same 34-channel epoch via theta-band filtering (3rd-order Butterworth, $4$--$8$~Hz) and Hilbert-transform phase extraction. Clinical metadata from the SHAPE psychopathology battery provides transdiagnostic diagnostic status for 206 of 211 subjects (5 missing), with mean comorbidity of 2.0 diagnoses per subject and 22 strict healthy controls (zero of five primary diagnoses).
 

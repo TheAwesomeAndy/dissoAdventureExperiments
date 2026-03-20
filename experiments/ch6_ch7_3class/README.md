@@ -81,5 +81,5 @@ Note: This script uses functional-style reservoir (init_reservoir/run_reservoir)
 numpy, scipy, scikit-learn, matplotlib, pandas, pickle
 
 ## Data Requirements
-SHAPE 3-class EEG files in `batch_data/`. Each file: (1229, 34) float64.
+SHAPE Community 3-class EEG files in `batch_data/`. Each file: (1229, 34) float64.
 Clinical metadata: `clinical_profile.csv` in `data/` directory.
