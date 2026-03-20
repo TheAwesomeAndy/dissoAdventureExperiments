@@ -57,9 +57,10 @@ import time
 # ═══════════════════════════════════════════════════════════════════
 # CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════
-SUBJECT_FEATURES_FILE = '/home/claude/subject_features.csv'
-C_MATRIX_FILE = '/home/claude/C_matrices.csv'
-PSYCH_FILE = '/home/claude/SHAPE_Community_Andrew_Psychopathology.xlsx'
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+SUBJECT_FEATURES_FILE = os.path.join(SCRIPT_DIR, 'chapter7_results', 'subject_features.csv')
+C_MATRIX_FILE = os.path.join(SCRIPT_DIR, 'chapter7_results', 'C_matrices.csv')
+PSYCH_FILE = os.path.join(SCRIPT_DIR, '..', 'SHAPE_Community_Andrew_Psychopathology.xlsx')
 FIGURE_DIR = '/mnt/user-data/outputs/pictures/chSynthesis'
 DX_LIST = ['SUD', 'MDD', 'PTSD', 'GAD', 'ADHD']
 N_REPEATS = 10
