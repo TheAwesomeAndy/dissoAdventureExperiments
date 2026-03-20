@@ -179,7 +179,8 @@ def extract_band_power(signal, fs):
     for i, (lo, hi) in enumerate(bands):
         mask = (freqs >= lo) & (freqs <= hi)
         if mask.any():
-            powers[i] = np.trapz(psd[mask], freqs[mask])
+            _trapz = getattr(np, 'trapezoid', getattr(np, 'trapz', None))
+            powers[i] = _trapz(psd[mask], freqs[mask])
     return powers
 
 
