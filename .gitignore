@@ -1,1 +1,30 @@
 __pycache__/
+
+# ═══════════════════════════════════════════════════════════════
+# ARSPI-Net data files (regenerate by running Script 01s)
+# ═══════════════════════════════════════════════════════════════
+
+# Large feature pickles
+shape_features_211.pkl
+shape_features_4class.pkl
+shape_features.pkl
+ch6_ch7_3class_features.pkl
+
+# Raw EEG data (not stored in repo)
+batch_data/
+categories/
+CategoryFiles/
+shape_data/
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+repo_update/
