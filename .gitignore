@@ -26,5 +26,10 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# Private participant data (not for public distribution)
+data/clinical_profile.csv
+SHAPE_Community_Andrew_Psychopathology.xlsx
+ParticipantInfo.csv
+
 # Temporary
 repo_update/

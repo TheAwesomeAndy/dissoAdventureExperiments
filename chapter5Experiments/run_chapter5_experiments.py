@@ -3,7 +3,7 @@
 ARSPI-Net Chapter 5: Complete End-to-End Experimental Pipeline
 ===============================================================
 Implements the full ARSPI-Net architecture and all comparison baselines
-for the SHAPE Community IAPS emotional picture viewing EEG dataset.
+for the SHAPE EEG dataset (https://lab-can.com/shape/).
 
 Data specification (from Brady):
   - Per file: 1229 rows × 34 columns (µV)
