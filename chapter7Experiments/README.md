@@ -471,6 +471,27 @@ Experiment B, C, and D figures are saved to `/mnt/user-data/outputs/pictures/chS
 - `fig7_E4_classification_auc.pdf` — AUC bar charts: 4 conditions x 5 diagnoses (ADHD D-only tallest, GAD T-only second)
 - `fig7_E5_paired_auc_detail.pdf` — Paired delta-AUC distributions for SUD and ADHD across three comparisons
 
+## Verification Results
+
+<!-- Last run: 2026-03-20, Result: 38/38 PASS -->
+
+```bash
+python chapter7Experiments/verify_chapter7.py
+```
+
+**Result: 38/38 PASS.** The most comprehensive verification in the repository, including full re-execution of Experiments B and C with verified numerical outputs.
+
+Verified components:
+- **Syntax validation (7 tests):** All 7 scripts (5 experiments + 2 extraction utilities) parse without errors
+- **Data file inventory (6 tests):** All expected output files present with correct sizes — ch7_full_results.pkl (23.7 MB), ch7_expA_analysis.pkl (131 KB), kappa_matrix.csv, C_matrices.csv, subject_features.csv, observation_features.csv
+- **Kappa matrix validation (4 tests):** 211 rows, correct columns (subject + 4 categories), values in [0,1], median kappa ~0.27 (within 0.05 of expected)
+- **C matrices validation (3 tests):** 844 rows (211x4), 14 correlation columns, all values in [-1,1]
+- **Experiment B full re-run (9 tests):** Script exits cleanly, V_subj ~29% (within 5pp), V_resid ~70% (within 5pp), ICC ~0.059 (within 0.02), Cute-Erotic p < 0.05, Threat-Mutilation p > 0.05 (null), all 3 figures generated
+- **Experiment C full re-run (5 tests):** Script exits cleanly, tau_ac has larger |d_z| than amplitude metrics, all 4 figures generated
+- **Subject features validation (4 tests):** 211 rows, 238 dynamical features (34x7), 68 topological features (34x2)
+
+Experiments A, D, and E are syntax-checked; full execution requires external data or was previously completed with results stored in `chapter7_results/`.
+
 ## Sample
 
 - 211 subjects from the SHAPE Community dataset

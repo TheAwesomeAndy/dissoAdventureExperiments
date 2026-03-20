@@ -14,7 +14,7 @@ Examples:
   python3 run_chapter7_experiment_A.py 8 8      # Process subjects 8-15
   python3 run_chapter7_experiment_A.py --analyze  # Generate figures/tables
 
-The script saves intermediate results to /home/claude/ch7_full_results.pkl
+The script saves intermediate results to chapter7_results/ch7_full_results.pkl
 and is crash-resilient: re-running a batch skips already-completed subjects.
 """
 import numpy as np
@@ -45,7 +45,8 @@ DYN_NAMES = ['total_spikes', 'mean_firing_rate', 'rate_entropy',
              'tau_ac']
 TOPO_NAMES = ['strength', 'clustering']
 
-OUTPUT_FILE = '/home/claude/ch7_full_results.pkl'
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_FILE = os.path.join(SCRIPT_DIR, 'chapter7_results', 'ch7_full_results.pkl')
 FIGURE_DIR = '/mnt/user-data/outputs/pictures/chSynthesis'
 
 # ═══════════════════════════════════════════════════════════════════
@@ -53,7 +54,7 @@ FIGURE_DIR = '/mnt/user-data/outputs/pictures/chSynthesis'
 # ═══════════════════════════════════════════════════════════════════
 def build_file_inventory():
     """Discover all EEG files and return {(sid, cat): filepath} dict."""
-    cat_dirs = [f'/home/claude/categories/categoriesbatch{b}' for b in [1, 2, 3, 4]]
+    cat_dirs = [os.path.join(SCRIPT_DIR, '..', 'categories', f'categoriesbatch{b}') for b in [1, 2, 3, 4]]
     pat = re.compile(
         r'SHAPE_Community_(\d+)_IAPS(Neg|Pos)_(Threat|Mutilation|Cute|Erotic)_BC\.txt'
     )
@@ -582,7 +583,7 @@ def run_analysis(results):
         'group_dz': d_z,
         'cat_kappas': cat_kappas,
     }
-    with open('/home/claude/ch7_expA_analysis.pkl', 'wb') as f:
+    with open(os.path.join(SCRIPT_DIR, 'chapter7_results', 'ch7_expA_analysis.pkl'), 'wb') as f:
         pickle.dump(analysis, f)
     print(f"\nAnalysis saved to ch7_expA_analysis.pkl")
 
