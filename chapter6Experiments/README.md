@@ -50,7 +50,7 @@ Metrics 4 and 6 failed the ICC >= 0.75 reliability gate in Experiment 6.2 and we
 ## Data Flow
 
 ```
-Raw EEG (SHAPE Community) --> Exp 6.1 (ESP gate)
+Raw EEG (SHAPE dataset) --> Exp 6.1 (ESP gate)
                           --> Exp 6.2 (reliability gate) --> 9 validated metrics
                           --> Exp 6.3 (surrogate gate)
                                                          --> Exp 6.4 (dissociation)
@@ -109,6 +109,6 @@ The `experiments/ch6_ch7_3class/` directory runs 7 equivalent Chapter 6 experime
 
 ## Sample
 
-- 211 subjects from the SHAPE Community dataset
+- 211 subjects from the [SHAPE dataset](https://lab-can.com/shape/)
 - 4 affective categories: Threat, Mutilation, Cute, Erotic
 - Subject 127 excluded

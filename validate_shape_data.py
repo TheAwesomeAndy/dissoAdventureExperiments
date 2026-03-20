@@ -4,7 +4,7 @@
 ARSPI-Net Data Validation and Quality Control
 ============================================================================
 Implements Brady's recommended data checks plus comprehensive EEG QC for
-the SHAPE Community emotional interrupt task dataset.
+the SHAPE dataset (https://lab-can.com/shape/).
 
 Brady's specification (from original email):
   - Each participant: 3 .txt files (IAPSNeg, IAPSNeu, IAPSPos)
