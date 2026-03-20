@@ -8,10 +8,10 @@ The experiments follow a progressive validation pipeline: verify the reservoir b
 
 | Experiment | Script | Purpose |
 |------------|--------|---------|
-| 6.1 | `run_chapter6_exp1_esp (1).py` | Echo State Property verification via driven Lyapunov exponent |
-| 6.2 | `run_chapter6_exp2_reliability (1).py` | Cross-seed reliability of 11 dynamical metrics (ICC 3,1) |
-| 6.3a | `run_chapter6_exp3_surrogate (1).py` | Surrogate sensitivity testing (3 null families) |
-| 6.3b | `run_chapter6_exp3_valueadd (1).py` | Nonlinear transformation value-add vs raw EEG |
+| 6.1 | `run_chapter6_exp1_esp.py` | Echo State Property verification via driven Lyapunov exponent |
+| 6.2 | `run_chapter6_exp2_reliability.py` | Cross-seed reliability of 11 dynamical metrics (ICC 3,1) |
+| 6.3a | `run_chapter6_exp3_surrogate.py` | Surrogate sensitivity testing (3 null families) |
+| 6.3b | `run_chapter6_exp3_valueadd.py` | Nonlinear transformation value-add vs raw EEG |
 | 6.4 | `run_chapter6_exp4_dissociation.py` | Affective subcategory dissociation (within-valence contrasts) |
 | 6.5 | `run_chapter6_exp5_interaction.py` | Diagnosis x subcategory interaction (5 clinical groups) |
 | 6.6 | `run_chapter6_exp6_temporal.py` | Sliding-window temporal localisation (22 windows, 146 ms each) |
