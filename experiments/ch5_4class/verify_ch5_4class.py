@@ -141,7 +141,7 @@ def main():
     print("\n" + "=" * 70)
     print(f"CH5 4-CLASS VERIFICATION COMPLETE: {PASS} passed, {FAIL} failed")
     print("=" * 70)
-    print("\nNote: Full end-to-end verification requires the SHAPE")
+    print("\nNote: Full end-to-end verification requires the SHAPE Community")
     print("EEG subcategory data (categoriesbatch{1-4}/ directories).")
     return 1 if FAIL > 0 else 0
 
