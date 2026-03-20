@@ -2,7 +2,7 @@
 
 ## Overview
 
-This pipeline extracts dynamical and topological features from the SHAPE Community EEG dataset at 3-class granularity (Negative / Neutral / Pleasant) for use in Chapters 6 (Dynamical Characterization) and 7 (Structure-Function Coupling) of the ARSPI-Net dissertation.
+This pipeline extracts dynamical and topological features from the [SHAPE EEG dataset](https://lab-can.com/shape/) at 3-class granularity (Negative / Neutral / Pleasant) for use in Chapters 6 (Dynamical Characterization) and 7 (Structure-Function Coupling) of the ARSPI-Net dissertation.
 
 The 3-class problem is the primary experimental vehicle. Variance decomposition (Chapter 5) establishes that condition-related signal accounts for 8.7% of total embedding variance at 3-class versus 2.4% at 4-class — a 3.6× signal advantage. Classification accuracy with subject-centering reaches 79.4% at 3-class. Every experiment in this pipeline operates in the stronger signal regime.
 
