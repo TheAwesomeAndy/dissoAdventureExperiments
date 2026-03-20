@@ -33,6 +33,22 @@ That thesis is a claim. This experiment is the test. Without this ablation, the 
 **Input:** `ch6_ch7_3class_features.pkl`, `clinical_profile.csv`
 **Output:** Ablation matrix (A1-A9), comparison tables, PDF figures
 
+## Verification Results
+
+<!-- Last run: 2026-03-20, Result: 23/23 PASS -->
+
+```bash
+python experiments/ablation/verify_ablation.py
+```
+
+**Result: 23/23 PASS.** Infrastructure tests on synthetic data:
+
+- **Syntax validation (1 test):** layer_ablation.py parses without errors
+- **Dependency imports (9 tests):** numpy, sklearn (linear_model, svm, preprocessing, metrics, model_selection), scipy.stats, pandas, matplotlib — all available
+- **Coupling computation (3 tests):** 7x2 Spearman coupling matrix computed correctly, values in [-1,1], kappa scalar in [0,1]
+- **Classification pipeline (3 tests):** StratifiedGroupKFold CV runs without error, returns accuracy (0.667 on synthetic data), above chance (>0.33)
+- **Feature dimensions (7 tests):** E=34x64=2176, D=34x7=238, T=34x2=68, C=3, BP=34x5=170; 10 ablation conditions (A0-A9), 6 clinical conditions (C1-C6)
+
 ## Dependencies
 numpy, scikit-learn, pandas, matplotlib, pickle
 
