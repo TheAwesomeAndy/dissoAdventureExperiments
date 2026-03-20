@@ -4,7 +4,7 @@ validate_subcategory_data.py
 ============================
 ARSPI-Net Dissertation — Fine-Grained IAPS Subcategory ERP Data Validation
 
-This script performs automated quality control on the SHAPE Community
+This script performs automated quality control on the SHAPE dataset
 fine-grained IAPS subcategory ERP data (Threat, Mutilation, Cute, Erotic).
 Each file is a trial-averaged, baseline-corrected ERP matrix (1229 × 34)
 for one subject under one affective subcategory.
@@ -469,7 +469,7 @@ def generate_report(all_results, completeness, consistency, ch5_subjects=None):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Validate SHAPE Community fine-grained IAPS subcategory ERP data.'
+        description='Validate SHAPE fine-grained IAPS subcategory ERP data.'
     )
     parser.add_argument(
         '--category-dirs', nargs='+', required=True,

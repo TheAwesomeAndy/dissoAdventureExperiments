@@ -158,7 +158,7 @@ pip install numpy scipy scikit-learn matplotlib pandas openpyxl
 
 ## Input Data Format
 
-This project was built for the **SHAPE Community Emotional Interrupt Task** dataset. If you have different EEG data, you will need to adapt the loading code. Here is exactly what the code expects:
+This project was built for the [**SHAPE dataset**](https://lab-can.com/shape/). If you have different EEG data, you will need to adapt the loading code. Here is exactly what the code expects:
 
 ### Broad-Condition EEG Files
 
@@ -210,10 +210,7 @@ Same file structure (1229 × 34), but organized in category directories (`catego
 
 ### Metadata Files
 
-| File | Format | Purpose |
-|------|--------|---------|
-| `SHAPE_Community_Andrew_Psychopathology.xlsx` | Excel | Clinical diagnoses: columns `ID`, `MDD` (0/1), `Depression_Type`, `GAD`, `PTSD`, etc. |
-| `ParticipantInfo.csv` | CSV | Demographic information |
+Clinical and demographic data files are **not included** in this repository for participant privacy. Contact the study authors or visit the [SHAPE study page](https://lab-can.com/shape/) for data access information.
 
 ---
 
@@ -416,7 +413,7 @@ python chapter4Experiments/run_chapter4_observations.py [--output_dir pictures/c
 
 ## Chapter 5: Clinical EEG Classification
 
-**Purpose:** Classify affective EEG responses (Negative/Neutral/Pleasant) on the SHAPE Community dataset using the full ARSPI-Net pipeline.
+**Purpose:** Classify affective EEG responses (Negative/Neutral/Pleasant) on the [SHAPE dataset](https://lab-can.com/shape/) using the full ARSPI-Net pipeline.
 
 ### Running Chapter 5
 

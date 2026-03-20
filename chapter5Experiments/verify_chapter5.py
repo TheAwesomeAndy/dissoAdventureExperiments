@@ -6,7 +6,7 @@ Verifies that the Chapter 5 scripts are syntactically valid, importable,
 and that core components (reservoir, feature extraction, graph construction,
 GNN propagation) produce correct outputs on minimal synthetic data.
 
-The full pipeline requires the SHAPE Community EEG dataset which is not
+The full pipeline requires the SHAPE EEG dataset which is not
 included in the repository. This script tests the code infrastructure
 without external data.
 
@@ -171,7 +171,7 @@ def main():
     print("\n" + "=" * 70)
     print(f"CHAPTER 5 VERIFICATION COMPLETE: {PASS} passed, {FAIL} failed")
     print("=" * 70)
-    print("\nNote: Full end-to-end verification requires the SHAPE Community")
+    print("\nNote: Full end-to-end verification requires the SHAPE")
     print("EEG dataset. Use --demo mode to test the complete pipeline:")
     print("  python chapter5Experiments/run_chapter5_experiments.py --demo")
     return 1 if FAIL > 0 else 0
