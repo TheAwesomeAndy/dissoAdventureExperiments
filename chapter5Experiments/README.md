@@ -336,6 +336,7 @@ Verified components:
 - **Classification (3 tests):** Full CV pipeline runs, returns accuracy and predictions
 
 Full end-to-end verification requires the SHAPE EEG dataset. Use `--demo` mode for pipeline testing:
+Full end-to-end verification requires the SHAPE Community EEG dataset. Use `--demo` mode for pipeline testing:
 ```bash
 python chapter5Experiments/run_chapter5_experiments.py --demo
 ```
