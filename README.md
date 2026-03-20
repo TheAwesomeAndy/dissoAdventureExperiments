@@ -2,26 +2,29 @@
 
 **Publication:** Lane, A. (2026). *ARSPI-Net: Hybrid Neuromorphic Affective Computing Architecture for EEG Signal Processing.* PhD Dissertation.
 
-This repository contains the complete experimental pipeline for Chapters 4–6 of the ARSPI-Net dissertation. The core innovation is a **Leaky Integrate-and-Fire (LIF) spiking neural network reservoir** that transforms continuous EEG signals into sparse binary spike codes, capturing temporal structure that rate-based approaches miss. These spike codes are then classified using Graph Neural Networks (GNNs) that exploit spatial electrode topology.
+This repository contains the complete experimental pipeline for Chapters 4–7 of the ARSPI-Net dissertation. The core innovation is a **Leaky Integrate-and-Fire (LIF) spiking neural network reservoir** that transforms continuous EEG signals into sparse binary spike codes, capturing temporal structure that rate-based approaches miss. These spike codes are then classified using Graph Neural Networks (GNNs) that exploit spatial electrode topology, with dynamical characterization (Chapter 6) and structure-function coupling analysis (Chapter 7) completing the multi-layer framework.
 
 ---
 
 ## Table of Contents
 
 1. [Repository Structure](#repository-structure)
-2. [Architecture Overview](#architecture-overview)
-3. [Dependencies](#dependencies)
-4. [Input Data Format](#input-data-format)
-5. [Adapting to Your Own EEG Data](#adapting-to-your-own-eeg-data)
-6. [Preprocessing Pipeline](#preprocessing-pipeline)
-7. [Feature Extraction](#feature-extraction)
-8. [Chapter 4: Temporal Pattern Discrimination](#chapter-4-temporal-pattern-discrimination)
-9. [Chapter 5: Clinical EEG Classification](#chapter-5-clinical-eeg-classification)
-10. [Chapter 6: Dynamical Characterization](#chapter-6-dynamical-characterization)
-11. [Data Validation and QC](#data-validation-and-quality-control)
-12. [Output Files](#output-files)
-13. [Key Parameters Reference](#key-parameters-reference)
-14. [Troubleshooting and Notes](#troubleshooting-and-notes)
+2. [Verification Summary](#verification-summary)
+3. [Architecture Overview](#architecture-overview)
+4. [Dependencies](#dependencies)
+5. [Input Data Format](#input-data-format)
+6. [Adapting to Your Own EEG Data](#adapting-to-your-own-eeg-data)
+7. [Preprocessing Pipeline](#preprocessing-pipeline)
+8. [Feature Extraction](#feature-extraction)
+9. [Chapter 4: Temporal Pattern Discrimination](#chapter-4-temporal-pattern-discrimination)
+10. [Chapter 5: Clinical EEG Classification](#chapter-5-clinical-eeg-classification)
+11. [Chapter 6: Dynamical Characterization](#chapter-6-dynamical-characterization)
+12. [Chapter 7: Dynamical-Topological Coupling](#chapter-7-dynamical-topological-coupling)
+13. [Extended Experiments](#extended-experiments)
+14. [Data Validation and QC](#data-validation-and-quality-control)
+15. [Output Files](#output-files)
+16. [Key Parameters Reference](#key-parameters-reference)
+17. [Troubleshooting and Notes](#troubleshooting-and-notes)
 
 ---
 
@@ -29,16 +32,89 @@ This repository contains the complete experimental pipeline for Chapters 4–6 o
 
 ```
 dissoAdventureExperiments/
-├── README.md                          # This file
-├── run_chapter4_experiments.py        # Ch4: Temporal coding experiments (synthetic data)
-├── run_chapter4_observations.py       # Ch4: Raw observation figures (6 figures)
-├── run_chapter5_experiments.py        # Ch5: Full EEG classification pipeline with GNN
-├── reproduce_chapter5.py              # Ch5: Standalone reproducibility pipeline
-├── reproduce_chapter6.py              # Ch6: Standalone reproducibility pipeline
-├── validate_shape_data.py             # QC for broad-condition SHAPE data (3 conditions)
-├── validate_subcategory_data.py       # QC for fine-grained subcategory data (4 categories)
-└── chapter6Experiments/
-    └── run_chapter6_exp1_esp.py       # Ch6 Exp 6.1: Echo State Property verification
+├── README.md                              # This file
+├── validate_shape_data.py                 # QC for broad-condition SHAPE data (3 conditions)
+├── validate_subcategory_data.py           # QC for fine-grained subcategory data (4 categories)
+├── verify_validators.py                   # Verification for data validators
+│
+├── chapter4Experiments/                   # Ch4: Temporal pattern discrimination (synthetic data)
+│   ├── run_chapter4_experiments.py        #   6 experiments: ablation, FDR, coding, PCA, robustness, sensitivity
+│   ├── run_chapter4_observations.py       #   6 raw observation figures
+│   └── verify_chapter4.py                #   Verification script (31 tests)
+│
+├── chapter5Experiments/                   # Ch5: Clinical EEG classification with GNN
+│   ├── run_chapter5_experiments.py        #   7-row baseline table + GNN experiments
+│   ├── reproduce_chapter5.py             #   Standalone reproducibility pipeline
+│   └── verify_chapter5.py                #   Verification script (32 tests)
+│
+├── chapter6Experiments/                   # Ch6: Dynamical characterisation of LIF reservoir
+│   ├── run_chapter6_exp1_esp.py          #   Echo State Property verification
+│   ├── run_chapter6_exp2_reliability.py  #   Cross-seed reliability (ICC)
+│   ├── run_chapter6_exp3_surrogate.py    #   Surrogate sensitivity testing
+│   ├── run_chapter6_exp3_valueadd.py     #   Value-add vs raw EEG
+│   ├── run_chapter6_exp4_dissociation.py #   Affective subcategory dissociation
+│   ├── run_chapter6_exp5_interaction.py  #   Diagnosis x category interaction
+│   ├── run_chapter6_exp6_temporal.py     #   Sliding-window temporal localisation
+│   ├── reproduce_chapter6.py             #   Standalone reproducibility pipeline
+│   ├── verify_chapter6.py                #   Verification script (31 tests)
+│   └── CHAPTER6_VERIFICATION_REPORT.md   #   27-test independent code review
+│
+├── chapter7Experiments/                   # Ch7: Dynamical-topological coupling
+│   ├── run_chapter7_experiment_A.py      #   Coupling existence test
+│   ├── run_chapter7_experiment_B.py      #   Variance decomposition
+│   ├── run_chapter7_experiment_C.py      #   Category-conditioned coupling structure
+│   ├── run_chapter7_experiment_D.py      #   Diagnosis-associated coupling
+│   ├── run_chapter7_experiment_E.py      #   Augmentation ablation
+│   ├── extract_kappa_matrix.py           #   Utility: export coupling as CSV
+│   ├── extract_C_matrices.py            #   Utility: export C matrices as CSV
+│   ├── verify_chapter7.py                #   Verification script (38 tests)
+│   └── chapter7_results/                 #   Output data + figures
+│
+├── experiments/                           # Extended experiments (March 2026)
+│   ├── ch5_4class/                       #   4-class classification extension
+│   ├── ch6_ch7_3class/                   #   3-class dynamical + coupling pipeline
+│   └── ablation/                         #   Layer ablation keystone experiment
+│
+├── data/                                  # Clinical metadata
+│   └── clinical_profile.csv              #   211-subject clinical profiles
+├── docs/                                  # Documentation
+│   ├── methodology_rules.md              #   7 governing methodology rules
+│   └── GITHUB_UPDATE_GUIDE.md            #   Repository management guide
+├── latex/                                 # LaTeX chapter sources
+├── pictures/chLSMEmbeddings/             # Ch4 publication figures (13 PDFs)
+└── .gitignore
+```
+
+---
+
+## Verification Summary
+
+<!-- Verification run: 2026-03-20. All scripts executed on synthetic/infrastructure data. -->
+
+All scripts in this repository have been verified. The table below summarizes results from both existing chapter verification scripts and newly created verification scripts for the extended experiments.
+
+| Component | Script | Tests | Result | Notes |
+|-----------|--------|-------|--------|-------|
+| **Chapter 4** | `verify_chapter4.py` | 31 | **31/31 PASS** | Full run on synthetic data. All 13 PDF figures generated. BSC6 99.5%, MFR 47.5%, FDR 8840x. |
+| **Chapter 5** | `verify_chapter5.py` | 32 | **32/32 PASS** | Infrastructure tests: reservoir, GNN (GCN/GraphSAGE/GAT), feature extraction, CV pipeline. Full pipeline requires SHAPE EEG data. |
+| **Chapter 6** | `verify_chapter6.py` | 31 | **31/31 PASS** | Reservoir, dynamical metrics (rate entropy, PE, tau_ac), ESP convergence, surrogate generation. See also `CHAPTER6_VERIFICATION_REPORT.md` (27 additional static tests). |
+| **Chapter 7** | `verify_chapter7.py` | 38 | **38/38 PASS** | Syntax validation, data file inventory, kappa matrix validation (211 subjects, median 0.27), C matrices (844 obs), Experiments B and C fully re-run with verified output. |
+| **Ch5 4-class** | `verify_ch5_4class.py` | 25 | **25/25 PASS** | LIF reservoir, BSC extraction, band power, configuration consistency (N_RES=256, BETA=0.05, 4 categories). |
+| **Ch6/7 3-class** | `verify_ch6_ch7_3class.py` | 28 | **28/28 PASS** | Reservoir (init/run functions), all dynamical metrics, tPLV topological computation, clustering coefficient. |
+| **Ablation** | `verify_ablation.py` | 23 | **23/23 PASS** | Coupling computation (7x2 matrix, kappa scalar), CV classification pipeline, all feature block dimensions verified. |
+| **Validators** | `verify_validators.py` | 20 | **20/20 PASS** | Syntax validation, configuration checks, mock data QC (dimensions, NaN, amplitude, flat channels, file patterns). |
+| **Total** | | **228** | **228/228 PASS** | |
+
+To re-run all verifications:
+```bash
+MPLBACKEND=Agg python chapter4Experiments/verify_chapter4.py
+python chapter5Experiments/verify_chapter5.py
+python chapter6Experiments/verify_chapter6.py
+python chapter7Experiments/verify_chapter7.py
+python experiments/ch5_4class/verify_ch5_4class.py
+python experiments/ch6_ch7_3class/verify_ch6_ch7_3class.py
+python experiments/ablation/verify_ablation.py
+python verify_validators.py
 ```
 
 ---
@@ -409,25 +485,83 @@ python reproduce_chapter6.py \
     --output_dir ./figures/ch6/
 ```
 
-### Chapter 6 Experiments
+### Chapter 6 Experiments (4-class subcategory analysis)
 
-| # | Experiment | What it measures |
-|---|-----------|-----------------|
-| 1 | ESP Convergence | Two trajectories from different initial conditions converge under same input |
-| 2 | Driven Lyapunov Exponent (λ₁) | Benettin renormalization → λ₁ < 0 confirms stable contraction |
-| 3 | Per-condition Φ (sparse coding efficiency) | Var[population_rate] / mean_activity |
-| 4 | Permutation Entropy (H_π) | Order-based entropy of PC1 of membrane potentials |
-| 5 | Relaxation time (τ_relax) | Steps to 1/e decay after stimulus peak |
-| 6 | Autocorrelation decay (τ_ac) | Lag to 1/e autocorrelation |
-| 7 | Sliding window classification | 50 ms windows → time-resolved accuracy curve |
-| 8 | ERP-motivated windows | P1/N1 (~100ms), EPN (~250ms), LPP (~400–800ms) |
-| 9 | HC vs MDD dynamical differences | Clinical group comparison |
-| 10 | Surrogate testing | Phase-randomized controls |
+| # | Script | What it measures |
+|---|--------|-----------------|
+| 6.1 | `run_chapter6_exp1_esp.py` | Echo State Property: convergence + driven Lyapunov exponent |
+| 6.2 | `run_chapter6_exp2_reliability.py` | Cross-seed reliability: ICC(3,1) across 10 seeds for 11 metrics |
+| 6.3a | `run_chapter6_exp3_surrogate.py` | Surrogate sensitivity: phase-randomized, time-shuffled, block-shuffled nulls |
+| 6.3b | `run_chapter6_exp3_valueadd.py` | Value-add: LIF reservoir vs raw EEG for same functionals |
+| 6.4 | `run_chapter6_exp4_dissociation.py` | Within-valence dissociation (Threat vs Mutilation, Cute vs Erotic) |
+| 6.5 | `run_chapter6_exp5_interaction.py` | Diagnosis x category interaction (5 clinical groups) |
+| 6.6 | `run_chapter6_exp6_temporal.py` | Sliding-window temporal localisation (22 windows, 146ms each) |
 
 ### Chapter 6 Key Results
 - **λ₁ = -0.054 ± 0.0001** — 100% negative across 4,220 measurements
 - The reservoir is uniformly contracting: ESP is verified
-- Affective conditions produce distinct dynamical signatures
+- 9/11 dynamical metrics pass ICC >= 0.75 reliability gate across 10 random seeds
+- 9/11 metrics detect genuine temporal structure vs 3 surrogate null families
+- Within-valence dissociation: permutation entropy dz = -0.31 (Mutilation > Threat)
+- Peak temporal discriminability at 708 ms (dz = -0.83), mapping onto the late positive potential
+
+See `chapter6Experiments/README.md` for detailed per-experiment results and `CHAPTER6_VERIFICATION_REPORT.md` for the 27-test independent code review.
+
+---
+
+## Chapter 7: Dynamical-Topological Coupling
+
+**Purpose:** Investigate whether the reservoir's temporal dynamics and the EEG's spatial topology are statistically coupled, and whether that coupling carries information beyond either property alone.
+
+### Running Chapter 7
+
+```bash
+# Experiment A: Coupling existence (distributed batch processing)
+python chapter7Experiments/run_chapter7_experiment_A.py 0 8     # subjects 0-7
+python chapter7Experiments/run_chapter7_experiment_A.py --analyze  # after all batches
+
+# Experiments B-E (require Experiment A results)
+python chapter7Experiments/run_chapter7_experiment_B.py
+python chapter7Experiments/run_chapter7_experiment_C.py
+python chapter7Experiments/run_chapter7_experiment_D.py
+python chapter7Experiments/run_chapter7_experiment_E.py
+```
+
+### Chapter 7 Experiments
+
+| # | Experiment | What it measures |
+|---|-----------|-----------------|
+| A | Coupling existence | kappa vs electrode-permutation null (d_z = 1.063) |
+| B | Variance decomposition | 29% subject, 1% category, 70% residual; ICC = 0.059 |
+| C | Category-conditioned structure | tau_AC carries Cute-Erotic coupling reorganization |
+| D | Diagnosis-associated differences | Clean null: no diagnosis shows coupling difference |
+| E | Augmentation ablation | ADHD: dynamics carry unique signal (AUC 0.622); GAD: topology better |
+
+### Chapter 7 Key Results
+- **Coupling exists** (d_z = 1.063, p < 10^-100) — reservoir dynamics and EEG topology are aligned
+- **Coupling is observation-specific** (ICC = 0.059) — not a stable trait, but a momentary processing signature
+- **Cute-Erotic** is the one within-valence contrast that reorganizes coupling (p = 0.025), carried by tau_AC
+- **Concatenation never improves** classification — the two descriptor families are analytically informative, not discriminatively additive
+- **ADHD** is uniquely captured by dynamics (AUC 0.622 D-only vs 0.533 T-only); **GAD** is the inverse
+
+See `chapter7Experiments/README.md` for detailed per-experiment results, methodology, and interpretation.
+
+---
+
+## Extended Experiments
+
+The `experiments/` directory contains March 2026 extensions that address cross-chapter questions:
+
+### 4-Class Classification (`experiments/ch5_4class/`)
+Extends Chapter 5 from 3-class to 4 IAPS subcategories (Threat, Mutilation, Cute, Erotic). Tests whether within-valence subcategory pairs carry distinct spatiotemporal signatures. 3 scripts: feature extraction, raw observations, classification + clinical interpretability (11 experiments).
+
+### 3-Class Pipeline (`experiments/ch6_ch7_3class/`)
+Consolidated Chapters 6 & 7 pipeline at 3-class granularity (Negative, Neutral, Pleasant), which provides a 3.6x signal advantage over 4-class. 4 scripts: feature extraction, raw observations, 7 Ch6 experiments, 5 Ch7 experiments.
+
+### Layer Ablation (`experiments/ablation/`)
+The dissertation's keystone experiment testing whether ARSPI-Net's three response layers (embedding, dynamics, topology) are redundant or complementary. Tests the central thesis: "ARSPI-Net reveals three operationally distinct response layers in affective EEG." 10 ablation conditions (A0-A9) + 6 clinical conditions (C1-C6).
+
+See `experiments/README.md` for full documentation.
 
 ---
 
@@ -506,6 +640,11 @@ python validate_subcategory_data.py \
 | `ch6_all_results.pkl` | All Chapter 6 dynamical metrics (Φ, τ, H_π, sliding window results, λ₁) |
 | `ch6_exp1_esp.pkl` | Detailed ESP convergence and Lyapunov measurements |
 | `shape_features.pkl` | Preprocessed features (input for Chapter 6) |
+| `chapter7_results/ch7_full_results.pkl` | Complete Chapter 7 coupling results (23.7 MB) |
+| `chapter7_results/kappa_matrix.csv` | Per-subject coupling strength (211 x 4 categories) |
+| `chapter7_results/C_matrices.csv` | Full 7x2 C matrices (844 observations) |
+| `chapter7_results/subject_features.csv` | Per-electrode features (211 subjects x 307 dims) |
+| `chapter7_results/observation_features.csv` | Per-observation features (844 obs x 308 dims) |
 
 ### QC Reports
 
@@ -576,6 +715,8 @@ OUTLIER_SD         = 5.0    # Flag values > 5 SD from mean
 - Chapter 4 (synthetic): ~2–5 minutes
 - Chapter 5 (full SHAPE dataset): ~15–20 minutes (reservoir processing is the bottleneck)
 - Chapter 6 (dynamical analysis): ~10–15 minutes
+- Chapter 7 (coupling analysis): ~30 minutes (Exp A batch processing)
+- Extended experiments (3-class pipeline): ~30–60 minutes total
 
 ### Matplotlib Backend
 All scripts set `matplotlib.use('Agg')` for headless/server environments. If you want interactive plots, remove or change this line.

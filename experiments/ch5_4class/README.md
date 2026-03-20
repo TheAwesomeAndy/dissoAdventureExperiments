@@ -30,6 +30,24 @@ Chapter 5 originally classified 3 broad affective conditions. The 4-class extens
 - **Clinical experiments (EXP 7-11):** Channel-level biomarkers, condition x clinical interactions, edge-level biomarkers, comorbidity burden, within-valence x clinical interactions
 - **Validation:** Subject-stratified 10-fold CV, PCA fitted per fold on training data only
 
+## Verification Results
+
+<!-- Last run: 2026-03-20, Result: 25/25 PASS -->
+
+```bash
+python experiments/ch5_4class/verify_ch5_4class.py
+```
+
+**Result: 25/25 PASS.** Infrastructure tests on synthetic data without requiring SHAPE EEG:
+
+- **Syntax validation (3 tests):** All 3 scripts parse without errors
+- **LIF Reservoir (8 tests):** Module imports, instantiation, W_in (64,1) and W_rec (64,64) shapes, forward pass shapes (256,64), binary spikes, finite membrane, non-negative membrane, non-silent spikes
+- **BSC extraction (3 tests):** Produces 384-dim vector (64 neurons x 6 bins), non-negative, nonzero entries
+- **Band power (3 tests):** Produces 5-dim vector per channel, non-negative, nonzero entries
+- **Configuration consistency (7 tests):** N_RES=256, BETA=0.05, THRESHOLD=0.5, SEED=42, BSC_N_BINS=6, PCA_N_COMPONENTS=64, 4 categories defined
+
+Note: One numpy compatibility fix was applied — `np.trapz` replaced with `np.trapezoid` for numpy >= 2.0.
+
 ## Dependencies
 numpy, scipy, scikit-learn, matplotlib, pandas, pickle
 

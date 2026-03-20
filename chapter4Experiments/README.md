@@ -315,15 +315,25 @@ Both scripts were executed to verify all claims. The verification confirms:
 5. **Results are stable across 30 parameter combinations** (Experiment 6) — minimum accuracy 97.7%
 6. **All 13 figures generated successfully** — 7 experimental + 6 observational
 
-### Running Verification
+### Automated Verification (verify_chapter4.py)
+
+<!-- Last run: 2026-03-20, Result: 31/31 PASS -->
 
 ```bash
-# Run all 6 experiments and generate 7 figures (~2-3 minutes):
-python chapter4Experiments/run_chapter4_experiments.py
-
-# Run observation pipeline and generate 6 figures (~1-2 minutes):
-python chapter4Experiments/run_chapter4_observations.py [--output_dir pictures/chLSMEmbeddings]
+MPLBACKEND=Agg python chapter4Experiments/verify_chapter4.py
 ```
+
+**Result: 31/31 PASS.** The verification script runs both experiment and observation scripts end-to-end on synthetic data, then validates all 31 expected outputs including figure generation, accuracy thresholds, FDR ratios, and parameter sensitivity results.
+
+Key verified outputs:
+- Both scripts exit cleanly (exit code 0)
+- All 13 PDF figures generated in `pictures/chLSMEmbeddings/`
+- Exp 1: All 4 reservoir sizes achieve >95% accuracy
+- Exp 2: FDR ratio LSM >> Raw (>6x), FDR > 100
+- Exp 3: BSC6 >90%, MFR ~chance (40-60%), BSC6 > MFR by >30pp
+- Exp 4: PCA-64 drop from full <5pp
+- Exp 5: BSC6 mean >95%, std <3%; MFR ~chance across all seeds
+- Exp 6: All 30 parameter combinations >95%, range <5pp
 
 **No external data required** — both scripts generate synthetic data internally.
 
