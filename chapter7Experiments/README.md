@@ -494,7 +494,7 @@ Experiments A, D, and E are syntax-checked; full execution requires external dat
 
 ## Sample
 
-- 211 subjects from the SHAPE Community dataset
+- 211 subjects from the [SHAPE dataset](https://lab-can.com/shape/)
 - Subject 127 excluded
 - 4 affective categories: Threat, Mutilation, Cute, Erotic
 - Kappa range: [0.0296, 0.7341]

@@ -10,7 +10,7 @@ Computing Architecture for EEG Signal Processing. PhD Dissertation.
 
 This script reproduces EVERY figure, table, and statistical result in 
 Chapter 5. It is designed for complete transparency: any reader can 
-verify every claim by running this code on the SHAPE Community dataset.
+verify every claim by running this code on the SHAPE dataset.
 
 REQUIREMENTS:
     pip install numpy scipy scikit-learn matplotlib pandas openpyxl

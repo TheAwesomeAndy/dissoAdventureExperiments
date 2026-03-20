@@ -198,7 +198,7 @@ def main():
     print("\n" + "=" * 70)
     print(f"CH6/CH7 3-CLASS VERIFICATION COMPLETE: {PASS} passed, {FAIL} failed")
     print("=" * 70)
-    print("\nNote: Full pipeline requires SHAPE Community 3-class EEG data.")
+    print("\nNote: Full pipeline requires SHAPE 3-class EEG data.")
     return 1 if FAIL > 0 else 0
 
 

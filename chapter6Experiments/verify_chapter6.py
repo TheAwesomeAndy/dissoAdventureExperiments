@@ -6,7 +6,7 @@ Verifies that all Chapter 6 experiment scripts are syntactically valid and
 that the core LIF reservoir + dynamical metric computation pipeline produces
 correct outputs on synthetic data.
 
-The full pipeline requires the SHAPE Community EEG category data which is
+The full pipeline requires the SHAPE EEG category data which is
 not included in the repository. This script tests the shared infrastructure
 (reservoir, metric computation, surrogate generation) on synthetic inputs.
 
@@ -221,7 +221,7 @@ def main():
     print("\n" + "=" * 70)
     print(f"CHAPTER 6 VERIFICATION COMPLETE: {PASS} passed, {FAIL} failed")
     print("=" * 70)
-    print("\nNote: Full end-to-end verification requires the SHAPE Community")
+    print("\nNote: Full end-to-end verification requires the SHAPE")
     print("EEG category data (categoriesbatch1-4 directories).")
     print("Experiments 6.1-6.6 produce figures and results only with real data.")
     return 1 if FAIL > 0 else 0
