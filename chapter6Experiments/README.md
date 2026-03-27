@@ -1,6 +1,6 @@
 # Chapter 6: Dynamical Characterisation of the LIF Reservoir
 
-This folder contains the experimental scripts for Chapter 6 of the ARSPI-Net dissertation. Chapter 6 validates the Leaky Integrate-and-Fire (LIF) spiking reservoir as a measurement instrument before using it for scientific discovery. The experiments operate at 4-class granularity (Threat / Mutilation / Cute / Erotic), enabling within-valence subcategory contrasts.
+This folder contains the experimental scripts for Chapter 6 of the ARSPI-Net dissertation. Chapter 6 validates the Leaky Integrate-and-Fire (LIF) spiking reservoir as a measurement instrument before using it for scientific discovery, using EEG data from the [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/). The experiments operate at 4-class granularity (Threat / Mutilation / Cute / Erotic), enabling within-valence subcategory contrasts.
 
 ---
 
@@ -58,7 +58,7 @@ Metrics 4 and 6 failed the ICC >= 0.75 reliability gate in Experiment 6.2 and we
 ## Data Flow
 
 ```
-Raw EEG (SHAPE dataset) --> Exp 6.1 (ESP gate)
+Raw EEG (SHAPE project) --> Exp 6.1 (ESP gate)
                           --> Exp 6.2 (reliability gate) --> 9 validated metrics
                           --> Exp 6.3 (surrogate gate)
                                                          --> Exp 6.4 (dissociation)
@@ -223,6 +223,6 @@ The `experiments/ch6_ch7_3class/` directory runs 7 equivalent Chapter 6 experime
 
 ## Sample
 
-- 211 subjects from the [SHAPE dataset](https://lab-can.com/shape/)
+- 211 subjects from the [SHAPE project](https://lab-can.com/shape/)
 - 4 affective categories: Threat, Mutilation, Cute, Erotic
 - Subject 127 excluded

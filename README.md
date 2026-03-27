@@ -98,7 +98,7 @@ dissoAdventureExperiments/
 
 <!-- Verification run: 2026-03-27. All scripts executed on synthetic/infrastructure data. -->
 
-**Every Python script in this repository has independent verification.** The 380 automated tests across 12 verification scripts validate syntax, algorithmic correctness, integration, determinism, and output format — all without requiring the proprietary SHAPE EEG dataset.
+**Every Python script in this repository has independent verification.** The 380 automated tests across 12 verification scripts validate syntax, algorithmic correctness, integration, determinism, and output format — all without requiring the proprietary [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/) EEG dataset.
 
 For a detailed explanation of the verification methodology, what the tests prove, and why they establish trustworthiness, see [`docs/VERIFICATION_METHODOLOGY.md`](docs/VERIFICATION_METHODOLOGY.md).
 
@@ -187,7 +187,7 @@ pip install numpy scipy scikit-learn matplotlib pandas openpyxl
 
 ## Input Data Format
 
-This project was developed in collaboration with the [**SHAPE study**](https://lab-can.com/shape/) conducted at the Labratory for Clinical Affective Neuroscience and Stonybrook University. If you have different EEG data, you will need to adapt the loading code. Here is exactly what the code expects:
+This project was developed in collaboration with the [**SHAPE project**](https://lab-can.com/shape/) conducted at the Laboratory for Clinical Affective Neuroscience and Stony Brook University. If you have different EEG data, you will need to adapt the loading code. Here is exactly what the code expects:
 
 ### Broad-Condition EEG Files
 
@@ -212,17 +212,7 @@ SHAPE_Community_007_IAPSPos_BC.txt
 - **Time structure:**
   - Rows 0–204 (205 samples): Baseline period (200 ms), already baseline-corrected to ~0
   - Rows 205–1228 (1024 samples): Post-stimulus period (1000 ms)
-- **Columns:** 34 EEG channels in this order:
-
-```
-Col 0:  Fp1    Col 1:  Fp2    Col 2:  F7     Col 3:  F3     Col 4:  Fz
-Col 5:  F4     Col 6:  F8     Col 7:  FC5    Col 8:  FC1    Col 9:  FC2
-Col 10: FC6    Col 11: T7     Col 12: C3     Col 13: Cz     Col 14: C4
-Col 15: T8     Col 16: CP5    Col 17: CP1    Col 18: CP2    Col 19: CP6
-Col 20: P7     Col 21: P3     Col 22: Pz     Col 23: P4     Col 24: P8
-Col 25: PO7    Col 26: PO3    Col 27: POz    Col 28: PO4    Col 29: PO8
-Col 30: O1     Col 31: Oz     Col 32: O2     Col 33: REF
-```
+- **Columns:** 34 EEG channels. The column-to-electrode mapping is not documented in the dataset and should not be assumed. Contact the [SHAPE project](https://lab-can.com/shape/) for channel ordering information.
 
 **File organization:** Data is delivered in ZIP batches (`batch1.zip`, `batch2.zip`, `batch3.zip`), each containing the `.txt` files directly.
 
@@ -239,7 +229,7 @@ Same file structure (1229 × 34), but organized in category directories (`catego
 
 ### Metadata Files
 
-Clinical and demographic data files are **not included** in this repository for participant privacy. Contact the study authors or visit the [SHAPE study page](https://lab-can.com/shape/) for data access information.
+Clinical and demographic data files are **not included** in this repository for participant privacy. Contact the study authors or visit the [SHAPE project page](https://lab-can.com/shape/) for data access information.
 
 ---
 
@@ -253,7 +243,7 @@ Each experiment expects a **trial-averaged, baseline-corrected ERP matrix** of s
 
 ### Step 2: Match the Expected Dimensions
 
-The code expects `(1229, 34)` — but this is specific to the SHAPE dataset. You have two options:
+The code expects `(1229, 34)` — but this is specific to the SHAPE project data. You have two options:
 
 **Option A: Reshape your data to match (recommended for minimal code changes)**
 
@@ -305,19 +295,9 @@ Replace this with your own parsing logic. The code needs:
 
 ### Step 5: Update Electrode Positions (for GNN spatial graph)
 
-Chapter 5 constructs a spatial adjacency graph from 3D electrode coordinates. These are hardcoded in `run_chapter5_experiments.py` (approx. lines 410–455) and `reproduce_chapter5.py`. If you have different channels:
+Chapter 5 constructs a spatial adjacency graph from electrode coordinates. The positions in `run_chapter5_experiments.py` are **assumed** based on a standard 10-20 montage layout but the actual column-to-electrode mapping for the SHAPE dataset has not been independently verified. If you have confirmed electrode positions for your data, update the `get_standard_34ch_positions()` function accordingly.
 
-```python
-# Original 34-channel positions (approximate 10-20 montage, unit sphere):
-CHANNEL_POSITIONS = {
-    'Fp1': (-0.31, 0.95, 0.03),
-    'Fp2': (0.31, 0.95, 0.03),
-    'F7':  (-0.81, 0.59, -0.04),
-    # ... etc for all 34 channels
-}
-```
-
-Replace with your electrode positions. The GNN builds a k-nearest-neighbors graph (default k=5) from these coordinates.
+**Important:** The GNN builds a k-nearest-neighbors graph (default k=5) from these coordinates. If the electrode ordering is incorrect, the spatial graph structure would be wrong, though this only affects the GNN experiments (Rows 4-7 in the baseline table), not the flat-classifier results (Rows 1-3).
 
 ### Step 6: Update Channel Count References
 
@@ -444,7 +424,7 @@ python chapter4Experiments/run_chapter4_observations.py [--output_dir pictures/c
 
 ## Chapter 5: Clinical EEG Classification
 
-**Purpose:** Classify affective EEG responses (Negative/Neutral/Pleasant) on the [SHAPE dataset](https://lab-can.com/shape/) using the full ARSPI-Net pipeline.
+**Purpose:** Classify affective EEG responses (Negative/Neutral/Pleasant) on the [SHAPE project](https://lab-can.com/shape/) EEG data using the full ARSPI-Net pipeline.
 
 ### Running Chapter 5
 
@@ -461,7 +441,7 @@ python chapter5Experiments/reproduce_chapter5.py \
     --output_dir ./figures/ch5/
 ```
 
-**`--demo` mode:** If you don't have the SHAPE dataset, `chapter5Experiments/run_chapter5_experiments.py --demo` generates synthetic data to verify the pipeline runs end-to-end.
+**`--demo` mode:** If you don't have the SHAPE data, `chapter5Experiments/run_chapter5_experiments.py --demo` generates synthetic data to verify the pipeline runs end-to-end.
 
 ### Chapter 5 Experiments: The 7-Row Baseline Table
 
@@ -778,7 +758,7 @@ OUTLIER_SD         = 5.0    # Flag values > 5 SD from mean
 
 ### Runtime Estimates
 - Chapter 4 (synthetic): ~2–5 minutes
-- Chapter 5 (full SHAPE dataset): ~15–20 minutes (reservoir processing is the bottleneck)
+- Chapter 5 (full SHAPE data): ~15–20 minutes (reservoir processing is the bottleneck)
 - Chapter 6 (dynamical analysis): ~10–15 minutes
 - Chapter 7 (coupling analysis): ~30 minutes (Exp A batch processing)
 - Extended experiments (3-class pipeline): ~30–60 minutes total
@@ -796,7 +776,7 @@ All scripts set `matplotlib.use('Agg')` for headless/server environments. If you
 1. **Channel count mismatch:** If you have 64 channels instead of 34, the reservoir loop, electrode position array, and all shape assertions must be updated.
 2. **Sampling rate mismatch:** If your data is at 512 Hz, change the downsample factor from 4 to 2 (target is 256 Hz).
 3. **No baseline period:** If your data is already baseline-removed, skip the `data[205:]` slicing.
-4. **Single-trial data:** The SHAPE files are trial-averaged ERPs. If you have single trials, either average them first or modify the pipeline to handle trial-level data (which would give you more samples but noisier signals).
+4. **Single-trial data:** The SHAPE project files are trial-averaged ERPs. If you have single trials, either average them first or modify the pipeline to handle trial-level data (which would give you more samples but noisier signals).
 5. **Different conditions:** The code expects exactly 3 conditions for Chapter 5 classification. If you have 2 or 5 conditions, update the label encoding and confusion matrix dimensions.
 
 ---
