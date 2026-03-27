@@ -9,10 +9,11 @@ This repository contains the complete experimental pipeline for Chapters 4–7 o
 ## Table of Contents
 
 1. [Repository Structure](#repository-structure)
-2. [Verification Summary](#verification-summary) — 380/380 tests, [methodology](docs/VERIFICATION_METHODOLOGY.md)
-3. [Architecture Overview](#architecture-overview)
-4. [Dependencies](#dependencies)
-5. [Input Data Format](#input-data-format)
+2. [External Baselines](#external-baselines-march-2026)
+3. [Verification Summary](#verification-summary) — 435/435 tests, [methodology](docs/VERIFICATION_METHODOLOGY.md)
+4. [Architecture Overview](#architecture-overview)
+5. [Dependencies](#dependencies)
+6. [Input Data Format](#input-data-format)
 6. [Adapting to Your Own EEG Data](#adapting-to-your-own-eeg-data)
 7. [Preprocessing Pipeline](#preprocessing-pipeline)
 8. [Feature Extraction](#feature-extraction)
@@ -41,11 +42,14 @@ dissoAdventureExperiments/
 │
 ├── chapter5Experiments/                   # Ch5: Clinical EEG classification with GNN
 │   ├── run_chapter5_experiments.py        #   7-row baseline table + GNN experiments
-│   ├── experiment_zero.py                #   Baseline disambiguation (4 conditions)
+│   ├── sklearn_baselines.py              #   8 sklearn classifiers (Table 5.4)
+│   ├── eegnet_gru_lstm_baselines.py      #   EEGNet 72.0%, GRU 59.9%, LSTM 58.0% (Table 5.5)
+│   ├── experiment_zero.py                #   Baseline disambiguation (4 conditions, Table 5.6)
 │   ├── reproduce_chapter5.py             #   Standalone reproducibility pipeline
 │   ├── verify_chapter5.py                #   Verification: core infrastructure (32 tests)
 │   ├── verify_experiment_zero.py         #   Verification: Exp Zero (37 tests)
-│   └── verify_reproduce_chapter5.py      #   Verification: reproducibility pipeline (33 tests)
+│   ├── verify_reproduce_chapter5.py      #   Verification: reproducibility pipeline (33 tests)
+│   └── verify_baselines.py              #   Verification: sklearn + deep baselines (55 tests)
 │
 ├── chapter6Experiments/                   # Ch6: Dynamical characterisation of LIF reservoir
 │   ├── run_chapter6_exp1_esp.py          #   Echo State Property verification
@@ -86,7 +90,8 @@ dissoAdventureExperiments/
 │   └── clinical_profile.csv              #   211-subject clinical profiles (corrected March 2026)
 ├── docs/                                  # Documentation
 │   ├── methodology_rules.md              #   7 governing methodology rules
-│   └── VERIFICATION_METHODOLOGY.md       #   Verification trustworthiness rationale
+│   ├── VERIFICATION_METHODOLOGY.md       #   Verification trustworthiness rationale
+│   └── REPRODUCTION_MAP.md              #   Script → dissertation table/figure mapping
 ├── latex/                                 # LaTeX chapter sources
 ├── pictures/chLSMEmbeddings/             # Ch4 publication figures (13 PDFs)
 └── .gitignore
@@ -94,11 +99,30 @@ dissoAdventureExperiments/
 
 ---
 
+## External Baselines (March 2026)
+
+Chapter 5 includes conventional and deep learning baseline comparisons in addition to the 7-row ARSPI-Net table:
+
+| Script | What It Tests | Key Result |
+|--------|--------------|------------|
+| `chapter5Experiments/sklearn_baselines.py` | 8 sklearn classifiers on BandPower+Hjorth features (Table 5.4) | LogReg, SVM, KNN, RF, GBM, AdaBoost, MLP |
+| `chapter5Experiments/eegnet_gru_lstm_baselines.py` | EEGNet, GRU, LSTM on raw EEG (Table 5.5) | EEGNet 72.0%, GRU 59.9%, LSTM 58.0% |
+| `chapter5Experiments/experiment_zero.py` | Disambiguation of centered vs uncentered baselines (Table 5.6) | 4-number table resolving the 70.5% ambiguity |
+
+These baselines establish that:
+1. EEGNet matches conventional features (~72%) but does not match the full ARSPI-Net pipeline (~79%)
+2. Neither GRU nor LSTM matches the reservoir — the LIF reservoir's advantage is not simply "having a temporal model"
+3. Subject centering has measurable impact on raw EEG classification but the reservoir's temporal code captures additional structure
+
+See [`docs/REPRODUCTION_MAP.md`](docs/REPRODUCTION_MAP.md) for the complete script-to-table/figure mapping across all chapters.
+
+---
+
 ## Verification Summary
 
 <!-- Verification run: 2026-03-27. All scripts executed on synthetic/infrastructure data. -->
 
-**Every Python script in this repository has independent verification.** The 380 automated tests across 12 verification scripts validate syntax, algorithmic correctness, integration, determinism, and output format — all without requiring the proprietary [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/) EEG dataset.
+**Every Python script in this repository has independent verification.** The 435 automated tests across 13 verification scripts validate syntax, algorithmic correctness, integration, determinism, and output format — all without requiring the proprietary [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/) EEG dataset.
 
 For a detailed explanation of the verification methodology, what the tests prove, and why they establish trustworthiness, see [`docs/VERIFICATION_METHODOLOGY.md`](docs/VERIFICATION_METHODOLOGY.md).
 
@@ -120,6 +144,7 @@ For a detailed explanation of the verification methodology, what the tests prove
 | **Chapter 5** | `verify_chapter5.py` | 32 | **32/32 PASS** | Infrastructure tests: reservoir, GNN (GCN/GraphSAGE/GAT), feature extraction, CV pipeline. |
 | **Ch5 Exp Zero** | `verify_experiment_zero.py` | 37 | **37/37 PASS** | LIF reservoir, BSC6, subject centering, CV pipeline, determinism, channel-specific seeding, end-to-end mini pipeline. |
 | **Ch5 Reproduce** | `verify_reproduce_chapter5.py` | 33 | **33/33 PASS** | LIF reservoir, GNN implementations (GCN/SAGE/GAT), graph construction, CV pipeline, output structure, deep baselines. |
+| **Ch5 Baselines** | `verify_baselines.py` | 55 | **55/55 PASS** | 8 sklearn classifiers, EEGNet/GRU/LSTM forward passes, feature extraction (BandPower+Hjorth), CV pipeline, determinism, existing results validation (72.0%/59.9%/58.0%). |
 | **Chapter 6** | `verify_chapter6.py` | 31 | **31/31 PASS** | Reservoir, dynamical metrics (rate entropy, PE, tau_ac), ESP convergence, surrogate generation. See also `CHAPTER6_VERIFICATION_REPORT.md` (27 additional static tests). |
 | **Ch6 Reproduce** | `verify_reproduce_chapter6.py` | 42 | **42/42 PASS** | LIFReservoirFull (spikes+membrane), Benettin Lyapunov exponent (lambda_1 < 0), PE validation, surrogate generation, sliding window pipeline. |
 | **Chapter 7** | `verify_chapter7.py` | 38 | **38/38 PASS** | Syntax validation, data file inventory, kappa matrix validation (211 subjects, median 0.27), C matrices (844 obs), Experiments B and C fully re-run with verified output. |
@@ -128,7 +153,7 @@ For a detailed explanation of the verification methodology, what the tests prove
 | **Ch6/7 3-class** | `verify_ch6_ch7_3class.py` | 28 | **28/28 PASS** | Reservoir (init/run functions), all dynamical metrics, tPLV topological computation, clustering coefficient. |
 | **Ablation** | `verify_ablation.py` | 23 | **23/23 PASS** | Coupling computation (7x2 matrix, kappa scalar), CV classification pipeline, all feature block dimensions verified. |
 | **Validators** | `verify_validators.py` | 20 | **20/20 PASS** | Syntax validation, configuration checks, mock data QC (dimensions, NaN, amplitude, flat channels, file patterns). |
-| **Total** | | **380** | **380/380 PASS** | |
+| **Total** | | **435** | **435/435 PASS** | |
 
 To re-run all verifications:
 ```bash
@@ -136,6 +161,7 @@ MPLBACKEND=Agg python chapter4Experiments/verify_chapter4.py
 python chapter5Experiments/verify_chapter5.py
 python chapter5Experiments/verify_experiment_zero.py
 python chapter5Experiments/verify_reproduce_chapter5.py
+python chapter5Experiments/verify_baselines.py
 python chapter6Experiments/verify_chapter6.py
 python chapter6Experiments/verify_reproduce_chapter6.py
 python chapter7Experiments/verify_chapter7.py
