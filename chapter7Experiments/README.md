@@ -473,13 +473,15 @@ Experiment B, C, and D figures are saved to `/mnt/user-data/outputs/pictures/chS
 
 ## Verification Results
 
-<!-- Last run: 2026-03-20, Result: 38/38 PASS -->
+<!-- Last run: 2026-03-27, Result: 78/78 PASS across 2 verification scripts -->
+
+### Core Verification (verify_chapter7.py — 38/38 PASS)
 
 ```bash
 python chapter7Experiments/verify_chapter7.py
 ```
 
-**Result: 38/38 PASS.** The most comprehensive verification in the repository, including full re-execution of Experiments B and C with verified numerical outputs.
+The most comprehensive verification in the repository, including full re-execution of Experiments B and C with verified numerical outputs.
 
 Verified components:
 - **Syntax validation (7 tests):** All 7 scripts (5 experiments + 2 extraction utilities) parse without errors
@@ -491,6 +493,22 @@ Verified components:
 - **Subject features validation (4 tests):** 211 rows, 238 dynamical features (34x7), 68 topological features (34x2)
 
 Experiments A, D, and E are syntax-checked; full execution requires external data or was previously completed with results stored in `chapter7_results/`.
+
+### Extraction Utilities Verification (verify_extract_utilities.py — 40/40 PASS)
+
+```bash
+python chapter7Experiments/verify_extract_utilities.py
+```
+
+Tests `extract_kappa_matrix.py` and `extract_C_matrices.py` using mock pickle data that mimics the ch7_full_results.pkl format:
+
+- **Syntax validation (2 tests):** Both scripts parse without errors
+- **Kappa extraction (6 tests):** Pickle loading, key validation, subject count, CSV format (5 columns), value range [0,1], row count
+- **C matrix extraction (7 tests):** Key validation, metric name counts (7 dyn, 2 topo), 14 column names, row count (N_subj x 4), column count (16), correlation values in [-1,1]
+- **Shape validation (6 tests):** C matrices have shape (7,2) for multiple (subject, category) pairs
+- **Column naming (2 tests):** First and last column names match expected format (`{dyn}_x_{topo}`)
+- **Cross-utility consistency (7 tests):** Same (subject,category) pairs in both utilities, all kappa values positive
+- **Script structure (4 tests):** Both use pickle.load and reference ch7_full_results.pkl
 
 ## Sample
 
