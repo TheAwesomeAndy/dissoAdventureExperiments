@@ -9,7 +9,7 @@ This repository contains the complete experimental pipeline for Chapters 4–7 o
 ## Table of Contents
 
 1. [Repository Structure](#repository-structure)
-2. [Verification Summary](#verification-summary)
+2. [Verification Summary](#verification-summary) — 380/380 tests, [methodology](docs/VERIFICATION_METHODOLOGY.md)
 3. [Architecture Overview](#architecture-overview)
 4. [Dependencies](#dependencies)
 5. [Input Data Format](#input-data-format)
@@ -33,19 +33,19 @@ This repository contains the complete experimental pipeline for Chapters 4–7 o
 ```
 dissoAdventureExperiments/
 ├── README.md                              # This file
-├── validate_shape_data.py                 # QC for broad-condition SHAPE data (3 conditions)
-├── validate_subcategory_data.py           # QC for fine-grained subcategory data (4 categories)
-├── verify_validators.py                   # Verification for data validators
 │
 ├── chapter4Experiments/                   # Ch4: Temporal pattern discrimination (synthetic data)
 │   ├── run_chapter4_experiments.py        #   6 experiments: ablation, FDR, coding, PCA, robustness, sensitivity
 │   ├── run_chapter4_observations.py       #   6 raw observation figures
-│   └── verify_chapter4.py                #   Verification script (31 tests)
+│   └── verify_chapter4.py                #   Verification (31 tests)
 │
 ├── chapter5Experiments/                   # Ch5: Clinical EEG classification with GNN
 │   ├── run_chapter5_experiments.py        #   7-row baseline table + GNN experiments
+│   ├── experiment_zero.py                #   Baseline disambiguation (4 conditions)
 │   ├── reproduce_chapter5.py             #   Standalone reproducibility pipeline
-│   └── verify_chapter5.py                #   Verification script (32 tests)
+│   ├── verify_chapter5.py                #   Verification: core infrastructure (32 tests)
+│   ├── verify_experiment_zero.py         #   Verification: Exp Zero (37 tests)
+│   └── verify_reproduce_chapter5.py      #   Verification: reproducibility pipeline (33 tests)
 │
 ├── chapter6Experiments/                   # Ch6: Dynamical characterisation of LIF reservoir
 │   ├── run_chapter6_exp1_esp.py          #   Echo State Property verification
@@ -56,7 +56,8 @@ dissoAdventureExperiments/
 │   ├── run_chapter6_exp5_interaction.py  #   Diagnosis x category interaction
 │   ├── run_chapter6_exp6_temporal.py     #   Sliding-window temporal localisation
 │   ├── reproduce_chapter6.py             #   Standalone reproducibility pipeline
-│   ├── verify_chapter6.py                #   Verification script (31 tests)
+│   ├── verify_chapter6.py                #   Verification: core infrastructure (31 tests)
+│   ├── verify_reproduce_chapter6.py      #   Verification: reproducibility pipeline (42 tests)
 │   └── CHAPTER6_VERIFICATION_REPORT.md   #   27-test independent code review
 │
 ├── chapter7Experiments/                   # Ch7: Dynamical-topological coupling
@@ -67,19 +68,25 @@ dissoAdventureExperiments/
 │   ├── run_chapter7_experiment_E.py      #   Augmentation ablation
 │   ├── extract_kappa_matrix.py           #   Utility: export coupling as CSV
 │   ├── extract_C_matrices.py            #   Utility: export C matrices as CSV
-│   ├── verify_chapter7.py                #   Verification script (38 tests)
+│   ├── verify_chapter7.py                #   Verification: experiments (38 tests)
+│   ├── verify_extract_utilities.py       #   Verification: extract utilities (40 tests)
 │   └── chapter7_results/                 #   Output data + figures
 │
 ├── experiments/                           # Extended experiments (March 2026)
-│   ├── ch5_4class/                       #   4-class classification extension
-│   ├── ch6_ch7_3class/                   #   3-class dynamical + coupling pipeline
-│   └── ablation/                         #   Layer ablation keystone experiment
+│   ├── ch5_4class/                       #   4-class classification extension (25 tests)
+│   ├── ch6_ch7_3class/                   #   3-class dynamical + coupling pipeline (28 tests)
+│   └── ablation/                         #   Layer ablation keystone experiment (23 tests)
+│
+├── validation/                            # Data quality control
+│   ├── validate_shape_data.py            #   QC for broad-condition SHAPE data (10 checks)
+│   ├── validate_subcategory_data.py      #   QC for subcategory data (12 checks)
+│   └── verify_validators.py             #   Meta-verification of validators (20 tests)
 │
 ├── data/                                  # Clinical metadata
-│   └── clinical_profile.csv              #   211-subject clinical profiles
+│   └── clinical_profile.csv              #   211-subject clinical profiles (corrected March 2026)
 ├── docs/                                  # Documentation
 │   ├── methodology_rules.md              #   7 governing methodology rules
-│   └── GITHUB_UPDATE_GUIDE.md            #   Repository management guide
+│   └── VERIFICATION_METHODOLOGY.md       #   Verification trustworthiness rationale
 ├── latex/                                 # LaTeX chapter sources
 ├── pictures/chLSMEmbeddings/             # Ch4 publication figures (13 PDFs)
 └── .gitignore
@@ -89,32 +96,54 @@ dissoAdventureExperiments/
 
 ## Verification Summary
 
-<!-- Verification run: 2026-03-20. All scripts executed on synthetic/infrastructure data. -->
+<!-- Verification run: 2026-03-27. All scripts executed on synthetic/infrastructure data. -->
 
-All scripts in this repository have been verified. The table below summarizes results from both existing chapter verification scripts and newly created verification scripts for the extended experiments.
+**Every Python script in this repository has independent verification.** The 380 automated tests across 12 verification scripts validate syntax, algorithmic correctness, integration, determinism, and output format — all without requiring the proprietary [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/) EEG dataset.
+
+For a detailed explanation of the verification methodology, what the tests prove, and why they establish trustworthiness, see [`docs/VERIFICATION_METHODOLOGY.md`](docs/VERIFICATION_METHODOLOGY.md).
+
+### What the Tests Prove
+
+| Validation Category | What It Establishes | Example |
+|---|---|---|
+| **Syntax & imports** | Every script runs on current Python/numpy/scipy | Catches API changes like `np.trapz` → `np.trapezoid` |
+| **Algorithm correctness** | Core computations match known ground truth | PE(random) ~ 1.0, PE(monotonic) ~ 0.0; Lyapunov exponent < 0 |
+| **Integration** | Components work together end-to-end | Reservoir → BSC6 → PCA → LogReg pipeline produces valid accuracies |
+| **Determinism** | Same seed = same output, different seed = different output | Reservoir spike trains are bitwise identical across runs |
+| **Parameter consistency** | All scripts agree on N=256, beta=0.05, theta=0.5 | No silent configuration drift between experiments |
+| **Output format** | Pickles, CSVs, and PDFs are well-formed | Kappa values in [0,1], correlations in [-1,1], correct column counts |
+| **No data leakage** | PCA fitted per fold, subjects never split across folds | StratifiedGroupKFold verified in every classification script |
 
 | Component | Script | Tests | Result | Notes |
 |-----------|--------|-------|--------|-------|
 | **Chapter 4** | `verify_chapter4.py` | 31 | **31/31 PASS** | Full run on synthetic data. All 13 PDF figures generated. BSC6 99.5%, MFR 47.5%, FDR 8840x. |
-| **Chapter 5** | `verify_chapter5.py` | 32 | **32/32 PASS** | Infrastructure tests: reservoir, GNN (GCN/GraphSAGE/GAT), feature extraction, CV pipeline. Full pipeline requires SHAPE EEG data. |
+| **Chapter 5** | `verify_chapter5.py` | 32 | **32/32 PASS** | Infrastructure tests: reservoir, GNN (GCN/GraphSAGE/GAT), feature extraction, CV pipeline. |
+| **Ch5 Exp Zero** | `verify_experiment_zero.py` | 37 | **37/37 PASS** | LIF reservoir, BSC6, subject centering, CV pipeline, determinism, channel-specific seeding, end-to-end mini pipeline. |
+| **Ch5 Reproduce** | `verify_reproduce_chapter5.py` | 33 | **33/33 PASS** | LIF reservoir, GNN implementations (GCN/SAGE/GAT), graph construction, CV pipeline, output structure, deep baselines. |
 | **Chapter 6** | `verify_chapter6.py` | 31 | **31/31 PASS** | Reservoir, dynamical metrics (rate entropy, PE, tau_ac), ESP convergence, surrogate generation. See also `CHAPTER6_VERIFICATION_REPORT.md` (27 additional static tests). |
+| **Ch6 Reproduce** | `verify_reproduce_chapter6.py` | 42 | **42/42 PASS** | LIFReservoirFull (spikes+membrane), Benettin Lyapunov exponent (lambda_1 < 0), PE validation, surrogate generation, sliding window pipeline. |
 | **Chapter 7** | `verify_chapter7.py` | 38 | **38/38 PASS** | Syntax validation, data file inventory, kappa matrix validation (211 subjects, median 0.27), C matrices (844 obs), Experiments B and C fully re-run with verified output. |
+| **Ch7 Utilities** | `verify_extract_utilities.py` | 40 | **40/40 PASS** | Mock pickle extraction for kappa matrix and C matrices, CSV format validation, column naming, cross-utility consistency, value range checks. |
 | **Ch5 4-class** | `verify_ch5_4class.py` | 25 | **25/25 PASS** | LIF reservoir, BSC extraction, band power, configuration consistency (N_RES=256, BETA=0.05, 4 categories). |
 | **Ch6/7 3-class** | `verify_ch6_ch7_3class.py` | 28 | **28/28 PASS** | Reservoir (init/run functions), all dynamical metrics, tPLV topological computation, clustering coefficient. |
 | **Ablation** | `verify_ablation.py` | 23 | **23/23 PASS** | Coupling computation (7x2 matrix, kappa scalar), CV classification pipeline, all feature block dimensions verified. |
 | **Validators** | `verify_validators.py` | 20 | **20/20 PASS** | Syntax validation, configuration checks, mock data QC (dimensions, NaN, amplitude, flat channels, file patterns). |
-| **Total** | | **228** | **228/228 PASS** | |
+| **Total** | | **380** | **380/380 PASS** | |
 
 To re-run all verifications:
 ```bash
 MPLBACKEND=Agg python chapter4Experiments/verify_chapter4.py
 python chapter5Experiments/verify_chapter5.py
+python chapter5Experiments/verify_experiment_zero.py
+python chapter5Experiments/verify_reproduce_chapter5.py
 python chapter6Experiments/verify_chapter6.py
+python chapter6Experiments/verify_reproduce_chapter6.py
 python chapter7Experiments/verify_chapter7.py
+python chapter7Experiments/verify_extract_utilities.py
 python experiments/ch5_4class/verify_ch5_4class.py
 python experiments/ch6_ch7_3class/verify_ch6_ch7_3class.py
 python experiments/ablation/verify_ablation.py
-python verify_validators.py
+python validation/verify_validators.py
 ```
 
 ---
@@ -158,7 +187,7 @@ pip install numpy scipy scikit-learn matplotlib pandas openpyxl
 
 ## Input Data Format
 
-This project was developed in collaboration with the [**SHAPE study**](https://lab-can.com/shape/) conducted at the Labratory for Clinical Affective Neuroscience and Stonybrook University. If you have different EEG data, you will need to adapt the loading code. Here is exactly what the code expects:
+This project was developed in collaboration with the [**SHAPE project**](https://lab-can.com/shape/) conducted at the Laboratory for Clinical Affective Neuroscience and Stony Brook University. If you have different EEG data, you will need to adapt the loading code. Here is exactly what the code expects:
 
 ### Broad-Condition EEG Files
 
@@ -183,17 +212,7 @@ SHAPE_Community_007_IAPSPos_BC.txt
 - **Time structure:**
   - Rows 0–204 (205 samples): Baseline period (200 ms), already baseline-corrected to ~0
   - Rows 205–1228 (1024 samples): Post-stimulus period (1000 ms)
-- **Columns:** 34 EEG channels in this order:
-
-```
-Col 0:  Fp1    Col 1:  Fp2    Col 2:  F7     Col 3:  F3     Col 4:  Fz
-Col 5:  F4     Col 6:  F8     Col 7:  FC5    Col 8:  FC1    Col 9:  FC2
-Col 10: FC6    Col 11: T7     Col 12: C3     Col 13: Cz     Col 14: C4
-Col 15: T8     Col 16: CP5    Col 17: CP1    Col 18: CP2    Col 19: CP6
-Col 20: P7     Col 21: P3     Col 22: Pz     Col 23: P4     Col 24: P8
-Col 25: PO7    Col 26: PO3    Col 27: POz    Col 28: PO4    Col 29: PO8
-Col 30: O1     Col 31: Oz     Col 32: O2     Col 33: REF
-```
+- **Columns:** 34 EEG channels. The column-to-electrode mapping is not documented in the dataset and should not be assumed. Contact the [SHAPE project](https://lab-can.com/shape/) for channel ordering information.
 
 **File organization:** Data is delivered in ZIP batches (`batch1.zip`, `batch2.zip`, `batch3.zip`), each containing the `.txt` files directly.
 
@@ -210,7 +229,7 @@ Same file structure (1229 × 34), but organized in category directories (`catego
 
 ### Metadata Files
 
-Clinical and demographic data files are **not included** in this repository for participant privacy. Contact the study authors or visit the [SHAPE study page](https://lab-can.com/shape/) for data access information.
+Clinical and demographic data files are **not included** in this repository for participant privacy. Contact the study authors or visit the [SHAPE project page](https://lab-can.com/shape/) for data access information.
 
 ---
 
@@ -224,7 +243,7 @@ Each experiment expects a **trial-averaged, baseline-corrected ERP matrix** of s
 
 ### Step 2: Match the Expected Dimensions
 
-The code expects `(1229, 34)` — but this is specific to the SHAPE dataset. You have two options:
+The code expects `(1229, 34)` — but this is specific to the SHAPE project data. You have two options:
 
 **Option A: Reshape your data to match (recommended for minimal code changes)**
 
@@ -276,19 +295,9 @@ Replace this with your own parsing logic. The code needs:
 
 ### Step 5: Update Electrode Positions (for GNN spatial graph)
 
-Chapter 5 constructs a spatial adjacency graph from 3D electrode coordinates. These are hardcoded in `run_chapter5_experiments.py` (approx. lines 410–455) and `reproduce_chapter5.py`. If you have different channels:
+Chapter 5 constructs a spatial adjacency graph from electrode coordinates. The positions in `run_chapter5_experiments.py` are **assumed** based on a standard 10-20 montage layout but the actual column-to-electrode mapping for the SHAPE dataset has not been independently verified. If you have confirmed electrode positions for your data, update the `get_standard_34ch_positions()` function accordingly.
 
-```python
-# Original 34-channel positions (approximate 10-20 montage, unit sphere):
-CHANNEL_POSITIONS = {
-    'Fp1': (-0.31, 0.95, 0.03),
-    'Fp2': (0.31, 0.95, 0.03),
-    'F7':  (-0.81, 0.59, -0.04),
-    # ... etc for all 34 channels
-}
-```
-
-Replace with your electrode positions. The GNN builds a k-nearest-neighbors graph (default k=5) from these coordinates.
+**Important:** The GNN builds a k-nearest-neighbors graph (default k=5) from these coordinates. If the electrode ordering is incorrect, the spatial graph structure would be wrong, though this only affects the GNN experiments (Rows 4-7 in the baseline table), not the flat-classifier results (Rows 1-3).
 
 ### Step 6: Update Channel Count References
 
@@ -405,15 +414,17 @@ python chapter4Experiments/run_chapter4_observations.py [--output_dir pictures/c
 | 6 | Parameter sensitivity | β × M_th grid heatmap |
 
 ### Chapter 4 Key Results
-- **BSC₆ + PCA-64:** >90% accuracy
-- **MFR:** ~50% (complete failure — proves temporal coding is necessary)
-- **FDR:** LSM features have ~6–7× better class separability than raw input
+- **BSC₆:** 99.5% +/- 0.6% accuracy (LogReg); **BSC₆ + PCA-64:** 98.5% +/- 1.2%
+- **MFR:** 47.5% +/- 4.1% (at chance — proves temporal coding is necessary)
+- **FDR:** LSM features have 8,840x better class separability than raw input (1158 vs 0.13)
+- **Cross-seed robustness:** 98.6% +/- 0.7% across 10 independent initializations
+- **Performance saturates at N_res = 128** — N_res = 256 is validated on the plateau
 
 ---
 
 ## Chapter 5: Clinical EEG Classification
 
-**Purpose:** Classify affective EEG responses (Negative/Neutral/Pleasant) on the [SHAPE dataset](https://lab-can.com/shape/) using the full ARSPI-Net pipeline.
+**Purpose:** Classify affective EEG responses (Negative/Neutral/Pleasant) on the [SHAPE project](https://lab-can.com/shape/) EEG data using the full ARSPI-Net pipeline.
 
 ### Running Chapter 5
 
@@ -430,7 +441,7 @@ python chapter5Experiments/reproduce_chapter5.py \
     --output_dir ./figures/ch5/
 ```
 
-**`--demo` mode:** If you don't have the SHAPE dataset, `chapter5Experiments/run_chapter5_experiments.py --demo` generates synthetic data to verify the pipeline runs end-to-end.
+**`--demo` mode:** If you don't have the SHAPE data, `chapter5Experiments/run_chapter5_experiments.py --demo` generates synthetic data to verify the pipeline runs end-to-end.
 
 ### Chapter 5 Experiments: The 7-Row Baseline Table
 
@@ -547,29 +558,66 @@ See `chapter7Experiments/README.md` for detailed per-experiment results, methodo
 
 ## Extended Experiments
 
-The `experiments/` directory contains March 2026 extensions that address cross-chapter questions:
+The `experiments/` directory contains March 2026 extensions that address cross-chapter questions and directly test the dissertation's central thesis.
 
-### 4-Class Classification (`experiments/ch5_4class/`)
-Extends Chapter 5 from 3-class to 4 IAPS subcategories (Threat, Mutilation, Cute, Erotic). Tests whether within-valence subcategory pairs carry distinct spatiotemporal signatures. 3 scripts: feature extraction, raw observations, classification + clinical interpretability (11 experiments).
+### 4-Class Classification (`experiments/ch5_4class/`) — 25/25 PASS
 
-### 3-Class Pipeline (`experiments/ch6_ch7_3class/`)
-Consolidated Chapters 6 & 7 pipeline at 3-class granularity (Negative, Neutral, Pleasant), which provides a 3.6x signal advantage over 4-class. 4 scripts: feature extraction, raw observations, 7 Ch6 experiments, 5 Ch7 experiments.
+Extends Chapter 5 from 3-class to 4 IAPS subcategories (Threat, Mutilation, Cute, Erotic). Tests whether within-valence subcategory pairs carry distinct spatiotemporal signatures. 3 scripts: feature extraction, raw observations, classification + clinical interpretability (11 experiments). The 4-class regime operates in 2.4% condition variance (vs 8.7% at 3-class), making it harder but revealing finer affective structure.
 
-### Layer Ablation (`experiments/ablation/`)
-The dissertation's keystone experiment testing whether ARSPI-Net's three response layers (embedding, dynamics, topology) are redundant or complementary. Tests the central thesis: "ARSPI-Net reveals three operationally distinct response layers in affective EEG." 10 ablation conditions (A0-A9) + 6 clinical conditions (C1-C6).
+### 3-Class Pipeline (`experiments/ch6_ch7_3class/`) — 28/28 PASS
+
+Consolidated Chapters 6 & 7 pipeline at 3-class granularity (Negative, Neutral, Pleasant), providing a 3.6x signal advantage over 4-class. 4 scripts run sequentially: feature extraction (21,522 reservoir runs), raw observations (8 figures), 7 Chapter 6 dynamical experiments, 5 Chapter 7 coupling experiments. This is the primary analysis vehicle for the dissertation's dynamical and coupling claims.
+
+### Layer Ablation (`experiments/ablation/`) — 23/23 PASS
+
+The dissertation's **keystone experiment** testing whether ARSPI-Net's three response layers (embedding E, dynamics D, topology T) are redundant or complementary. Tests the central thesis: *"ARSPI-Net reveals three operationally distinct response layers in affective EEG."* The ablation matrix systematically evaluates 10 feature conditions (A0-A9) for emotion discrimination and 6 clinical conditions (C1-C6) for binary diagnosis detection, using linear readouts (Methodology Rule 5).
 
 See `experiments/README.md` for full documentation.
 
 ---
 
+## Consolidated Results Summary
+
+### Headline Findings Across All Chapters
+
+| Finding | Chapter | Evidence |
+|---------|---------|----------|
+| Temporal coding is necessary, not just helpful | Ch4 | MFR at chance (47.5%); BSC6 at 99.5% |
+| LIF reservoir provides 8,840x separability gain | Ch4 | FDR: 1158 (LSM) vs 0.13 (raw) |
+| Full ARSPI-Net achieves ~79% on clinical EEG | Ch5 | 3-class, subject-stratified 10-fold CV |
+| Reservoir operates in stable echo state regime | Ch6 | lambda_1 = -0.054, 100% negative |
+| 9/11 dynamical metrics are reliable (ICC >= 0.75) | Ch6 | Cross-seed reliability across 10 initializations |
+| SUD shows category-dependent hypoactivation | Ch6 | Mutilation d = -0.46 |
+| ADHD shows global dynamical hyperactivation | Ch6 | d = +0.40 across all categories |
+| Peak temporal discriminability at 708 ms (LPP) | Ch6 | d_z = -0.83 for Cute-Erotic |
+| Dynamical-topological coupling exists | Ch7 | d_z = 1.063, p < 10^-100 |
+| Coupling is observation-specific, not a trait | Ch7 | ICC(3,1) = 0.059 |
+| tau_AC carries the Cute-Erotic coupling shift | Ch7 | Cross-chapter convergence with Ch6 |
+| Concatenation never improves classification | Ch7 | T+D <= max(T,D) for all 5 diagnoses |
+| ADHD uniquely captured by dynamics | Ch7 | AUC 0.622 (D-only) vs 0.533 (T-only) |
+| GAD uniquely captured by topology | Ch7 | AUC 0.581 (T-only) vs 0.533 (D-only) |
+
+### The Central Thesis
+
+> "ARSPI-Net reveals three operationally distinct response layers in affective EEG — discriminative representation, dynamical response, and topology/coupling — each sensitive to different aspects of the signal."
+
+The evidence structure:
+1. **Discriminative embedding (E)** captures temporal spike patterns that rate coding cannot (Ch4), achieving clinical-grade classification (Ch5)
+2. **Dynamical trajectory (D)** reveals condition-sensitive and diagnosis-associated processing signatures invisible in the embedding space (Ch6)
+3. **Spatial topology (T)** and its coupling with dynamics expose a systems-level organization layer that is observation-specific rather than trait-like (Ch7)
+4. **Different layers dominate for different clinical dimensions:** ADHD is captured by dynamics, GAD by topology, SUD by neither alone (Ch7 Exp E)
+5. **The layer ablation experiment** (keystone) directly tests whether this decomposition is empirically supported or merely narratively consistent
+
+---
+
 ## Data Validation and Quality Control
 
-Run these **before** any experiments to verify data integrity.
+Run these **before** any experiments to verify data integrity. All validation scripts are located in the `validation/` directory.
 
 ### Broad-Condition Validation (3 conditions per subject)
 
 ```bash
-python validate_shape_data.py \
+python validation/validate_shape_data.py \
     --batch1 /path/to/batch1.zip \
     --batch2 /path/to/batch2.zip \
     --batch3 /path/to/batch3.zip \
@@ -596,7 +644,7 @@ python validate_shape_data.py \
 ### Subcategory Validation (4 categories per subject)
 
 ```bash
-python validate_subcategory_data.py \
+python validation/validate_subcategory_data.py \
     --category-dirs categoriesbatch1 categoriesbatch2 categoriesbatch3 categoriesbatch4 \
     --broad-zips batch1.zip batch2.zip batch3.zip \
     --output validation_report.txt
@@ -710,7 +758,7 @@ OUTLIER_SD         = 5.0    # Flag values > 5 SD from mean
 
 ### Runtime Estimates
 - Chapter 4 (synthetic): ~2–5 minutes
-- Chapter 5 (full SHAPE dataset): ~15–20 minutes (reservoir processing is the bottleneck)
+- Chapter 5 (full SHAPE data): ~15–20 minutes (reservoir processing is the bottleneck)
 - Chapter 6 (dynamical analysis): ~10–15 minutes
 - Chapter 7 (coupling analysis): ~30 minutes (Exp A batch processing)
 - Extended experiments (3-class pipeline): ~30–60 minutes total
@@ -728,7 +776,7 @@ All scripts set `matplotlib.use('Agg')` for headless/server environments. If you
 1. **Channel count mismatch:** If you have 64 channels instead of 34, the reservoir loop, electrode position array, and all shape assertions must be updated.
 2. **Sampling rate mismatch:** If your data is at 512 Hz, change the downsample factor from 4 to 2 (target is 256 Hz).
 3. **No baseline period:** If your data is already baseline-removed, skip the `data[205:]` slicing.
-4. **Single-trial data:** The SHAPE files are trial-averaged ERPs. If you have single trials, either average them first or modify the pipeline to handle trial-level data (which would give you more samples but noisier signals).
+4. **Single-trial data:** The SHAPE project files are trial-averaged ERPs. If you have single trials, either average them first or modify the pipeline to handle trial-level data (which would give you more samples but noisier signals).
 5. **Different conditions:** The code expects exactly 3 conditions for Chapter 5 classification. If you have 2 or 5 conditions, update the label encoding and confusion matrix dimensions.
 
 ---

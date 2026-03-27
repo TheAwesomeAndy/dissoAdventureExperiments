@@ -397,11 +397,20 @@ def extract_hjorth(X_ds):
 # SECTION 5: GRAPH CONSTRUCTION
 # ================================================================
 def get_standard_34ch_positions():
-    """Standard 10-20 positions for a 34-channel montage.
-    Returns (34, 2) array of (x, y) positions for topographic plots
-    and (34, 3) array of (x, y, z) for distance computation.
-    
-    Channel order assumed (common 34-ch EEG cap):
+    """Approximate 10-20 positions for a 34-channel montage.
+    Returns (34, 2) array of (x, y) positions for spatial adjacency
+    graph construction.
+
+    WARNING: The column-to-electrode mapping below is ASSUMED based on a
+    common 34-channel EEG cap layout. The actual channel ordering in the
+    SHAPE dataset files has not been independently verified against
+    recording documentation. These positions are used only for the GNN
+    spatial adjacency graph (k-NN construction). If the ordering is
+    incorrect, the flat-classifier results (Rows 1-3 of the baseline
+    table) are unaffected — only the GNN results (Rows 4-7) depend on
+    this mapping.
+
+    Assumed channel order:
     Fp1,Fp2, F7,F3,Fz,F4,F8, FC5,FC1,FC2,FC6,
     T7,C3,Cz,C4,T8, CP5,CP1,CP2,CP6,
     P7,P3,Pz,P4,P8, PO7,PO3,POz,PO4,PO8, O1,Oz,O2, REF
