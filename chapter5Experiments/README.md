@@ -317,13 +317,13 @@ arspi_net_chapter5_complete/
 
 ## Verification Results
 
-<!-- Last run: 2026-03-20, Result: 32/32 PASS -->
+<!-- Last run: 2026-03-27, Result: 102/102 PASS across 3 verification scripts -->
+
+### `verify_chapter5.py` — Core Infrastructure (32/32 PASS)
 
 ```bash
 python chapter5Experiments/verify_chapter5.py
 ```
-
-**Result: 32/32 PASS.** The verification script tests all core infrastructure components on synthetic data without requiring the SHAPE EEG dataset.
 
 Verified components:
 - **Script import:** `run_chapter5_experiments.py` imports successfully
@@ -334,6 +334,43 @@ Verified components:
 - **GNN propagation (5 tests):** GCN preserves shape, GraphSAGE doubles features, GAT returns features + attention matrices, attention rows sum to ~1
 - **Graph readout (1 test):** Mean readout produces 64-dim vector
 - **Classification (3 tests):** Full CV pipeline runs, returns accuracy and predictions
+
+### `verify_experiment_zero.py` — Baseline Disambiguation (37/37 PASS)
+
+```bash
+python chapter5Experiments/verify_experiment_zero.py
+```
+
+Verified components:
+- **Syntax validation (1 test):** `experiment_zero.py` parses without errors
+- **Import validation (1 test):** All core functions importable (LIFReservoir, bsc6_encode, flatten_raw, subject_center, evaluate)
+- **LIF Reservoir (7 tests):** Instantiation, weight shapes, spectral radius = 0.9, forward pass shape, binary spikes, non-silent
+- **BSC6 encoding (4 tests):** Correct dimensionality (384-dim), non-negative, nonzero entries, sum consistency
+- **Flatten raw (2 tests):** Shape transformation (N,256,34) -> (N,8704), value preservation
+- **Subject centering (4 tests):** Correct shape, values change, per-subject mean is zero, does not modify input
+- **CV pipeline (4 tests):** Returns numpy array, correct fold count, accuracies in [0,1], finite mean
+- **Determinism (2 tests):** Same seed produces identical spikes, different seed produces different spikes
+- **Channel seeding (1 test):** Different channels produce different reservoir responses
+- **End-to-end (4 tests):** Raw and reservoir paths with centering produce correct shapes
+- **Script structure (7 tests):** All 4 experimental conditions defined, SVM cross-check present, pickle output saved
+
+### `verify_reproduce_chapter5.py` — Reproducibility Pipeline (33/33 PASS)
+
+```bash
+python chapter5Experiments/verify_reproduce_chapter5.py
+```
+
+Verified components:
+- **Syntax and import (2 tests):** Module parses and imports successfully
+- **LIF Reservoir (8 tests):** Instantiation, weight shapes, spectral radius, forward pass, binary spikes, non-silent, returns spikes only (not tuple)
+- **Feature extraction (2 tests):** BSC6 encoding present, band power referenced
+- **GNN implementations (7 tests):** GCN, GraphSAGE/skip, GAT/attention present in source; manual GCN/SAGE/attention produce valid shapes and finite outputs; attention weights sum to 1
+- **Graph construction (3 tests):** Graph structure, electrode topology, and k-NN referenced
+- **Classification pipeline (3 tests):** StratifiedGroupKFold CV runs, returns correct fold count, finite accuracies
+- **Graph readout (1 test):** Mean pooling produces correct-dim vector
+- **No-leakage checks (2 tests):** StratifiedGroupKFold used, PCA fitted per fold
+- **Output structure (3 tests):** Pickle saved, PDF figures generated, Agg backend used
+- **Deep baselines (2 tests):** Baseline results pickle exists and contains data
 
 Full end-to-end verification requires the SHAPE EEG dataset. Use `--demo` mode for pipeline testing:
 Full end-to-end verification requires the SHAPE Community EEG dataset. Use `--demo` mode for pipeline testing:
