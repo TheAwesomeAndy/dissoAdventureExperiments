@@ -33,9 +33,6 @@ This repository contains the complete experimental pipeline for Chapters 4–7 o
 ```
 dissoAdventureExperiments/
 ├── README.md                              # This file
-├── validate_shape_data.py                 # QC for broad-condition SHAPE data (3 conditions)
-├── validate_subcategory_data.py           # QC for fine-grained subcategory data (4 categories)
-├── verify_validators.py                   # Verification for data validators
 │
 ├── chapter4Experiments/                   # Ch4: Temporal pattern discrimination (synthetic data)
 │   ├── run_chapter4_experiments.py        #   6 experiments: ablation, FDR, coding, PCA, robustness, sensitivity
@@ -71,15 +68,19 @@ dissoAdventureExperiments/
 │   └── chapter7_results/                 #   Output data + figures
 │
 ├── experiments/                           # Extended experiments (March 2026)
-│   ├── ch5_4class/                       #   4-class classification extension
-│   ├── ch6_ch7_3class/                   #   3-class dynamical + coupling pipeline
-│   └── ablation/                         #   Layer ablation keystone experiment
+│   ├── ch5_4class/                       #   4-class classification extension (25 tests)
+│   ├── ch6_ch7_3class/                   #   3-class dynamical + coupling pipeline (28 tests)
+│   └── ablation/                         #   Layer ablation keystone experiment (23 tests)
+│
+├── validation/                            # Data quality control
+│   ├── validate_shape_data.py            #   QC for broad-condition SHAPE data (10 checks)
+│   ├── validate_subcategory_data.py      #   QC for subcategory data (12 checks)
+│   └── verify_validators.py             #   Meta-verification of validators (20 tests)
 │
 ├── data/                                  # Clinical metadata
-│   └── clinical_profile.csv              #   211-subject clinical profiles
+│   └── clinical_profile.csv              #   211-subject clinical profiles (corrected March 2026)
 ├── docs/                                  # Documentation
-│   ├── methodology_rules.md              #   7 governing methodology rules
-│   └── GITHUB_UPDATE_GUIDE.md            #   Repository management guide
+│   └── methodology_rules.md              #   7 governing methodology rules
 ├── latex/                                 # LaTeX chapter sources
 ├── pictures/chLSMEmbeddings/             # Ch4 publication figures (13 PDFs)
 └── .gitignore
@@ -114,7 +115,7 @@ python chapter7Experiments/verify_chapter7.py
 python experiments/ch5_4class/verify_ch5_4class.py
 python experiments/ch6_ch7_3class/verify_ch6_ch7_3class.py
 python experiments/ablation/verify_ablation.py
-python verify_validators.py
+python validation/verify_validators.py
 ```
 
 ---
@@ -405,9 +406,11 @@ python chapter4Experiments/run_chapter4_observations.py [--output_dir pictures/c
 | 6 | Parameter sensitivity | β × M_th grid heatmap |
 
 ### Chapter 4 Key Results
-- **BSC₆ + PCA-64:** >90% accuracy
-- **MFR:** ~50% (complete failure — proves temporal coding is necessary)
-- **FDR:** LSM features have ~6–7× better class separability than raw input
+- **BSC₆:** 99.5% +/- 0.6% accuracy (LogReg); **BSC₆ + PCA-64:** 98.5% +/- 1.2%
+- **MFR:** 47.5% +/- 4.1% (at chance — proves temporal coding is necessary)
+- **FDR:** LSM features have 8,840x better class separability than raw input (1158 vs 0.13)
+- **Cross-seed robustness:** 98.6% +/- 0.7% across 10 independent initializations
+- **Performance saturates at N_res = 128** — N_res = 256 is validated on the plateau
 
 ---
 
@@ -547,29 +550,66 @@ See `chapter7Experiments/README.md` for detailed per-experiment results, methodo
 
 ## Extended Experiments
 
-The `experiments/` directory contains March 2026 extensions that address cross-chapter questions:
+The `experiments/` directory contains March 2026 extensions that address cross-chapter questions and directly test the dissertation's central thesis.
 
-### 4-Class Classification (`experiments/ch5_4class/`)
-Extends Chapter 5 from 3-class to 4 IAPS subcategories (Threat, Mutilation, Cute, Erotic). Tests whether within-valence subcategory pairs carry distinct spatiotemporal signatures. 3 scripts: feature extraction, raw observations, classification + clinical interpretability (11 experiments).
+### 4-Class Classification (`experiments/ch5_4class/`) — 25/25 PASS
 
-### 3-Class Pipeline (`experiments/ch6_ch7_3class/`)
-Consolidated Chapters 6 & 7 pipeline at 3-class granularity (Negative, Neutral, Pleasant), which provides a 3.6x signal advantage over 4-class. 4 scripts: feature extraction, raw observations, 7 Ch6 experiments, 5 Ch7 experiments.
+Extends Chapter 5 from 3-class to 4 IAPS subcategories (Threat, Mutilation, Cute, Erotic). Tests whether within-valence subcategory pairs carry distinct spatiotemporal signatures. 3 scripts: feature extraction, raw observations, classification + clinical interpretability (11 experiments). The 4-class regime operates in 2.4% condition variance (vs 8.7% at 3-class), making it harder but revealing finer affective structure.
 
-### Layer Ablation (`experiments/ablation/`)
-The dissertation's keystone experiment testing whether ARSPI-Net's three response layers (embedding, dynamics, topology) are redundant or complementary. Tests the central thesis: "ARSPI-Net reveals three operationally distinct response layers in affective EEG." 10 ablation conditions (A0-A9) + 6 clinical conditions (C1-C6).
+### 3-Class Pipeline (`experiments/ch6_ch7_3class/`) — 28/28 PASS
+
+Consolidated Chapters 6 & 7 pipeline at 3-class granularity (Negative, Neutral, Pleasant), providing a 3.6x signal advantage over 4-class. 4 scripts run sequentially: feature extraction (21,522 reservoir runs), raw observations (8 figures), 7 Chapter 6 dynamical experiments, 5 Chapter 7 coupling experiments. This is the primary analysis vehicle for the dissertation's dynamical and coupling claims.
+
+### Layer Ablation (`experiments/ablation/`) — 23/23 PASS
+
+The dissertation's **keystone experiment** testing whether ARSPI-Net's three response layers (embedding E, dynamics D, topology T) are redundant or complementary. Tests the central thesis: *"ARSPI-Net reveals three operationally distinct response layers in affective EEG."* The ablation matrix systematically evaluates 10 feature conditions (A0-A9) for emotion discrimination and 6 clinical conditions (C1-C6) for binary diagnosis detection, using linear readouts (Methodology Rule 5).
 
 See `experiments/README.md` for full documentation.
 
 ---
 
+## Consolidated Results Summary
+
+### Headline Findings Across All Chapters
+
+| Finding | Chapter | Evidence |
+|---------|---------|----------|
+| Temporal coding is necessary, not just helpful | Ch4 | MFR at chance (47.5%); BSC6 at 99.5% |
+| LIF reservoir provides 8,840x separability gain | Ch4 | FDR: 1158 (LSM) vs 0.13 (raw) |
+| Full ARSPI-Net achieves ~79% on clinical EEG | Ch5 | 3-class, subject-stratified 10-fold CV |
+| Reservoir operates in stable echo state regime | Ch6 | lambda_1 = -0.054, 100% negative |
+| 9/11 dynamical metrics are reliable (ICC >= 0.75) | Ch6 | Cross-seed reliability across 10 initializations |
+| SUD shows category-dependent hypoactivation | Ch6 | Mutilation d = -0.46 |
+| ADHD shows global dynamical hyperactivation | Ch6 | d = +0.40 across all categories |
+| Peak temporal discriminability at 708 ms (LPP) | Ch6 | d_z = -0.83 for Cute-Erotic |
+| Dynamical-topological coupling exists | Ch7 | d_z = 1.063, p < 10^-100 |
+| Coupling is observation-specific, not a trait | Ch7 | ICC(3,1) = 0.059 |
+| tau_AC carries the Cute-Erotic coupling shift | Ch7 | Cross-chapter convergence with Ch6 |
+| Concatenation never improves classification | Ch7 | T+D <= max(T,D) for all 5 diagnoses |
+| ADHD uniquely captured by dynamics | Ch7 | AUC 0.622 (D-only) vs 0.533 (T-only) |
+| GAD uniquely captured by topology | Ch7 | AUC 0.581 (T-only) vs 0.533 (D-only) |
+
+### The Central Thesis
+
+> "ARSPI-Net reveals three operationally distinct response layers in affective EEG — discriminative representation, dynamical response, and topology/coupling — each sensitive to different aspects of the signal."
+
+The evidence structure:
+1. **Discriminative embedding (E)** captures temporal spike patterns that rate coding cannot (Ch4), achieving clinical-grade classification (Ch5)
+2. **Dynamical trajectory (D)** reveals condition-sensitive and diagnosis-associated processing signatures invisible in the embedding space (Ch6)
+3. **Spatial topology (T)** and its coupling with dynamics expose a systems-level organization layer that is observation-specific rather than trait-like (Ch7)
+4. **Different layers dominate for different clinical dimensions:** ADHD is captured by dynamics, GAD by topology, SUD by neither alone (Ch7 Exp E)
+5. **The layer ablation experiment** (keystone) directly tests whether this decomposition is empirically supported or merely narratively consistent
+
+---
+
 ## Data Validation and Quality Control
 
-Run these **before** any experiments to verify data integrity.
+Run these **before** any experiments to verify data integrity. All validation scripts are located in the `validation/` directory.
 
 ### Broad-Condition Validation (3 conditions per subject)
 
 ```bash
-python validate_shape_data.py \
+python validation/validate_shape_data.py \
     --batch1 /path/to/batch1.zip \
     --batch2 /path/to/batch2.zip \
     --batch3 /path/to/batch3.zip \
@@ -596,7 +636,7 @@ python validate_shape_data.py \
 ### Subcategory Validation (4 categories per subject)
 
 ```bash
-python validate_subcategory_data.py \
+python validation/validate_subcategory_data.py \
     --category-dirs categoriesbatch1 categoriesbatch2 categoriesbatch3 categoriesbatch4 \
     --broad-zips batch1.zip batch2.zip batch3.zip \
     --output validation_report.txt
