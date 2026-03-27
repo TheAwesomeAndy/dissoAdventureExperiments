@@ -198,6 +198,23 @@ A 746-line independent verification report provides 27 additional synthetic unit
   - MEDIUM: Effect size metric is paired d_z (inflates magnitudes ~2x vs independent d)
   - LOW: PE computation parameter differences between full-epoch (d=4) and windowed analyses
 
+### Reproducibility Pipeline Verification (verify_reproduce_chapter6.py)
+
+```bash
+python chapter6Experiments/verify_reproduce_chapter6.py
+```
+
+**Result: 42/42 PASS.** Tests the `reproduce_chapter6.py` reproducibility pipeline:
+
+- **LIFReservoirFull (11 tests):** Returns both spikes and membrane; shapes (256,64), binary spikes, finite non-negative membrane, non-silent
+- **Driven Lyapunov exponent (5 tests):** Benettin algorithm runs, lambda_1 is finite and negative (ESP verified), convergence trace returned
+- **Dynamical metrics (6 tests):** PE, firing rate, Phi, tau_relax referenced; PE of random signal ~1.0, PE of monotonic signal ~0
+- **ESP convergence (3 tests):** Deterministic with same seed, different trajectories with different seeds
+- **Surrogate generation (4 tests):** Phase-randomization preserves power spectrum, time-shuffle preserves amplitude distribution
+- **Pipeline structure (5 tests):** 10 experiments, Agg backend, pickle output, PDF figures, clinical labels
+- **Statistical tests (3 tests):** Kruskal-Wallis, Mann-Whitney, Spearman referenced
+- **Sliding window (3 tests):** Window analysis, StandardScaler, LogisticRegression
+
 ### Relationship to Extended 3-Class Experiments
 
 The `experiments/ch6_ch7_3class/` directory runs 7 equivalent Chapter 6 experiments at 3-class granularity, where the condition signal is 3.6x stronger. That extension includes its own verification script (`verify_ch6_ch7_3class.py`, 28/28 PASS).

@@ -97,21 +97,29 @@ All scripts in this repository have been verified. The table below summarizes re
 | Component | Script | Tests | Result | Notes |
 |-----------|--------|-------|--------|-------|
 | **Chapter 4** | `verify_chapter4.py` | 31 | **31/31 PASS** | Full run on synthetic data. All 13 PDF figures generated. BSC6 99.5%, MFR 47.5%, FDR 8840x. |
-| **Chapter 5** | `verify_chapter5.py` | 32 | **32/32 PASS** | Infrastructure tests: reservoir, GNN (GCN/GraphSAGE/GAT), feature extraction, CV pipeline. Full pipeline requires SHAPE EEG data. |
+| **Chapter 5** | `verify_chapter5.py` | 32 | **32/32 PASS** | Infrastructure tests: reservoir, GNN (GCN/GraphSAGE/GAT), feature extraction, CV pipeline. |
+| **Ch5 Exp Zero** | `verify_experiment_zero.py` | 37 | **37/37 PASS** | LIF reservoir, BSC6, subject centering, CV pipeline, determinism, channel-specific seeding, end-to-end mini pipeline. |
+| **Ch5 Reproduce** | `verify_reproduce_chapter5.py` | 33 | **33/33 PASS** | LIF reservoir, GNN implementations (GCN/SAGE/GAT), graph construction, CV pipeline, output structure, deep baselines. |
 | **Chapter 6** | `verify_chapter6.py` | 31 | **31/31 PASS** | Reservoir, dynamical metrics (rate entropy, PE, tau_ac), ESP convergence, surrogate generation. See also `CHAPTER6_VERIFICATION_REPORT.md` (27 additional static tests). |
+| **Ch6 Reproduce** | `verify_reproduce_chapter6.py` | 42 | **42/42 PASS** | LIFReservoirFull (spikes+membrane), Benettin Lyapunov exponent (lambda_1 < 0), PE validation, surrogate generation, sliding window pipeline. |
 | **Chapter 7** | `verify_chapter7.py` | 38 | **38/38 PASS** | Syntax validation, data file inventory, kappa matrix validation (211 subjects, median 0.27), C matrices (844 obs), Experiments B and C fully re-run with verified output. |
+| **Ch7 Utilities** | `verify_extract_utilities.py` | 40 | **40/40 PASS** | Mock pickle extraction for kappa matrix and C matrices, CSV format validation, column naming, cross-utility consistency, value range checks. |
 | **Ch5 4-class** | `verify_ch5_4class.py` | 25 | **25/25 PASS** | LIF reservoir, BSC extraction, band power, configuration consistency (N_RES=256, BETA=0.05, 4 categories). |
 | **Ch6/7 3-class** | `verify_ch6_ch7_3class.py` | 28 | **28/28 PASS** | Reservoir (init/run functions), all dynamical metrics, tPLV topological computation, clustering coefficient. |
 | **Ablation** | `verify_ablation.py` | 23 | **23/23 PASS** | Coupling computation (7x2 matrix, kappa scalar), CV classification pipeline, all feature block dimensions verified. |
 | **Validators** | `verify_validators.py` | 20 | **20/20 PASS** | Syntax validation, configuration checks, mock data QC (dimensions, NaN, amplitude, flat channels, file patterns). |
-| **Total** | | **228** | **228/228 PASS** | |
+| **Total** | | **380** | **380/380 PASS** | |
 
 To re-run all verifications:
 ```bash
 MPLBACKEND=Agg python chapter4Experiments/verify_chapter4.py
 python chapter5Experiments/verify_chapter5.py
+python chapter5Experiments/verify_experiment_zero.py
+python chapter5Experiments/verify_reproduce_chapter5.py
 python chapter6Experiments/verify_chapter6.py
+python chapter6Experiments/verify_reproduce_chapter6.py
 python chapter7Experiments/verify_chapter7.py
+python chapter7Experiments/verify_extract_utilities.py
 python experiments/ch5_4class/verify_ch5_4class.py
 python experiments/ch6_ch7_3class/verify_ch6_ch7_3class.py
 python experiments/ablation/verify_ablation.py
