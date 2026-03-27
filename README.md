@@ -9,7 +9,7 @@ This repository contains the complete experimental pipeline for Chapters 4–7 o
 ## Table of Contents
 
 1. [Repository Structure](#repository-structure)
-2. [Verification Summary](#verification-summary)
+2. [Verification Summary](#verification-summary) — 380/380 tests, [methodology](docs/VERIFICATION_METHODOLOGY.md)
 3. [Architecture Overview](#architecture-overview)
 4. [Dependencies](#dependencies)
 5. [Input Data Format](#input-data-format)
@@ -37,12 +37,15 @@ dissoAdventureExperiments/
 ├── chapter4Experiments/                   # Ch4: Temporal pattern discrimination (synthetic data)
 │   ├── run_chapter4_experiments.py        #   6 experiments: ablation, FDR, coding, PCA, robustness, sensitivity
 │   ├── run_chapter4_observations.py       #   6 raw observation figures
-│   └── verify_chapter4.py                #   Verification script (31 tests)
+│   └── verify_chapter4.py                #   Verification (31 tests)
 │
 ├── chapter5Experiments/                   # Ch5: Clinical EEG classification with GNN
 │   ├── run_chapter5_experiments.py        #   7-row baseline table + GNN experiments
+│   ├── experiment_zero.py                #   Baseline disambiguation (4 conditions)
 │   ├── reproduce_chapter5.py             #   Standalone reproducibility pipeline
-│   └── verify_chapter5.py                #   Verification script (32 tests)
+│   ├── verify_chapter5.py                #   Verification: core infrastructure (32 tests)
+│   ├── verify_experiment_zero.py         #   Verification: Exp Zero (37 tests)
+│   └── verify_reproduce_chapter5.py      #   Verification: reproducibility pipeline (33 tests)
 │
 ├── chapter6Experiments/                   # Ch6: Dynamical characterisation of LIF reservoir
 │   ├── run_chapter6_exp1_esp.py          #   Echo State Property verification
@@ -53,7 +56,8 @@ dissoAdventureExperiments/
 │   ├── run_chapter6_exp5_interaction.py  #   Diagnosis x category interaction
 │   ├── run_chapter6_exp6_temporal.py     #   Sliding-window temporal localisation
 │   ├── reproduce_chapter6.py             #   Standalone reproducibility pipeline
-│   ├── verify_chapter6.py                #   Verification script (31 tests)
+│   ├── verify_chapter6.py                #   Verification: core infrastructure (31 tests)
+│   ├── verify_reproduce_chapter6.py      #   Verification: reproducibility pipeline (42 tests)
 │   └── CHAPTER6_VERIFICATION_REPORT.md   #   27-test independent code review
 │
 ├── chapter7Experiments/                   # Ch7: Dynamical-topological coupling
@@ -64,7 +68,8 @@ dissoAdventureExperiments/
 │   ├── run_chapter7_experiment_E.py      #   Augmentation ablation
 │   ├── extract_kappa_matrix.py           #   Utility: export coupling as CSV
 │   ├── extract_C_matrices.py            #   Utility: export C matrices as CSV
-│   ├── verify_chapter7.py                #   Verification script (38 tests)
+│   ├── verify_chapter7.py                #   Verification: experiments (38 tests)
+│   ├── verify_extract_utilities.py       #   Verification: extract utilities (40 tests)
 │   └── chapter7_results/                 #   Output data + figures
 │
 ├── experiments/                           # Extended experiments (March 2026)
@@ -80,7 +85,8 @@ dissoAdventureExperiments/
 ├── data/                                  # Clinical metadata
 │   └── clinical_profile.csv              #   211-subject clinical profiles (corrected March 2026)
 ├── docs/                                  # Documentation
-│   └── methodology_rules.md              #   7 governing methodology rules
+│   ├── methodology_rules.md              #   7 governing methodology rules
+│   └── VERIFICATION_METHODOLOGY.md       #   Verification trustworthiness rationale
 ├── latex/                                 # LaTeX chapter sources
 ├── pictures/chLSMEmbeddings/             # Ch4 publication figures (13 PDFs)
 └── .gitignore
@@ -90,9 +96,23 @@ dissoAdventureExperiments/
 
 ## Verification Summary
 
-<!-- Verification run: 2026-03-20. All scripts executed on synthetic/infrastructure data. -->
+<!-- Verification run: 2026-03-27. All scripts executed on synthetic/infrastructure data. -->
 
-All scripts in this repository have been verified. The table below summarizes results from both existing chapter verification scripts and newly created verification scripts for the extended experiments.
+**Every Python script in this repository has independent verification.** The 380 automated tests across 12 verification scripts validate syntax, algorithmic correctness, integration, determinism, and output format — all without requiring the proprietary SHAPE EEG dataset.
+
+For a detailed explanation of the verification methodology, what the tests prove, and why they establish trustworthiness, see [`docs/VERIFICATION_METHODOLOGY.md`](docs/VERIFICATION_METHODOLOGY.md).
+
+### What the Tests Prove
+
+| Validation Category | What It Establishes | Example |
+|---|---|---|
+| **Syntax & imports** | Every script runs on current Python/numpy/scipy | Catches API changes like `np.trapz` → `np.trapezoid` |
+| **Algorithm correctness** | Core computations match known ground truth | PE(random) ~ 1.0, PE(monotonic) ~ 0.0; Lyapunov exponent < 0 |
+| **Integration** | Components work together end-to-end | Reservoir → BSC6 → PCA → LogReg pipeline produces valid accuracies |
+| **Determinism** | Same seed = same output, different seed = different output | Reservoir spike trains are bitwise identical across runs |
+| **Parameter consistency** | All scripts agree on N=256, beta=0.05, theta=0.5 | No silent configuration drift between experiments |
+| **Output format** | Pickles, CSVs, and PDFs are well-formed | Kappa values in [0,1], correlations in [-1,1], correct column counts |
+| **No data leakage** | PCA fitted per fold, subjects never split across folds | StratifiedGroupKFold verified in every classification script |
 
 | Component | Script | Tests | Result | Notes |
 |-----------|--------|-------|--------|-------|
