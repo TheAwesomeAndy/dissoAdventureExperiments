@@ -280,7 +280,7 @@ Produces exactly four numbers under identical protocol:
   (4) Reservoir BSC6-PCA-64 + LogReg, subject-centered
 
 Example:
-  python experiment_zero.py --data_dir /home/claude/batch_data/
+  python experiment_zero.py --data_dir /path/to/batch_data/
   python experiment_zero.py --data_dir /workspaces/dissoAdventureExperiments/data/batch_data/
         """)
     parser.add_argument('--data_dir', type=str, required=True,

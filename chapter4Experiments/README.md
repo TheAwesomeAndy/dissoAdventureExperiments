@@ -405,7 +405,7 @@ Key verified outputs:
 
 - **Chapter 3** established the LIF reservoir parameters through systematic characterization. Chapter 4 validates these choices on a controlled discrimination task.
 - **Chapter 4** proves that temporal coding (BSC6) is necessary for temporal pattern discrimination. This is the foundational result for all subsequent chapters.
-- **Chapter 5** applies the BSC6+PCA-64 pipeline validated here to real clinical EEG data ([SHAPE dataset](https://lab-can.com/shape/)), adding graph-structured classification.
+- **Chapter 5** applies the BSC6+PCA-64 pipeline validated here to real clinical EEG data from the [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/), adding graph-structured classification.
 - **Chapter 6** uses the same reservoir to characterize dynamical properties (Lyapunov exponents, permutation entropy, relaxation time) per affective condition.
 - **Chapter 7** couples Chapter 5's topological descriptors with Chapter 6's dynamical descriptors — both built on the reservoir validated here.
 
