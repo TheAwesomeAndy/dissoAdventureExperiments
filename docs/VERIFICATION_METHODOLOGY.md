@@ -12,7 +12,7 @@ Scientific code must be transparent. A reader encountering this repository shoul
 2. **Does the code compute what it claims?** A function named `permutation_entropy` should actually compute permutation entropy, not something else.
 3. **Are the results trustworthy?** The pipeline should produce consistent, deterministic outputs that match the claimed methodology.
 
-The 380 verification tests across 12 verification scripts answer all three questions without requiring the proprietary [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/) EEG dataset.
+The 435 automated tests across 13 verification scripts answer all three questions without requiring the proprietary [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/) EEG dataset.
 
 ---
 
@@ -75,6 +75,8 @@ Every Python script in the repository is tested by at least one verification scr
 | `experiments/ch6_ch7_3class/ch6_03_experiments.py` | `verify_ch6_ch7_3class.py` | Syntax + component |
 | `experiments/ch6_ch7_3class/ch7_04_experiments.py` | `verify_ch6_ch7_3class.py` | Syntax + component |
 | `experiments/ablation/layer_ablation.py` | `verify_ablation.py` | Component + integration |
+| `chapter5Experiments/sklearn_baselines.py` | `verify_baselines.py` | Component + integration (8 classifiers, feature extraction, CV) |
+| `chapter5Experiments/eegnet_gru_lstm_baselines.py` | `verify_baselines.py` | Component + integration (EEGNet/GRU/LSTM forward, fit, determinism) |
 | `validation/validate_shape_data.py` | `verify_validators.py` | Syntax + mock data QC |
 | `validation/validate_subcategory_data.py` | `verify_validators.py` | Syntax + mock data QC |
 
@@ -230,9 +232,9 @@ Chapter 6 has an additional layer of verification: `CHAPTER6_VERIFICATION_REPORT
 
 | Metric | Value |
 |--------|-------|
-| Total verification scripts | 12 |
-| Total automated tests | 380 |
-| Pass rate | 100% (380/380) |
+| Total verification scripts | 13 |
+| Total automated tests | 435 |
+| Pass rate | 100% (435/435) |
 | Scripts with zero coverage | 0 |
 | External data required | None |
 | Runtime | < 2 minutes |
