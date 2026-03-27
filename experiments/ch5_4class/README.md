@@ -110,7 +110,7 @@ These findings complement the 3-class clinical analyses and require within-valen
 python experiments/ch5_4class/verify_ch5_4class.py
 ```
 
-**Result: 25/25 PASS.** Infrastructure tests on synthetic data without requiring SHAPE EEG:
+**Result: 25/25 PASS.** Infrastructure tests on synthetic data without requiring [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/) EEG data:
 
 - **Syntax validation (3 tests):** All 3 scripts parse without errors
 - **LIF Reservoir (8 tests):** Module imports, instantiation, W_in (64,1) and W_rec (64,64) shapes, forward pass shapes (256,64), binary spikes, finite membrane, non-negative membrane, non-silent spikes
@@ -126,4 +126,4 @@ numpy, scipy, scikit-learn, matplotlib, pandas, pickle
 
 ## Data Requirements
 
-SHAPE Community EEG subcategory files in `categoriesbatch{1-4}/` directories. Each file: (1229, 34) float64, baseline-corrected, trial-averaged microvolts.
+SHAPE EEG subcategory files in `categoriesbatch{1-4}/` directories. Each file: (1229, 34) float64, baseline-corrected, trial-averaged microvolts.

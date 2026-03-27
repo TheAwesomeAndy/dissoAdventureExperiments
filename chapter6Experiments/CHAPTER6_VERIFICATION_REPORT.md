@@ -715,7 +715,7 @@ All tests were run using Python 3 with NumPy 2.4.3 / SciPy 1.17.1 / scikit-learn
 - **scikit-learn:** 1.8.0
 - **Platform:** Linux 6.18.5
 - **Date:** 2026-03-17
-- **All tests run on synthetic data — SHAPE EEG dataset not accessed**
+- **All tests run on synthetic data — [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/) EEG dataset not accessed**
 
 ## Appendix B: Experiment Dependency Graph
 

@@ -12,7 +12,7 @@ Scientific code must be transparent. A reader encountering this repository shoul
 2. **Does the code compute what it claims?** A function named `permutation_entropy` should actually compute permutation entropy, not something else.
 3. **Are the results trustworthy?** The pipeline should produce consistent, deterministic outputs that match the claimed methodology.
 
-The 380 automated tests across 12 verification scripts answer all three questions without requiring the proprietary SHAPE EEG dataset.
+The 380 automated tests across 12 verification scripts answer all three questions without requiring the proprietary [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/) EEG dataset.
 
 ---
 

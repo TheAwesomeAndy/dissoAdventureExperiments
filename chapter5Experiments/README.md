@@ -1,6 +1,6 @@
 # Chapter 5: Clinical EEG Classification with ARSPI-Net
 
-This folder contains the experimental scripts, results archive, and figures for Chapter 5 of the ARSPI-Net dissertation. Chapter 5 validates the full ARSPI-Net pipeline on real clinical EEG data — classifying affective responses (Negative/Neutral/Pleasant) from the [SHAPE dataset](https://lab-can.com/shape/).
+This folder contains the experimental scripts, results archive, and figures for Chapter 5 of the ARSPI-Net dissertation. Chapter 5 validates the full ARSPI-Net pipeline on real clinical EEG data — classifying affective responses (Negative/Neutral/Pleasant) from the [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/).
 
 ## Experiment Overview
 
@@ -373,7 +373,6 @@ Verified components:
 - **Deep baselines (2 tests):** Baseline results pickle exists and contains data
 
 Full end-to-end verification requires the SHAPE EEG dataset. Use `--demo` mode for pipeline testing:
-Full end-to-end verification requires the SHAPE Community EEG dataset. Use `--demo` mode for pipeline testing:
 ```bash
 python chapter5Experiments/run_chapter5_experiments.py --demo
 ```
@@ -394,7 +393,7 @@ The `experiments/ch5_4class/` directory extends this 3-class pipeline to 4 IAPS 
 
 ## Sample
 
-- 80+ subjects from the [SHAPE dataset](https://lab-can.com/shape/)
+- 80+ subjects from the [SHAPE project](https://lab-can.com/shape/)
 - 3 affective conditions: Negative, Neutral, Pleasant (IAPS picture viewing)
 - Subject-stratified cross-validation prevents data leakage
 - Demo mode available with `--demo` flag for pipeline testing without SHAPE data access

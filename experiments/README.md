@@ -81,4 +81,4 @@ The two granularities are complementary, not redundant: 3-class provides statist
 
 ## Data Requirements
 
-All scripts require the [SHAPE EEG dataset](https://lab-can.com/shape/) (not included in repository). See the root README for data format specifications and the `validation/` directory for data quality-control scripts.
+All scripts require data from the [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/) (not included in repository). See the root README for data format specifications and the `validation/` directory for data quality-control scripts.

@@ -1,6 +1,6 @@
 # Data Validation Scripts
 
-This directory contains validation and quality-control scripts for the SHAPE EEG dataset used throughout the ARSPI-Net dissertation.
+This directory contains validation and quality-control scripts for the [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/) EEG data used throughout the ARSPI-Net dissertation.
 
 ## Scripts
 
@@ -52,4 +52,4 @@ python validation/verify_validators.py
 
 ## Data Requirements
 
-The SHAPE EEG dataset is not included in this repository. See the [SHAPE study page](https://lab-can.com/shape/) for data access information.
+The SHAPE EEG dataset is not included in this repository. See the [SHAPE project page](https://lab-can.com/shape/) for data access information.
