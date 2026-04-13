@@ -143,7 +143,7 @@ The dissertation's final results for Chapters 5–7 use the **3-class** design. 
 
 The ARSPI-Net pipeline implements a Koopman-theoretic signal processing chain:
 
-1. **LIF Spiking Reservoir** (Ch3) — Fixed-weight leaky integrate-and-fire reservoir converts continuous EEG into spike trains. The separation property (Maass 2002) guarantees distinct inputs produce distinct reservoir states.
+1. **LIF Spiking Reservoir** (Ch3) — Fixed-weight leaky integrate-and-fire reservoir converts continuous EEG into spike trains. The separation property (Maass 2002) guarantees distinct inputs produce distinct reservoir states. Chapter 3 is theoretical/analytical — it derives the reservoir properties and separation guarantees. The computational validation (reservoir size ablation, coding scheme comparison, cross-seed robustness, parameter sensitivity) is performed in `chapter4Experiments/`.
 
 2. **BSC₆ Temporal Coding** (Ch4) — Binned Spike Count with 6 temporal bins discretizes the continuous spike response into a structured temporal representation. Each bin is independently analyzable (temporal traceability).
 
