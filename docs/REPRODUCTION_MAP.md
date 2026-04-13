@@ -94,6 +94,30 @@ This document maps every table, figure, and statistical result in the ARSPI-Net 
 
 ---
 
+## Chapter 3: LIF Reservoir Characterization (Synthetic)
+
+| Dissertation Element | Script | Output |
+|---|---|---|
+| Membrane dynamics verification | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Exp 1: leak, fire, reset checks |
+| Separation property (Maass 2002) | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Exp 2: input–state distance correlation |
+| Fading memory decay | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Exp 3: τ decay constant |
+| Spectral radius sweep | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Exp 4: accuracy vs ρ |
+| Kernel quality | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Exp 5: effective rank |
+| Cross-seed robustness | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Exp 6: 10 seeds |
+
+---
+
+## Interpretability Validation (Four-Level Taxonomy)
+
+| Dissertation Element | Script | Output |
+|---|---|---|
+| Level 1: LPP recovery (r = 0.82) | `experiments/interpretability/run_level1_temporal_traceability.py` | Per-channel correlation + PDF |
+| Level 1: LPP prediction (R² = 0.661) | `experiments/interpretability/run_level1_temporal_traceability.py` | Ridge regression + PDF |
+| EEGNet saliency peaks (402–691 ms) | `experiments/interpretability/run_eegnet_saliency_comparison.py` | Saliency profile + PDF |
+| Attention-prototype readout (66.7%, p = 0.634) | `experiments/interpretability/run_arspinet_v2_attention_prototype.py` | Readout comparison + PDF |
+
+---
+
 ## Extended: 4-Class Classification
 
 | Dissertation Element | Script | Output |
