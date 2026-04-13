@@ -1,35 +1,41 @@
 #!/usr/bin/env python3
 """
-ARSPI-Net Chapter 5: Deep Learning Baselines (EEGNet, GRU, LSTM)
-================================================================
+ARSPI-Net Chapter 5: Deep Learning Baselines — NumPy REFERENCE IMPLEMENTATIONS
+================================================================================
 
-Conventional deep learning baselines for 3-class affective EEG
-classification. These models operate on raw downsampled EEG (256 Hz,
-34 channels) without the LIF reservoir transformation, providing a
-direct comparison with the ARSPI-Net neuromorphic pipeline.
+*** IMPORTANT: THESE ARE SIMPLIFIED REFERENCE IMPLEMENTATIONS ***
 
-Models:
-  1. EEGNet: Compact CNN designed for EEG, using depthwise + separable
-     convolutions (Lawhern et al. 2018). Captures both temporal and
-     spatial patterns directly from raw EEG.
-  2. GRU: Gated Recurrent Unit applied to the (T, 34) EEG sequence.
-     Tests whether a standard recurrent architecture can capture the
-     temporal structure that the LIF reservoir captures.
-  3. LSTM: Long Short-Term Memory applied identically to GRU.
+These models are implemented from scratch in NumPy without PyTorch/TensorFlow:
+  - EEGNet: Only the fully-connected output layer is trained. The temporal
+    and spatial convolution weights are fixed random projections.
+  - GRU/LSTM: Recurrent weights are fixed random — only the output layer
+    is trained. These are effectively untrained gated reservoirs, NOT
+    canonical trained RNNs.
 
-All models use subject-stratified 10-fold CV (StratifiedGroupKFold)
-to prevent data leakage. Results are stored alongside fold-level
-balanced accuracies and MCC scores.
+The reported numbers (EEGNet 72.0%, GRU 59.9%, LSTM 58.0%) are FROM THESE
+simplified implementations and are NOT directly comparable to canonical
+literature implementations.
 
-Results (from SHAPE dataset, 211 subjects):
-  EEGNet: 72.0% ± 4.9% (MCC 0.585)
-  GRU:    59.9% ± 6.4% (MCC 0.406)
-  LSTM:   58.0% ± 5.5% (MCC 0.377)
+*** For the dissertation's final baseline table, use: ***
+    canonical_pytorch_baselines.py
+which implements full end-to-end PyTorch training with:
+  - EEGNet per Lawhern et al. 2018
+  - 2-layer bidirectional GRU/LSTM with trained recurrent weights
+  - Adam, early stopping, gradient clipping, ReduceLROnPlateau
+  - 10-fold StratifiedGroupKFold, 10 seeds × 5 initializations
 
-These baselines establish that:
-  1. EEGNet is competitive with conventional features (Row 1: ~72%)
-  2. Neither GRU nor LSTM matches the reservoir pipeline
-  3. The LIF reservoir's advantage is NOT simply "having a temporal model"
+This file is retained for reproducibility of the original exploration.
+
+Original results (SHAPE dataset, 211 subjects, 3-class, UNCENTERED):
+  EEGNet (NumPy, FC-only):  72.0% ± 4.9% (MCC 0.585)
+  GRU (NumPy, fixed RNN):   59.9% ± 6.4% (MCC 0.406)
+  LSTM (NumPy, fixed RNN):  58.0% ± 5.5% (MCC 0.377)
+
+Canonical PyTorch results (canonical_pytorch_baselines.py):
+  Uncentered → Centered:
+  EEGNet: 72.0% → 89.1%  (+17.1 pp)
+  GRU:    59.9% → 78.4%  (+18.5 pp)
+  LSTM:   58.0% → 71.1%  (+13.1 pp)
 
 Usage:
   python eegnet_gru_lstm_baselines.py --data_dir /path/to/batch_data/
