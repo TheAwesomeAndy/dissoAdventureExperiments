@@ -92,7 +92,9 @@ dissoAdventureExperiments/
 ├── experiments/                           # Extended experiments (March 2026)
 │   ├── ch5_4class/                       #   4-class classification extension
 │   ├── ch6_ch7_3class/                   #   3-class dynamical + coupling pipeline (PRIMARY for Ch6/Ch7)
-│   └── ablation/                         #   Layer ablation keystone experiment
+│   ├── ablation/                         #   Layer ablation keystone experiment
+│   ├── chapter3/                         #   Ch3: Controlled LIF reservoir characterization (synthetic)
+│   └── interpretability/                 #   Four-level interpretability validation scripts
 │
 ├── validation/                            # Data quality control
 │   ├── validate_shape_data.py            #   QC for 3-class SHAPE data
@@ -135,6 +137,15 @@ The dissertation's final results for Chapters 5–7 use the **3-class** design. 
 | 4-class classification | `experiments/ch5_4class/ch5_4class_03_classification_full.py` | 52.0% centered, 40.4% raw |
 | 4-class Ch6 experiments | `chapter6Experiments/run_chapter6_exp*.py` | Original exploration |
 | 4-class Ch7 experiments | `chapter7Experiments/run_chapter7_experiment_*.py` | Original exploration |
+
+### Interpretability Validation & Chapter 3
+
+| Dissertation Element | Script | Key Result |
+|---|---|---|
+| Ch3 LIF reservoir characterization | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Separation, fading memory, kernel quality (synthetic) |
+| Level 1 temporal traceability | `experiments/interpretability/run_level1_temporal_traceability.py` | r = 0.82 LPP recovery, R² = 0.661 prediction |
+| EEGNet saliency comparison | `experiments/interpretability/run_eegnet_saliency_comparison.py` | EEGNet 402–691 ms vs ARSPI-Net 176–254 ms |
+| Attention-prototype readout | `experiments/interpretability/run_arspinet_v2_attention_prototype.py` | 66.7%, permutation p = 0.634 (not significant) |
 
 ---
 
