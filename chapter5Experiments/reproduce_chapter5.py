@@ -5,8 +5,9 @@ ARSPI-Net Chapter 5: End-to-End Validation on Clinical EEG
 COMPLETE REPRODUCIBILITY PIPELINE
 ============================================================================
 
-Publication: Lane, A. (2026). ARSPI-Net: Hybrid Neuromorphic Affective 
-Computing Architecture for EEG Signal Processing. PhD Dissertation.
+Publication: Lane, A. A. (2026). Affective Reservoir-Spike Processing and
+Inference Network (ARSPI-Net): A Four-Level Interpretable Neuromorphic
+Framework for Clinical EEG Analysis. PhD Dissertation, Stony Brook University.
 
 This script reproduces EVERY figure, table, and statistical result in 
 Chapter 5. It is designed for complete transparency: any reader can 
