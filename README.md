@@ -2,6 +2,7 @@
 
 **Dissertation:** Lane, A. A. (2026). *Affective Reservoir-Spike Processing and Inference Network (ARSPI-Net): A Four-Level Interpretable Neuromorphic Framework for Clinical EEG Analysis.* PhD Dissertation, Department of Electrical and Computer Engineering, Stony Brook University.
 
+**Advisor:** K. Wendy Tang (Senior Member, IEEE)
 
 This repository contains the complete experimental pipeline for the ARSPI-Net dissertation. The framework converts raw multichannel EEG into a staged neuromorphic representation — fixed-weight LIF spiking reservoir → BSC₆ temporal coding → PCA-64 compression → graph-organized spatial analysis — whose internal layers are independently analyzable, providing a four-level interpretability taxonomy for clinical EEG.
 
