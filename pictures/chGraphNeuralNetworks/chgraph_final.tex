@@ -9,9 +9,7 @@ The preceding chapters established the reservoir component of ARSPI-Net as a non
 
 This chapter pursues three interleaved scientific questions on the full $211$-subject SHAPE dataset. The first is a representation question: how much of the reservoir embedding space is occupied by condition-related signal versus subject-identity nuisance structure? The second is a graph-propagation question: under what finite-sensor graph conditions does message-passing propagation increase or decrease the detectability of a weak condition signal embedded in strong subject-level noise? The third is a clinical-topological question: when the same graph is analyzed descriptively rather than propagatively, what transdiagnostic network phenotypes emerge?
 
-The experimental program produces four principal findings. First, variance decomposition reveals that subject identity accounts for $62.6\%$ of embedding variance, condition accounts for $8.7\%$, and residual within-subject variability accounts for $28.7\%$---a $7\times$ subject-to-condition dominance ratio. Removing the subject-identity component through per-subject centering increases classification accuracy from $63.4\%$ to $79.4\%$ balanced accuracy, demonstrating that the reservoir's condition-discriminative capacity is substantially richer than cross-subject classification accuracy suggests. Second, a Propagation Operating Characteristic analysis across six graph densities, six propagation depths, three adjacency families, and four contrast-preserving operator families demonstrates that \emph{no graph operator}---smoothing, high-pass, residual, difference-aware, or attention-based---exceeds the non-propagated baseline. The graph Laplacian spectral analysis reveals the mechanism: propagation acts as a graph-spectral low-pass filter that suppresses high-frequency inter-channel contrast (which carries condition signal) faster than it suppresses low-frequency subject-nuisance structure. Third, the same graph, treated as a \emph{descriptive topological object} rather than a propagative inference substrate, reveals distributed transdiagnostic network phenotypes, with the strongest signal in Substance Use Disorder across three complementary metrics. Fourth, PCA nuisance regression monotonically destroys accuracy because subject and condition share principal components---a structural discovery about the geometry of neuromorphic EEG embeddings.
-
-The chapter's central contribution is a regime characterization, not a successful graph classifier. The novel scientific object is a \emph{detection-theoretic understanding} of when and why graph operators increase or decrease the detectability of a weak task signal embedded in strong nuisance structure on finite-sensor arrays. This understanding, formalized through the Propagation Operating Characteristic and the graph-spectral condition signal analysis, provides the EEG-GNN field with a principled framework for graph operator selection.
+The experimental program produces three principal findings. First, variance decomposition reveals that subject identity accounts for $62.6\%$ of embedding variance, condition accounts for $8.7\%$, and residual within-subject variability accounts for $28.7\%$---a $7\times$ subject-to-condition dominance ratio. Removing the subject-identity component through per-subject centering increases classification accuracy from $63.4\%$ to $79.4\%$ balanced accuracy, a $+16.0$ percentage-point gain that reveals the condition signal is substantially richer than the original representation suggests. Second, a Propagation Operating Characteristic analysis across six graph densities and six propagation depths demonstrates that message-passing monotonically reduces classification accuracy at every density tested, absorbing up to $90\%$ of inter-channel discriminative variance at high density. This regime boundary is robust across Pearson, spatial-distance, and random graph constructions. Third, graph-topological analysis, applied descriptively to the same graphs, reveals that Substance Use Disorder modulates emotional network reactivity across three complementary metrics, validated through permutation testing and internal replication at two sample sizes.
 
 The chapter is organized as follows. Sections~\ref{sec:ch5_gnn_theory}--\ref{sec:ch5_dataset} present the theoretical framework and dataset. Section~\ref{sec:ch5_raw_obs} characterizes the raw data at every pipeline stage. Section~\ref{sec:ch5_classification} presents the classification experiments. Section~\ref{sec:ch5_variance} develops the variance decomposition, subject-nuisance suppression, and detection-theoretic analyses. Section~\ref{sec:ch5_regime} presents the Propagation Operating Characteristic and graph construction sweep. Sections~\ref{sec:ch5_interpretability}--\ref{sec:ch5_nonrep} demonstrate that graph-topological analysis provides a transdiagnostic clinical interpretability tool. Sections~\ref{sec:ch5_novelty}--\ref{sec:ch5_summary} discuss novelty, significance, and the bridge to Chapter~\ref{ch:dynamics}.
 
@@ -27,15 +25,13 @@ A multichannel EEG recording can be represented as a graph $\mathcal{G} = (\math
 \end{equation}
 where $\tau_\rho$ retains the top $20\%$ of channel pairs, yielding approximately $112$ edges at $20\%$ density.
 
-A consequence of hard thresholding is that the resulting graph is not guaranteed to be connected. The Laplacian spectral analysis in Section~\ref{sec:ch5_raw_obs} reveals that the population-average graph has $5$ connected components, and individual subject graphs range from $1$ to $8$ components. This fragmentation has direct consequences for message-passing: information cannot propagate between disconnected components, and the smoothing analysis must be interpreted within each connected subgraph. The $20\%$ threshold was selected to balance edge density (sufficient for meaningful topology) against sparsity (avoiding the fully connected regime where all channels are linked). The graph construction sweep in Section~\ref{sec:ch5_regime} evaluates whether the regime boundary is specific to this threshold or robust across graph families including those that produce different connectivity patterns.
-
 \subsection{Message-Passing Neural Networks}
 
 The message-passing framework \cite{Gilmer2017} updates node representations through iterative neighborhood aggregation:
 \begin{equation}
     \mathbf{h}_v^{(k+1)} = \psi^{(k)}\!\left(\mathbf{h}_v^{(k)},\; \bigoplus_{u \in \mathcal{N}(v)} \phi^{(k)}\!\left(\mathbf{h}_u^{(k)}, \mathbf{h}_v^{(k)}, \mathbf{e}_{uv}\right)\right).
 \end{equation}
-Three architectures are evaluated: GCN \cite{Kipf2017} (normalized adjacency aggregation), GIN \cite{Xu2019} (sum-aggregation with MLP, maximally expressive under the Weisfeiler-Lehman test), and EdgeConv \cite{Wang2019HeterogeneousGNN} (edge-feature MLP with max-aggregation). For graph-level classification, mean-max pooling produces the graph representation $\mathbf{z} = [\text{mean}(\mathbf{H}^{(K)}) \| \max(\mathbf{H}^{(K)})]$.
+Three architectures are evaluated: GCN \cite{Kipf2017} (normalized adjacency aggregation), GIN \cite{Xu2019} (sum-aggregation with MLP, maximally expressive under the Weisfeiler-Lehman test), and EdgeConv \cite{Wang2019} (edge-feature MLP with max-aggregation). For graph-level classification, mean-max pooling produces the graph representation $\mathbf{z} = [\text{mean}(\mathbf{H}^{(K)}) \| \max(\mathbf{H}^{(K)})]$.
 
 \subsection{Graph-Topological Descriptors}
 
@@ -430,72 +426,22 @@ Subject identity accounts for $62.6\%$ of total embedding variance, emotional co
 
 \subsection{Subject-Nuisance Suppression: Revealing the True Condition Signal}
 
-The variance decomposition motivates a direct experiment: what happens to classification accuracy when the subject-identity component is removed? Six nuisance-suppression strategies were evaluated (Figure~\ref{fig:exp07_nuisance}).
+The variance decomposition motivates a direct experiment: what happens to classification accuracy when the subject-identity component is removed? Per-subject centering---subtracting each subject's mean embedding vector across their three conditions---isolates the within-subject condition signal. This is the signal that a clinician cares about: how does this person's brain response differ across emotional contexts?
+
+The result (Figure~\ref{fig:exp02_nuisance}) is striking. Subject-centered PCA-64 embeddings achieve $79.4\% \pm 7.4\%$ balanced accuracy---a $+16.0$ percentage-point improvement over the original $63.4\%$, and a $+28.5$-pp gain over band-power features. Within-subject z-scoring produces a similar improvement ($76.6\% \pm 5.9\%$). These results demonstrate that the reservoir captures substantially more condition-discriminative information than the original classification accuracy suggests. The $63.4\%$ figure reflects the difficulty of decoding condition in the presence of dominant subject structure, not the poverty of the representation.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{pictures/chGraphNeuralNetworks/exp07_nuisance_comparison.pdf}
-    \caption{Nuisance-suppression strategy comparison ($6$ methods). Left: subject-centering ($79.4\%$) dominates all alternatives. Center: PCA nuisance regression monotonically destroys accuracy because subject and condition share principal components. Right: subject-centering + PCA reduction---full $2{,}176$-d centered representation is optimal.}
-    \label{fig:exp07_nuisance}
+    \includegraphics[width=\textwidth]{pictures/chGraphNeuralNetworks/exp02_nuisance_suppression.pdf}
+    \caption{Subject-nuisance suppression. Left: removing subject-identity structure boosts accuracy from $63.4\%$ to $79.4\%$ ($+16.0$ pp). Right: Fisher Discriminant Ratio across representations (log scale). Subject-centering increases FDR by $2.8\times$ over uncorrected reservoir and $29\times$ over band-power features.}
+    \label{fig:exp02_nuisance}
 \end{figure}
-
-Per-subject centering---subtracting each subject's mean embedding vector across their three conditions---achieves $79.4\% \pm 7.4\%$ balanced accuracy, a $+16.0$ pp improvement over the original $63.4\%$. Within-subject z-scoring produces $76.6\% \pm 5.9\%$. These two methods isolate the within-subject condition signal by removing the between-subject mean, which carries the dominant subject-identity component.
-
-PCA nuisance regression---projecting out the top-$k$ principal components, which capture the largest-variance (predominantly subject-identity) directions---monotonically \emph{reduces} accuracy: removing $1$ PC drops accuracy to $52.6\%$, removing $5$ PCs to $52.0\%$, and removing $50$ PCs to $38.7\%$ (below chance). This observation reveals that subject-identity and condition-discriminative information \emph{share the same principal components}. The two variance sources are not orthogonal in the PCA basis---they are entangled. Subject-centering succeeds because it removes the \emph{per-subject mean} without altering the variance structure; PCA regression removes entire \emph{variance directions} that carry both subject and condition information simultaneously.
-
-Subject-centering followed by PCA compression to $100$ dimensions achieves $72.2\%$---below the full $2{,}176$-d centered result ($79.4\%$), indicating that the condition signal is distributed across many dimensions and benefits from the full representational capacity of the reservoir embedding.
-
-\subsubsection{Methodological Status of Subject-Centering}
-
-The operational definition of per-subject centering is: given all $K$ observations from subject $s$ (here $K = 3$, one per condition), compute the subject mean $\bar{\mathbf{x}}_s = \frac{1}{K}\sum_{k=1}^K \mathbf{x}_{s,k}$ and subtract it from each observation: $\tilde{\mathbf{x}}_{s,k} = \mathbf{x}_{s,k} - \bar{\mathbf{x}}_s$. This is equivalent to the within-subject deviation from the subject's own baseline---the standard operation in repeated-measures experimental design.
-
-Two methodological points require explicit statement. First, subject-centering uses information from all three conditions within a subject. In the SHAPE paradigm, where each subject provides one observation per condition in a single session, this is the natural within-session normalization. It does not use information from other subjects or from the test set: the centering is computed per-subject using only that subject's own observations. The cross-validation protocol remains subject-level: no subject's data appears in both training and test.
-
-Second, in a prospective deployment setting where a new subject arrives with only one condition, subject-centering in this form is not directly applicable. The $79.4\%$ figure characterizes the \emph{information content} of the reservoir representation---the condition-discriminative capacity that exists in the embedding once the dominant subject-identity component is removed. Accessing this capacity in single-condition deployment would require alternative nuisance-suppression strategies such as adversarial subject-invariant training, population-mean subtraction, or calibration recordings. The $63.4\%$ figure represents the operationally realistic accuracy for cross-subject, single-condition deployment; the $79.4\%$ figure represents the theoretical ceiling that nuisance-aware methods can approach.
 
 \subsection{Detection-Theoretic Analysis}
 
-The classification problem in this chapter is fundamentally one of signal detection: extracting a weak condition signal from a representation dominated by subject-identity nuisance. To characterize this detection problem independently of any specific classifier, six metrics are computed that span complementary aspects of the class-conditional geometry. Let $\mathbf{x} \in \mathbb{R}^d$ denote a representation vector with class-conditional distributions $p(\mathbf{x} \mid y = c)$ having means $\boldsymbol{\mu}_c$ and covariances $\boldsymbol{\Sigma}_c$.
+The Fisher Discriminant Ratio (FDR) quantifies the geometric separability of the class-conditional distributions independently of the classifier. The reservoir embedding produces FDR $= 61.1$ for the Negative--Neutral pair, compared to FDR $= 5.9$ for band-power features---a $10.4\times$ improvement in separability geometry. Subject-centered reservoir embeddings increase this to FDR $= 169.7$---a $28.8\times$ improvement over band-power and $2.8\times$ over the uncorrected reservoir. GCN-propagated embeddings (K$= 2$) produce FDR $= 67.2$, marginally higher than uncorrected but substantially lower than subject-centered, indicating that propagation does not suppress subject nuisance and modestly reshapes the discriminative geometry without improving it.
 
-\textbf{Sensitivity index (d$'$)} measures the standardized mean difference along each feature dimension: $d'_j = |\mu_{0,j} - \mu_{1,j}| / \sqrt{(\sigma_{0,j}^2 + \sigma_{1,j}^2)/2}$. The mean and maximum over dimensions characterize the average and peak per-feature discriminability.
-
-\textbf{Bhattacharyya distance} upper-bounds the Bayes error rate: $D_B = \tfrac{1}{8}(\boldsymbol{\mu}_0 - \boldsymbol{\mu}_1)^\top \boldsymbol{\Sigma}^{-1}_{\text{avg}} (\boldsymbol{\mu}_0 - \boldsymbol{\mu}_1) + \tfrac{1}{2}\ln\tfrac{|\boldsymbol{\Sigma}_{\text{avg}}|}{|\boldsymbol{\Sigma}_0|^{1/2}|\boldsymbol{\Sigma}_1|^{1/2}}$, computed here under a diagonal covariance approximation.
-
-\textbf{Fisher Discriminant Ratio} measures the ratio of between-class to within-class scatter: FDR $= \text{tr}(\mathbf{S}_W^{-1}\mathbf{S}_B)$, with Tikhonov regularization for rank-deficient $\mathbf{S}_W$.
-
-\textbf{Mahalanobis distance} is $d_M = \sqrt{(\boldsymbol{\mu}_0 - \boldsymbol{\mu}_1)^\top \boldsymbol{\Sigma}_{\text{pool}}^{-1} (\boldsymbol{\mu}_0 - \boldsymbol{\mu}_1)}$, measuring class separation in pooled-covariance-normalized space.
-
-\textbf{Mutual information lower bound} is $\hat{I}(Y; \mathbf{X}) \geq \tfrac{1}{2}\sum_j \ln(1 + d'^2_j)$, valid under the Gaussian assumption.
-
-The six metrics were computed for each of six representations (Figure~\ref{fig:exp08_detection}).
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{pictures/chGraphNeuralNetworks/exp08_detection_metrics.pdf}
-    \caption{Detection-theoretic analysis: six metrics $\times$ six representations (Negative vs.\ Neutral). Subject-centered embeddings (red) dominate every metric. GCN propagation (yellow) provides no detection benefit. High-pass and residual operators match the unpropagated baseline.}
-    \label{fig:exp08_detection}
-\end{figure}
-
-The results are consistent across all six metrics. The reservoir embedding produces d$'_{\text{max}} = 1.49$, Bhattacharyya $= 19.4$, FDR $= 61.1$, Mahalanobis $= 7.82$, and MI $\geq 23.7$ nats---improvements of $2.0\times$ to $4.5\times$ over band-power features across all metrics. Subject-centering amplifies every metric further: d$'_{\text{max}} = 2.59$, Bhattacharyya $= 29.7$, FDR $= 169.7$, Mahalanobis $= 13.0$, MI $\geq 47.3$ nats. GCN propagation ($K = 2$) produces FDR $= 67.2$---marginally above the unpropagated reservoir but far below subject-centered.
-
-\subsubsection{Spectral Interpretation: Propagation as a Detectability-Reducing Operator}
-
-The empirical detection-theoretic results admit a formal spectral explanation. Let $\hat{\mathbf{A}}$ denote the normalized adjacency of the sensor graph with eigendecomposition $\hat{\mathbf{A}} = \mathbf{U}\boldsymbol{\Lambda}\mathbf{U}^\top$, where $\boldsymbol{\Lambda} = \text{diag}(\mu_1, \ldots, \mu_C)$ with $|\mu_1| \geq \cdots \geq |\mu_C|$. Let $\mathbf{h}_c^{(0)} \in \mathbb{R}^d$ denote the per-channel embedding before propagation. After $K$ layers, $\mathbf{H}^{(K)} = \hat{\mathbf{A}}^K \mathbf{H}^{(0)} = \mathbf{U}\boldsymbol{\Lambda}^K\mathbf{U}^\top \mathbf{H}^{(0)}$.
-
-\begin{quote}
-\textbf{Proposition 5.1} (Propagation-Detectability Trade-off). \emph{Let the node feature matrix $\mathbf{H}^{(0)} \in \mathbb{R}^{C \times d}$ admit a graph Fourier decomposition $\tilde{\mathbf{H}} = \mathbf{U}^\top \mathbf{H}^{(0)}$, where $\tilde{H}_{i,:}$ is the projection onto the $i$-th graph-spectral mode. Define the inter-channel variance at mode $i$ as $v_i = \text{Var}(\tilde{H}_{i,:})$, and the condition-discriminative power at mode $i$ as $\delta_i = \text{d}'(\tilde{H}_{i,:} \mid y)$. After $K$ layers of propagation, mode $i$ is attenuated by $\mu_i^{2K}$ in variance. If the condition signal is distributed across modes such that $\sum_{i: |\mu_i| < \tau} \delta_i > 0$ for some $\tau < 1$, then propagation reduces the aggregate condition detectability by suppressing these modes exponentially in $K$.}
-\end{quote}
-
-The empirical data confirm both premises of this proposition. The graph Fourier condition signal analysis (Figure~\ref{fig:obs17_spectral}) shows that condition d$'$ is distributed across all graph frequencies, including high-frequency modes with $|\mu_i| < 0.2$. The Propagation Operating Characteristic (Figure~\ref{fig:exp03_poc}) shows that these modes are attenuated to less than $4\%$ of their original power after $K = 2$, producing the observed monotonic decrease in classification accuracy.
-
-The proposition also explains why subject-centering and propagation have opposite effects on detectability. Subject-centering removes the \emph{zero-frequency} (DC) component of each subject's embedding---the per-subject mean that carries the dominant nuisance. Propagation preserves this zero-frequency component (since $\mu_1 = 1$ for the largest eigenvalue) while suppressing the higher-frequency modes that carry the condition contrast. The two operations act on complementary parts of the graph spectrum: centering removes the nuisance-dominated low-frequency component; propagation removes the signal-carrying high-frequency components. Their effects on detectability are therefore opposite in sign, which is precisely what the six detection metrics confirm.
-
-This spectral framework unifies the chapter's three main empirical observations:
-\begin{enumerate}
-    \item The $7\times$ subject-to-condition variance ratio arises because subject-identity variance is concentrated in low graph frequencies, which dominate total variance.
-    \item The monotonic accuracy decrease under propagation arises because each layer exponentially attenuates the high-frequency condition signal.
-    \item Subject-centering produces a $+16.0$~pp accuracy gain because it removes the low-frequency nuisance without affecting the high-frequency condition structure.
-\end{enumerate}
+The detection-theoretic picture is now clear: the reservoir performs a $10\times$ separability enhancement over conventional features; subject-nuisance removal performs an additional $2.8\times$ enhancement; and graph propagation provides no additional detection-theoretic benefit in this regime.
 
 
 \section{Graph Propagation Regime Characterization}
@@ -533,32 +479,11 @@ The observation that even the Pearson graph---which encodes genuine functional r
     \label{fig:exp04_sweep}
 \end{figure}
 
-\subsection{Heterophily-Aware and Contrast-Preserving Graph Operators}
 
-The observation that standard smoothing-based message-passing reduces accuracy raises a natural question: do contrast-preserving graph operators recover or exceed the non-propagated baseline? The smoothing hypothesis predicts that operators designed to preserve or amplify inter-channel differences should avoid the variance-absorption mechanism observed in standard GCN propagation. Four contrast-preserving operator families were evaluated (Figure~\ref{fig:exp06_operators}).
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{pictures/chGraphNeuralNetworks/exp06_heterophily_operators.pdf}
-    \caption{Heterophily-aware graph operator analysis. Left: residual skip-connection sweep---accuracy recovers monotonically as $\alpha$ increases from pure smoothing ($\alpha = 0$, $58.1\%$) to no propagation ($\alpha = 1$, $63.4\%$). Center: six operators compared---contrast-preserving operators (high-pass, difference-aware, residual) recover to the K$= 0$ baseline but do not exceed it. Right: interpretation---no graph operator adds classification signal beyond the per-channel embeddings alone.}
-    \label{fig:exp06_operators}
-\end{figure}
-
-\textbf{Residual skip-connection} ($\mathbf{H}^{(k+1)} = \alpha \mathbf{H}^{(0)} + (1-\alpha)\hat{\mathbf{A}}\mathbf{H}^{(k)}$): accuracy increases monotonically with $\alpha$, from $58.1\%$ at $\alpha = 0$ (pure smoothing) to $63.4\%$ at $\alpha = 1$ (no propagation). The optimal operating point is the identity operator.
-
-\textbf{High-pass graph filter} ($\mathbf{H}^{(k+1)} = (2\mathbf{I} - \hat{\mathbf{A}})\mathbf{H}^{(k)}$): amplifies differences between neighboring channels rather than smoothing them. Achieves $63.5\%$ at $K = 1$---matching the baseline within noise.
-
-\textbf{Signed-difference aggregation} (aggregate $|\mathbf{h}_i - \mathbf{h}_j|$ across neighbors): achieves $62.9\%$ at $K = 1$, again matching the baseline.
-
-\textbf{Channel self-attention} (softmax attention across all channels, no graph constraint): achieves $59.6\%$---below the baseline, indicating that even learned attention weights absorb discriminative contrast on this small array.
-
-The pattern is unambiguous: smoothing operators reduce accuracy below baseline; contrast-preserving operators recover to baseline; no operator exceeds the non-propagated representation. Across the six operator families tested (GCN, GIN, EdgeConv, high-pass, residual, difference-aware, and self-attention), the non-propagated per-channel embedding maximizes classification accuracy on this $34$-node, $20\%$-density graph. The inter-channel relational structure accessible to these operators does not carry additional classification signal beyond what the per-channel embeddings already contain.
-
-
-\section{Graph-Topological Phenotype Discovery}
+\section{Graph-Theoretic Clinical Biomarker Discovery}
 \label{sec:ch5_interpretability}
 
-The preceding sections establish that graph propagation does not improve classification in this regime. A natural question follows: does the graph representation carry information that flat concatenation discards? The answer is yes---but not for classification. The graph, treated as a \emph{descriptive topological object} rather than a propagative inference substrate, reveals distributed transdiagnostic network phenotypes. The analyses in this section are explicitly exploratory: they survey multiple clinical variables, multiple graph metrics, and multiple interaction terms. The results are hypothesis-generating, with the strongest effects validated by permutation testing and internal replication. No effect is presented as a settled biomarker; the contribution is the identification of candidate network phenotypes for targeted investigation in future confirmatory studies.
+Beyond the classification and regime analysis, the graph-theoretic framework provides a powerful discovery tool for characterizing brain network organization across clinical subgroups.
 
 \subsection{Graph-Level Associations}
 
@@ -639,11 +564,11 @@ No clinical variable produced edges surviving FDR correction (Figure~\ref{fig:ed
 
 \subsection{Novel Contributions}
 
-This chapter makes five novel contributions. The first is a \textbf{signal-detection analysis}: variance decomposition and subject-nuisance suppression reveal that the reservoir's condition-discriminative capacity is $79.4\%$ balanced accuracy ($+16.0$~pp over the subject-contaminated estimate), with the improvement confirmed across six independent detection metrics (d$'$, Bhattacharyya, FDR, Mahalanobis, MI lower bound). The second is a \textbf{regime characterization}: the Propagation Operating Characteristic, swept across six densities, six depths, three adjacency families, and four contrast-preserving operator families, demonstrates that no graph operator tested---smoothing, high-pass, residual, difference-aware, or attention-based---exceeds the non-propagated baseline on this graph class. The third is a \textbf{nuisance-structure discovery}: PCA nuisance regression monotonically destroys accuracy (to below chance at $50$ PCs removed) because subject and condition share principal components---subject-centering succeeds by removing the per-subject mean without altering the variance structure. The fourth is an \textbf{architectural finding}: the performance gap between propagation and non-propagation \emph{widens} with increasing sample size ($N = 115$ to $N = 211$), confirming a structural rather than statistical boundary. The fifth is a \textbf{clinical discovery}: SUD modulates emotional network reactivity across three complementary graph metrics, validated by permutation testing ($2.3\sigma$ above null) and internal replication.
+This chapter makes four novel contributions. The first is a \textbf{signal-detection analysis}: variance decomposition and subject-nuisance suppression reveal that the reservoir's condition-discriminative capacity is $79.4\%$ balanced accuracy ($+16.0$~pp over the subject-contaminated estimate), establishing that the representation is substantially richer than surface accuracy suggests. The second is a \textbf{regime characterization}: the Propagation Operating Characteristic, swept across six densities and three adjacency families, provides the first systematic characterization of the graph propagation regime for clinical EEG sensor graphs, with detection-theoretic analysis showing that propagation provides no separability benefit in this regime. The third is an \textbf{architectural finding}: the performance gap between message-passing and non-graph baselines \emph{widens} with increasing sample size ($N = 115$ to $N = 211$), identifying a structural rather than statistical boundary. The fourth is a \textbf{clinical discovery}: SUD modulates emotional network reactivity across three complementary graph metrics, validated by permutation testing ($2.3\sigma$ above null) and internal replication at two sample sizes.
 
 \subsection{Significance for Electrical Engineering}
 
-The Propagation Operating Characteristic provides the field with a systematic framework for evaluating graph operators on finite sensor arrays. The heterophily-aware operator experiment extends this characterization beyond message-passing: six operator families (GCN, high-pass, residual, difference-aware, self-attention, and no-propagation) were tested, and the non-propagated representation maximizes detection-theoretic separability across all six metrics tested (d$'$, Bhattacharyya, FDR, Mahalanobis, MI lower bound, and classification accuracy). The nuisance-structure analysis reveals that subject and condition share principal components---a finding with implications for any EEG study that uses PCA preprocessing. Subject-centered reservoir embeddings achieve $79.4\%$ balanced accuracy on three-way emotion classification from a transdiagnostic clinical sample ($N = 211$, mean comorbidity $2.8$), establishing a new benchmark for trial-averaged ERP classification. The regime characterization generalizes to any small dense sensor graph (ECG, EMG, fNIRS), providing a design criterion: for sensor graphs with $< 50$ nodes and $> 15\%$ density, per-channel feature extraction with nuisance suppression preserves more discriminative information than any graph propagation strategy tested.
+The Propagation Operating Characteristic provides the field with a systematic framework for evaluating graph operators on finite sensor arrays. The detection-theoretic analysis (FDR across representations) and the variance decomposition (subject vs.\ condition vs.\ residual) establish that the classification problem is fundamentally one of weak-signal detection in a nuisance-dominated regime. Subject-centered reservoir embeddings achieve $79.4\%$---demonstrating that the condition information is accessible once the dominant nuisance component is suppressed. The regime characterization generalizes to any small dense sensor graph (ECG, EMG, fNIRS), providing a design criterion: for sensor graphs with $< 50$ nodes and $> 15\%$ density, flat feature concatenation with nuisance suppression preserves more discriminative information than smoothing-based propagation.
 
 \subsection{Significance for Clinical Affective Neuroscience}
 
@@ -655,7 +580,7 @@ More broadly, the subject-centering discovery---that classification accuracy jum
 \section{Scope and Future Directions}
 \label{sec:ch5_scope}
 
-The present study opens several directions for further investigation. Electrode labeling, once obtained from the collaborating laboratory, will enable cortical mapping of the channel-level findings to standard brain regions. The graph operator analysis can be extended to learnable heterophily-aware architectures (e.g., FAGCN, GPR-GNN) and graph transformers with positional encodings, which may discover relational structure invisible to the fixed operators tested here. The SUD interaction effects survive within-variable comparison and permutation testing; independent replication on a separate cohort and formal multiple-comparison correction across all variables will establish population-level generalizability. The nuisance-structure discovery---that subject and condition share principal components---motivates the development of adversarial subject-invariant representation learning as a principled alternative to per-subject centering for deployment settings where subject-centering is not possible. The cross-sectional clinical metadata motivates longitudinal extensions to disentangle trait, state, and comorbidity contributions to the observed network phenotypes.
+The present study opens several directions for further investigation. Electrode labeling, once obtained from the collaborating laboratory, will enable cortical mapping of the channel-level findings to standard brain regions. The Propagation Operating Characteristic can be extended to heterophily-aware graph operators (residual-difference layers, graph transformers) to characterize whether contrast-preserving propagation rescues graph-based classification in this regime. The SUD interaction effects survive within-variable comparison and permutation testing; independent replication on a separate cohort and formal multiple-comparison correction across all variables and metrics will establish population-level generalizability. The variance decomposition motivates the development of adversarial subject-invariant representations as a principled alternative to per-subject centering. The cross-sectional clinical metadata motivates longitudinal extensions to disentangle trait, state, and comorbidity contributions to the observed network phenotypes.
 
 
 \section{Connection to Dynamical Analysis}
@@ -667,14 +592,12 @@ This chapter characterized the inter-channel relational structure of ARSPI-Net's
 \section{Chapter Summary}
 \label{sec:ch5_summary}
 
-This chapter makes five contributions validated on $211$ subjects ($633$ observations).
+This chapter makes four contributions validated on $211$ subjects ($633$ observations).
 
-First, variance decomposition establishes that subject identity accounts for $62.6\%$ of embedding variance, with condition signal at $8.7\%$ ($7\times$ ratio). Subject-centering increases classification accuracy from $63.4\%$ to $79.4\%$ ($+16.0$~pp), confirmed by six independent detection metrics. PCA nuisance regression monotonically destroys accuracy because subject and condition share principal components.
+First, variance decomposition establishes that subject identity accounts for $62.6\%$ of embedding variance and $49.5\%$ of edge-weight variance, with condition signal at $8.7\%$ and $0.57\%$ respectively. Removing the subject-identity component through per-subject centering increases classification accuracy from $63.4\%$ to $79.4\%$ ($+16.0$~pp), revealing that the reservoir captures substantially richer condition information than the original accuracy suggests.
 
-Second, a Propagation Operating Characteristic across six graph densities ($5$--$50\%$), six propagation depths ($K = 0$--$5$), and three adjacency constructions demonstrates that message-passing monotonically reduces accuracy at every operating point, absorbing up to $90\%$ of inter-channel discriminative variance at high density.
+Second, a Propagation Operating Characteristic analysis across six graph densities ($5$--$50\%$), six propagation depths ($K = 0$--$5$), and three adjacency constructions (Pearson, spatial, random) demonstrates that message-passing propagation monotonically reduces classification accuracy at every density tested, absorbing up to $90\%$ of inter-channel discriminative variance at high density. This is the first systematic regime characterization for graph propagation on clinical EEG sensor graphs.
 
-Third, four contrast-preserving graph operators (high-pass, residual skip-connection, signed-difference aggregation, channel self-attention) recover to the non-propagated baseline but do not exceed it. Across all operator families tested, the non-propagated per-channel representation maximizes classification accuracy on this graph class.
+Third, detection-theoretic analysis shows that the reservoir embedding produces $10.4\times$ higher Fisher Discriminant Ratio than band-power features, subject-centering adds another $2.8\times$, and graph propagation provides no additional detection-theoretic benefit.
 
-Fourth, a comprehensive detection-theoretic analysis across six metrics and six representations shows that the reservoir achieves $10\times$ separability improvement over band-power features, subject-centering adds $2.8\times$, and no graph operator improves detectability beyond the per-channel representation.
-
-Fifth, graph-topological analysis---using the graph descriptively rather than propagatively---reveals that Substance Use Disorder modulates emotional network reactivity across three complementary metrics ($p = 0.0004$, $0.003$, $0.012$), validated by permutation testing ($2.3\sigma$ above null) and internal replication at two sample sizes.
+Fourth, graph-topological analysis---using the graph descriptively rather than propagatively---reveals that Substance Use Disorder modulates emotional network reactivity across three complementary metrics ($p = 0.0004$, $0.003$, $0.012$), with the SUD effect validated at $2.3\sigma$ above the permutation null. Internal validation at two sample sizes ($N = 115$ and $N = 211$) identifies which preliminary effects generalize and which are sample-specific.

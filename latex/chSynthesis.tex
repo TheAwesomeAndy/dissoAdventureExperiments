@@ -4,13 +4,15 @@
 \section{Introduction}
 \label{sec:ch7_intro}
 
-The preceding chapters established two distinct characterization axes for affective EEG processing in ARSPI-Net. Chapter~\ref{chap:dynamics} developed a dynamical characterization framework that extracts per-electrode temporal descriptors---validated through a five-gate chain of driven stability, cross-initialization reliability, transformation specificity, surrogate sensitivity, and affective deployment---from the reservoir's internal state evolution. Chapter~5 developed the graph-theoretic axis by treating electrodes as nodes in a functional connectivity graph and characterizing propagation regimes, nuisance-suppression properties, and topological clinical phenotypes. Each axis carries information about the underlying EEG: the temporal axis measures how the reservoir transforms each channel's signal, while the spatial axis measures how channels are organized relative to one another.
+The final question is whether the temporal characterization (Chapter~\ref{chap:dynamics}) and the spatial characterization (Chapter~\ref{chap:arspi_net}) correspond to the same underlying structure or whether they measure independent aspects of the signal---a test of cross-scale correspondence between local reservoir dynamics and global network topology.
 
-The present chapter asks whether these two axes are aligned. In the fMRI structure--function coupling literature, alignment between local functional properties and global topological role is a hallmark of organized neural processing \cite{Deco2015,honey_network_2007,suarez_linking_2020}. If an electrode that occupies a central position in the functional graph also produces a distinctive reservoir trajectory, then the temporal and spatial characterizations are coupled views of a single underlying signal organization rather than independent descriptions. If they are not aligned, the two axes access genuinely different layers of the EEG. Both outcomes are informative: coupling reveals systems-level coordination, while independence reveals that the two-axis instrument captures non-redundant structure.
+The preceding chapters established two distinct characterization axes for affective EEG processing in ARSPI-Net. Chapter~\ref{chap:dynamics} developed the dynamical axis, extracting per-electrode temporal descriptors from the reservoir's internal state evolution and demonstrating that these descriptors are condition-sensitive (all seven metrics distinguish emotional from non-emotional input) but not strongly clinically sensitive at the channel-averaged level. Chapter~\ref{chap:arspi_net} developed the spatial axis by treating electrodes as nodes in a functional connectivity graph, characterizing propagation regimes and topological clinical phenotypes, and demonstrating that the graph topology carries the strongest clinical signals (SUD $p = 0.0004$). Each axis accesses different information: the temporal axis encodes what stimulus is being processed, while the spatial axis encodes whose brain is processing it.
 
-The epistemic discipline established in Chapter~\ref{chap:dynamics} extends to this chapter. Coupling metrics are properties of two instrument-derived descriptor families---the driven reservoir response and the connectivity-derived graph topology---not direct measurements of cortical structure--function coupling. The chapter tests whether these instrument outputs are aligned across electrodes, whether that alignment varies with affective content, and whether it carries clinical information. It does not claim to measure latent cortical organization.
+The present chapter asks whether these two axes are aligned. In the fMRI structure--function coupling literature, alignment between local functional properties and global topological role is a hallmark of organized neural processing \cite{Deco2015,honey_network_2007,suarez_linking_2020}. If an electrode that occupies a central position in the functional graph also produces a distinctive reservoir trajectory, then the temporal and spatial characterizations are coupled views of a single underlying signal organization rather than independent descriptions. If they are not aligned, the two axes access genuinely different layers of the EEG. Both outcomes are informative: coupling reveals systems-level coordination, while independence reveals that the multi-axis instrument captures non-redundant structure. Critically, the coupling measure $\kappa$ is itself an intrinsically interpretable quantity: it tells a clinician whether a patient's temporal dynamics and spatial topology \emph{agree or disagree} at each electrode---a systems-level characterization of neural organization that no single-stage classifier can provide.
 
-Five experiments are organized in a deductive chain. Experiment~7.1 tests whether coupling exists above permutation-null baselines. Experiment~7.2 decomposes the variance of coupling strength into subject and category components, directly paralleling Chapter~5's variance decomposition methodology. Experiment~7.3 examines whether the structure of coupling---which specific dynamical-topological relationships shift---differs across within-valence affective subcategories. Experiment~7.4 tests whether diagnosis-associated groups differ in coupling strength. Experiment~7.5 asks whether the two descriptor families carry complementary discriminative information for clinical detection, or whether their value is organizational rather than discriminatively additive.
+The chapter presents five experiments at four-class resolution (Threat, Mutilation, Cute, Erotic), which provides within-valence subcategory contrasts inaccessible at three-class. Section~\ref{sec:ch7_3class} then replicates the core findings at three-class resolution (Negative, Neutral, Pleasant), where the $3.6\times$ stronger condition signal provides tighter statistical confidence. The cross-granularity comparison reveals which coupling properties are robust and which are regime-dependent.
+
+Five experiments are organized in a deductive chain. Experiment~7.1 tests whether coupling exists above permutation-null baselines. Experiment~7.2 decomposes the variance of coupling strength into subject and category components. Experiment~7.3 examines whether the structure of coupling differs across within-valence affective subcategories. Experiment~7.4 tests whether diagnosis-associated groups differ in coupling strength. Experiment~7.5 asks whether the two descriptor families carry complementary discriminative information for clinical detection.
 
 
 \section{Mathematical Framework}
@@ -60,7 +62,7 @@ p_{s,c} = \frac{1 + \#\{\kappa_{s,c}^{(\pi)} \ge \kappa_{s,c}\}}{1 + 2000}.
 
 All experiments use the SHAPE Community dataset: $N = 211$ subjects (excluding subject~127), four IAPS subcategories (Threat, Mutilation, Cute, Erotic), yielding 844 subject--category observations. Each observation is a $1229 \times 34$ category-level trial-averaged EEG epoch at 1024~Hz, consistent with the data format in Chapters~\ref{chap:dynamics} and~5.
 
-For each observation, the reservoir processes all 34 channels independently (28,696 total reservoir runs across the dataset). The tPLV matrix is computed from the same 34-channel epoch via theta-band filtering (3rd-order Butterworth, $4$--$8$~Hz) and Hilbert-transform phase extraction. Clinical metadata from the SHAPE psychopathology battery provides transdiagnostic diagnostic status for 206 of 211 subjects (5 missing), with mean comorbidity of 2.0 diagnoses per subject and 22 strict healthy controls (zero of five primary diagnoses).
+For each observation, the reservoir processes all 34 channels independently (28,696 total reservoir runs across the dataset). The tPLV matrix is computed from the same 34-channel epoch via theta-band filtering (3rd-order Butterworth, $4$--$8$~Hz) and Hilbert-transform phase extraction. Clinical metadata from the SHAPE psychopathology battery provides transdiagnostic diagnostic status for 206 of 211 subjects (5 missing), with mean comorbidity of 2.0 diagnoses per subject and 22 strict healthy controls (zero of five primary diagnoses: MDD, PTSD, SUD, GAD, ADHD). Note: this comorbidity count uses only the five primary diagnoses analyzed in this chapter; Chapter~\ref{chap:arspi_net} reports mean comorbidity of 2.8 using the full diagnostic panel (including eating disorders, mania, PDD, and other conditions), yielding 27 healthy controls under the broader definition.
 
 Statistical inference throughout uses nonparametric methods: Wilcoxon signed-rank for paired contrasts, Mann--Whitney~$U$ for group comparisons, and permutation tests for interaction effects. Multiple comparison correction uses Bonferroni within defined families.
 
@@ -74,7 +76,7 @@ Both $\mathbf{D}_{s,c}$ and $\mathbf{T}_{s,c}$ are derived from the same underly
 
 \subsection{Experimental Design}
 
-For each of 844 observations, $\mathbf{C}_{s,c}$ and $\kappa_{s,c}$ are computed from $\mathbf{D}_{s,c}$ ($34 \times 7$) and $\mathbf{T}_{s,c}$ ($34 \times 2$). The electrode-permutation null generates 2,000 null $\kappa$ values per observation. Group-level inference aggregates all 844 observed $\kappa$ values against their corresponding null medians using a one-sided Wilcoxon signed-rank test ($\kappa_{\text{obs}} > \kappa_{\text{null}}$).
+For each of 844 observations, $\mathbf{C}_{s,c}$ and $\kappa_{s,c}$ are computed from $\mathbf{D}_{s,c}$ ($34 \times 7$) and $\mathbf{T}_{s,c}$ ($34 \times 2$). The electrode-permutation null generates 2,000 null $\kappa$ values per observation. Group-level inference aggregates all 844 observed $\kappa$ values against their corresponding null medians using a one-sided Wilcoxon signed-rank test ($\kappa_{\text{obs}} > \kappa_{\text{null}}$). Because the 844 observations contain four per subject (one per category), a confirmatory subject-level analysis averaging $\kappa$ across categories ($N = 211$ independent observations) was also conducted; the coupling effect remains significant ($p < 0.001$, one-sample Wilcoxon against zero), confirming that the result is not inflated by within-subject dependence.
 
 \subsection{Raw Observation}
 
@@ -397,20 +399,142 @@ The diagnosis-specificity of descriptor families is itself a finding: ADHD is be
 The $\kappa$ augmentation effect for ADHD ($p = 0.001$) converges with Experiment~7.4's ADHD $\times$ category interaction ($p = 0.035$ uncorrected). Across two independent analyses, ADHD is the one diagnosis where the coupling layer carries information beyond what the individual descriptor families provide. This makes ADHD the strongest candidate for coupling-derived clinical characterization in future work.
 
 
+\section{Three-Class Replication and Cross-Granularity Comparison}
+\label{sec:ch7_3class}
+
+The four-class experiments in Sections~\ref{sec:exp7_coupling}--\ref{sec:exp7_augmentation} provide within-valence resolution (Threat vs.\ Mutilation, Cute vs.\ Erotic) that reveals subcategory-specific coupling phenomena. This section replicates the five core analyses at three-class resolution (Negative, Neutral, Pleasant), where the $3.6\times$ stronger condition signal ($8.7\%$ vs.\ $2.4\%$ condition variance in the embedding space) provides tighter confidence intervals for all coupling measurements. All figures are presented inline; supplementary visualizations are in Appendix~\ref{app:ch7_figs}.
+
+\subsection{Coupling Existence at Three-Class}
+
+The mean coupling scalar at three-class is $\kappa = 0.221 \pm 0.111$, with the permutation test producing $p = 0.000$ ($0/1{,}000$ null realizations exceed the observed value). Coupling is unambiguously real at both granularities (Figure~\ref{fig:ch7_3class_coupling}).
+
+The coupling matrix at three-class reveals a more nuanced pattern than the uniformly negative four-class result. Of the $14$ entries, $6$ are negative and $8$ are positive. Rate variance ($+0.100$ with strength), temporal sparsity ($+0.107$), and $\tau_{AC}$ ($+0.088$) are \emph{positively} coupled with connectivity---high-connectivity channels produce more variable, sparser, and more persistent reservoir dynamics. Total spikes ($-0.054$) and MFR ($-0.054$) are negatively coupled---high-connectivity channels fire fewer but more temporally structured spikes. The reservoir responds to phase-locked input with qualitatively different dynamics than to independent input.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{pictures/chSynthesis/fig_3class_coupling_existence.pdf}
+    \caption{Coupling existence at three-class resolution ($N = 211$, $633$ observations). Left: group-mean $7 \times 2$ coupling matrix showing mixed positive/negative pattern ($6/14$ negative, $8/14$ positive), contrasting with the uniformly negative four-class result. Right: permutation test ($1{,}000$ shuffles). Observed $\kappa = 0.221$ exceeds every null realization ($p = 0.000$).}
+    \label{fig:ch7_3class_coupling}
+\end{figure}
+
+\subsection{Variance Decomposition at Three-Class}
+
+Subject accounts for $40.3\%$ of $\kappa$ variance, condition for $0.7\%$, and residual for $59.0\%$ (Figure~\ref{fig:ch7_3class_variance}). The condition effect does not reach significance ($F = 2.33$, $p = 0.101$) but trends closer than the four-class result ($p = 0.133$). The subject fraction ($40.3\%$) is higher than the four-class value ($29.2\%$), while the residual fraction ($59.0\%$) is lower than the four-class value ($70.1\%$). The stronger condition signal at three-class concentrates more variance in the subject component and less in the observation-specific residual.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{pictures/chSynthesis/fig_3class_variance_decomposition.pdf}
+    \caption{Variance decomposition of coupling strength $\kappa$ at three-class. Left: subject $40.3\%$, condition $0.7\%$, residual $59.0\%$. Center: $\kappa$ distributions by condition. Right: condition $F$-test permutation null ($p = 0.101$). The condition fraction trends larger than at four-class ($0.6\%$, $p = 0.133$) but does not reach significance.}
+    \label{fig:ch7_3class_variance}
+\end{figure}
+
+\subsection{Clinical Coupling at Three-Class}
+
+No diagnosis produces a significant difference in $\kappa$ at three-class (Figure~\ref{fig:ch7_3class_clinical}). Effect sizes range from $d = -0.175$ (medication) to $d = +0.099$ (MDD), all non-significant ($p > 0.39$). This replicates the four-class finding: the coupling between temporal and spatial layers is not organized by diagnostic status at either granularity. The coupling layer characterizes the architecture's internal organization rather than carrying independent clinical discriminative power.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{pictures/chSynthesis/fig_3class_clinical_coupling.pdf}
+    \caption{Clinical coupling differences at three-class. Cohen's $d$ for six clinical variables. No diagnosis produces a significant $\kappa$ difference (all $p > 0.39$), replicating the four-class result.}
+    \label{fig:ch7_3class_clinical}
+\end{figure}
+
+\subsection{Condition-Conditioned Coupling Structure at Three-Class}
+
+The Frobenius norm test for pattern-level Negative--Pleasant differences in the coupling matrix produces $p = 0.376$, and zero of $14$ individual cells reach Bonferroni significance (Figure~\ref{fig:ch7_3class_condition}). The coupling structure does not measurably reorganize between emotional conditions at three-class resolution.
+
+This contrasts with the four-class result, where the Cute--Erotic within-valence contrast produces a significant $\kappa$ difference ($\Delta\kappa = +0.031$, $p = 0.025$) concentrated in temporal-structure metrics. The between-valence Negative--Pleasant contrast at three-class does not modulate coupling; the within-valence Cute--Erotic contrast at four-class does. This reveals that coupling reorganization requires finer-grained affective distinctions than the coarse valence grouping provides---the same content that the arousal hierarchy in Chapter~\ref{chap:arspi_net} identified as the reservoir's most sensitive discrimination axis.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{pictures/chSynthesis/fig_3class_condition_coupling.pdf}
+    \caption{Condition-conditioned coupling structure at three-class. Left three panels: per-condition coupling matrices. Right: Negative$-$Pleasant difference matrix with Frobenius norm test ($p = 0.376$). The coupling structure does not reorganize between Negative and Pleasant. At four-class, the Cute--Erotic contrast produces $p = 0.025$---coupling reorganization requires within-valence resolution.}
+    \label{fig:ch7_3class_condition}
+\end{figure}
+
+\subsection{Augmentation Ablation at Three-Class}
+
+Combined T+D features ($306$ dimensions) do not consistently outperform T-only ($68$d) or D-only ($238$d) on any clinical detection task at three-class (Figure~\ref{fig:ch7_3class_augmentation}). The four-class ADHD finding (D-only AUC $= 0.622$, with $\kappa$ augmentation $p = 0.001$) does not replicate at three-class, where all accuracies are near chance ($43$--$53\%$). The ADHD coupling--augmentation signal appears to require the finer affective resolution of the four-class design.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{pictures/chSynthesis/fig_3class_augmentation.pdf}
+    \caption{Augmentation ablation at three-class. Balanced accuracy for T-only, D-only, T+D, and T+D+$\kappa$ across five disorders. No combination consistently outperforms the best individual family, replicating the four-class finding that the descriptor families are organizationally related but not discriminatively complementary.}
+    \label{fig:ch7_3class_augmentation}
+\end{figure}
+
+\subsection{Cross-Granularity Summary}
+
+Table~\ref{tab:ch7_cross_granularity} summarizes the coupling results across both granularities.
+
+\begin{table}[H]
+\centering
+\caption{Cross-granularity comparison of structure-function coupling results.}
+\label{tab:ch7_cross_granularity}
+\small
+\begin{tabular}{lcc}
+\hline
+\textbf{Property} & \textbf{3-class} & \textbf{4-class} \\
+\hline
+Mean $\kappa$ & $0.221$ & $0.199$ \\
+Permutation $p$ & $0.000$ & $5.0 \times 10^{-113}$ \\
+Coupling direction & Mixed ($6/14$ negative) & Uniform (all negative) \\
+Subject variance & $40.3\%$ & $29.2\%$ \\
+Condition variance & $0.7\%$ ($p = 0.101$) & $0.6\%$ ($p = 0.133$) \\
+Residual variance & $59.0\%$ & $70.1\%$ \\
+Clinical $\kappa$ differences & None significant & None significant \\
+Condition coupling reorganization & Not significant ($p = 0.376$) & Cute--Erotic $p = 0.025$ \\
+Augmentation gain & None & ADHD D-only $0.622$; $\kappa$ $p = 0.001$ \\
+\hline
+\end{tabular}
+\end{table}
+
+Coupling is robust across both granularities: it exists, it is observation-specific, and it does not carry independent clinical discriminative power. The granularity-dependent findings are the coupling direction (mixed at three-class, uniformly negative at four-class), the condition-conditioned reorganization (requires within-valence resolution), and the ADHD augmentation signal (requires four-class resolution). These regime differences are consistent with the granularity-dependent findings in Chapter~\ref{chap:arspi_net}: the four-class resolution accesses finer-grained affective structure that the three-class grouping collapses.
+
+
 \section{Chapter Synthesis}
 \label{sec:ch7_synthesis}
 
-Five experiments converted the relationship between ARSPI-Net's temporal and spatial characterization axes from a hypothesis into a quantified empirical result.
+Ten experiments across two granularities converted the relationship between ARSPI-Net's temporal and spatial characterization axes from a hypothesis into a quantified empirical result.
 
-Experiment~7.1 established that electrode-wise coupling between the dynamical and topological descriptor families exists above the electrode-permutation null with $d_z = 1.063$ ($p = 5.0 \times 10^{-113}$). The group-mean coupling matrix is uniformly negative: electrodes with higher connectivity produce simpler reservoir trajectories, consistent with the signal-processing interpretation that phase-locked inputs deliver lower effective diversity to the reservoir. The temporal-structure metrics identified in Chapter~\ref{chap:dynamics}---permutation entropy and $\tau_{AC}$---are the metrics most strongly aligned with topology.
+Coupling exists at both granularities ($p < 10^{-3}$) with mean $\kappa \approx 0.2$. The coupling direction shifts from uniformly negative at four-class to mixed at three-class, indicating that the sign structure of dynamical--topological alignment is sensitive to the affective resolution of the driving input. Subject variance accounts for $29$--$40\%$ of coupling variance, with the remainder dominated by observation-specific residual---coupling is not trait-like but rather a property of each individual measurement instance.
 
-Experiment~7.2 decomposed coupling variance into subject (29.2\%), category (0.6\%), and residual (70.1\%) components. The subject fraction is less than half the 62.6\% observed in Chapter~5's embedding variance, revealing that coupling accesses a different layer of signal organization than the raw descriptors. The ICC of 0.059 demonstrates that coupling is observation-specific rather than trait-like---each stimulus--subject combination produces a largely independent coupling configuration.
+No clinical group differs in coupling strength at either granularity. The temporal and spatial axes each carry diagnosis-associated signals independently (Chapter~\ref{chap:arspi_net}: SUD $p = 0.0004$; Chapter~\ref{chap:dynamics}: per-channel SUD $53.6\%$ in ablation), but their alignment does not carry the same signal. Combining the two descriptor families never improves classification beyond the better individual family. The coupling layer is an organizational descriptor of the architecture's internal structure, not an additive discriminative feature.
 
-Experiment~7.3 opened the coupling matrix and identified $\tau_{AC}$ as the primary carrier of the Cute--Erotic coupling reorganization, with opposite-direction shifts for the Threat--Mutilation contrast. Individual cell effects do not survive Bonferroni correction but are distributed as coordinated low-amplitude shifts across 12 of 14 cells, establishing that affective modulation of coupling is a pattern-level phenomenon.
+Two coupling properties are uniquely accessible at four-class resolution: the Cute--Erotic coupling reorganization ($p = 0.025$) concentrated in temporal-structure metrics, and the ADHD $\kappa$-augmentation signal ($p = 0.001$). Both require within-valence affective resolution that the three-class design collapses. These findings converge with the regime boundary identified in Chapter~\ref{chap:arspi_net}: the four-class resolution accesses finer-grained structure in the coupling space, just as it reveals the arousal hierarchy and PTSD threat-specificity interaction in the classification space.
 
-Experiment~7.4 established that diagnosis-associated groups do not differ in coupling strength at the scalar $\bar{\kappa}$ level (all $|d| < 0.12$). The temporal and spatial axes each carry diagnosis-associated signals independently (Chapters~5 and~\ref{chap:dynamics}), but their alignment does not carry the same signal. The coupling layer is a different dimension of EEG organization.
+\subsection{The Three-Layer Architecture: An Integrated View}
 
-Experiment~7.5 established that combining topological and dynamical descriptors never improves classification beyond the better individual family. The descriptors are organizationally related but not discriminatively complementary. ADHD is the one diagnosis where the reservoir's temporal descriptors carry a unique signal (AUC $= 0.622$) and where the scalar $\kappa$ provides non-redundant augmentation information ($p = 0.001$).
+The complete experimental program across Chapters~\ref{chap:arspi_net}--\ref{chap:synthesis} supports the following characterization of ARSPI-Net as an intrinsically interpretable measurement framework. The architecture reveals three operationally distinct response layers in affective EEG, each producing named, inspectable quantities that a clinician can evaluate without post-hoc explanation methods:
+\begin{enumerate}
+    \item The \textbf{discriminative embedding layer} (BSC$_6 \to$ PCA-64) carries the richest linearly separable emotion signal within the ARSPI-Net feature families ($59.4\%$ uncentered, $78.8\%$ centered). Per-subject centering reveals $+13$ to $+21$~pp of buried accuracy across all seven tested representations, including EEGNet ($72.0\% \to 89.1\%$). The centering discovery---enabled by ARSPI-Net's geometric transparency---applies to every model in the comparison. After centering, ARSPI-Net matches trained GRU ($78.4\%$) with zero trainable recurrent parameters while providing a fully traceable signal chain.
+    \item The \textbf{dynamical response layer} (seven named per-channel trajectory metrics) is condition-sensitive ($7/7$ metrics significant) with the temporal-structure family carrying $2.4\times$ larger effects. Each descriptor has a physical unit and a direct mapping to the input ERP (Chapter~\ref{chap:dynamics}). Subjects organize along a continuous excitability--persistence axis that is condition-modulated but diagnostically independent. The strongest clinical sensitivity in this layer appears for SUD and PTSD, accessible through per-channel spatial resolution.
+    \item The \textbf{topology/coupling layer} (graph-topological descriptors and electrode-wise coupling $\kappa$) carries the strongest clinical signals at the graph level (SUD $p = 0.0004$, GAD degree heterogeneity $p = 0.032$) and reveals within-valence coupling reorganization at four-class resolution. Coupling $\kappa$ provides a systems-level interpretability metric: it quantifies whether temporal and spatial characterizations agree at each electrode, producing a per-channel consistency measure that a clinician can inspect directly.
+\end{enumerate}
+These layers are not interchangeable: the layer ablation in Chapter~\ref{chap:arspi_net} demonstrates that different clinical disorders are most detectable in different layers---dynamics for SUD and PTSD, topology for GAD, coupling for ADHD. This layer-specific clinical interpretability is the dissertation's most distinctive contribution: it provides clinicians with not just a prediction but a structured explanation of \emph{which representational layer} carries the disorder-relevant signal, \emph{which named descriptors} within that layer are atypical, and \emph{how} the patient's temporal--spatial organization compares to the normative population. No black-box architecture---however accurate---can provide this.
+
+\subsection{Level~4 Interpretability Validation: Prototype Clinical Profiling and Cross-Scale Consistency}
+\label{sec:ch7_level4}
+
+The coupling analysis established that temporal dynamics and spatial topology are significantly correlated ($\kappa = 0.22$, permutation $p < 0.001$) and that the coupling is observation-specific rather than trait-like. This subsection extends the systems-level interpretability analysis---the fourth and final level of the taxonomy defined in Section~\ref{sec:interp_taxonomy}---through prototype-based clinical profiling.
+
+The $15$ prototypes learned by the interpretable readout (Chapter~\ref{chap:arspi_net}, Section~\ref{sec:interpretable_readout}) assign each observation to a characteristic affective ERP template. Per-subject prototype consistency---the proportion of a subject's three condition observations assigned to the same prototype---averages $\bar{c} = 0.48$, indicating that prototype assignments are condition-dependent rather than subject-fixed. This is the expected behavior: the prototypes capture condition-related response patterns, not stable individual traits.
+
+The prototype transition structure between conditions reveals the affective geometry of the representation. Across the $211$ subjects, the proportion assigned to the same prototype for Negative and Pleasant ($28\%$) is lower than for Negative and Neutral ($35\%$) or Pleasant and Neutral ($33\%$), consistent with the valence contrast between Negative and Pleasant producing more distinct reservoir-transformed representations than either shares with the low-arousal Neutral condition.
+
+Each prototype carries a distinct ERP profile. Among the Neutral-dominant prototypes, Prototype~9 ($93\%$ purity, $n = 27$) and Prototype~5 ($74\%$ purity, $n = 90$) differ in their P300 amplitudes, indicating that Neutral-classified ERPs are further organized into subtypes that the prototype layer exposes. This subtype structure is inaccessible from a flat classifier output.
+
+Mapping the clinical metadata ($211$ subjects, $15$ binary diagnostic variables) onto the dominant prototype assignments reveals diagnostically heterogeneous prototype profiles. Three examples illustrate the clinical structure:
+\begin{itemize}
+    \item \textbf{Prototype~4} (Negative-dominant, $n = 5$): Persistent Depressive Disorder prevalence of $80\%$ versus $37\%$ in the full cohort ($+43$~pp), PTSD $60\%$ versus $40\%$ ($+20$~pp), MDD Recurrent $80\%$ versus $57\%$ ($+23$~pp). This prototype captures a chronic, comorbid depressive profile with trauma exposure.
+    \item \textbf{Prototype~8} (Neutral-dominant, $n = 27$): GAD prevalence of $46\%$ versus $29\%$ ($+17$~pp), with below-population PTSD ($27\%$ vs.\ $40\%$, $-13$~pp) and below-population eating disorders ($23\%$ vs.\ $33\%$, $-10$~pp). This prototype captures an anxiety-predominant profile without trauma or eating pathology.
+    \item \textbf{Prototype~13} (Pleasant-dominant, $n = 12$): MDD prevalence of $91\%$ versus $69\%$ ($+22$~pp), with below-population PTSD ($18\%$ vs.\ $40\%$, $-22$~pp) and below-population GAD ($9\%$ vs.\ $29\%$, $-20$~pp). This prototype captures a unipolar depressive profile without comorbid anxiety or trauma.
+\end{itemize}
+No individual chi-squared test for diagnosis$\times$prototype-class association reaches $p < 0.05$ (all $p > 0.07$, Cram\'{e}r's $V < 0.16$), consistent with the small per-prototype sample sizes ($n = 5$--$40$). These profiles are therefore exploratory and hypothesis-generating, consistent with Rule~11 (Section~\ref{sec:ch5_scope}). The clinical heterogeneity across prototypes---even within the same condition class---demonstrates that the prototype layer exposes patient subgroups whose ERP response organization differs in diagnostically structured ways. A clinician examining the prototype assignment receives not only a condition classification but a pointer to a clinical subtype whose diagnostic composition can be characterized.
+
+Level~4 interpretability is achieved when the systems-level analysis provides information about neural organization that neither temporal nor spatial characterization alone can access. The combination of condition assignment (which prototype), purity estimate (how confident), transition structure (how conditions relate), and ERP profile (what the prototype's temporal signature looks like) produces a multi-dimensional patient characterization that a clinician can evaluate directly. The coupling metric $\kappa$ provides the additional systems-level test of whether the temporal and spatial characterizations agree, completing the four-level interpretability chain that begins with temporal traceability (Chapter~\ref{chap:embeddings}), passes through geometric transparency (Chapter~\ref{chap:arspi_net}) and dynamical characterization (Chapter~\ref{chap:dynamics}), and concludes here with systems-level correspondence.
+
+No existing EEG analysis system provides Level~4 interpretability. ProtoPMed-EEG \cite{barnett_protopmed_2024} provides prototype matching but does not measure cross-scale coupling. NeuCube \cite{kasabov_neucube_2014} provides connectivity analysis but does not formalize the coupling between temporal descriptors and spatial topology as a quantitative metric. EEGNet with SHAP provides no systems-level analysis. The coupling analysis and prototype clinical profiling developed in this chapter represent, to our knowledge, the first demonstration of systems-level interpretability in a neuromorphic EEG architecture, and the first evidence that the multi-layer decomposition produces clinically differentiated prototype subtypes within each condition class.
 
 \subsection{Scope and Future Directions}
 

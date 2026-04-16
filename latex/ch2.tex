@@ -1,0 +1,400 @@
+\chapter{Background and Related Work}
+\label{chap:background}
+
+This chapter establishes the theoretical foundations and reviews the prior work upon which the ARSPI-Net architecture is built. It covers five interconnected domains: the evolution of spiking neural computation and the biophysics of the neuron models used in this dissertation (Sections~\ref{sec:neural_paradigms}--\ref{sec:neuron_models}); the mathematical tools drawn upon throughout the dissertation, including information theory, the information bottleneck principle, graph theory, dynamical systems analysis, and Koopman operator theory (Section~\ref{sec:math_prelim}); the theory of reservoir computing that underpins the LSM component (Section~\ref{sec:reservoir_computing}); the principles of interpretability in clinical machine learning that motivate ARSPI-Net's staged, transparent architecture (Section~\ref{sec:interpretability_background}); and the affective neuroscience task formulation and the state of the art in EEG-based classification that positions the research contribution (Sections~\ref{sec:affect_ontology}--\ref{sec:state_of_art}).
+
+%% ===================================================================
+%% SECTION 1: NEURAL COMPUTATION PARADIGMS
+%% ===================================================================
+\section{The Evolution of Neural Computation Paradigms}
+\label{sec:neural_paradigms}
+
+\subsection{From Binary Logic to Rate-Based Abstraction}
+The history of artificial neural networks can be understood as a progression of conceptual generations, each increasing in its capacity to model complex computations. The first generation was rooted in the foundational work of McCulloch and Pitts, who proposed a simplified model of a neuron as a binary threshold logic gate \cite{mcculloch_logical_1943}. This led to the development of the Perceptron by Rosenblatt, a model that established the crucial principle of learning a vector of synaptic weights from data to perform a classification task \cite{rosenblatt_perceptron_1958}. While these first-generation networks were universal for Boolean functions, their binary nature fundamentally limited them from processing continuous, real-world data.
+
+The second generation, which encompasses the vast majority of modern deep learning, overcame this limitation by introducing continuous activation functions (e.g., sigmoid, hyperbolic tangent, ReLU). In this paradigm, the analog output of a unit is interpreted as an abstraction of a biological neuron's average firing rate over a given time window. The introduction of the backpropagation algorithm enabled the efficient training of deep, multi-layered networks of these units. These rate-based models are universal function approximators, and their ability to learn hierarchical representations from vast datasets has revolutionized fields from computer vision to natural language processing. However, this rate-coding abstraction is fundamentally at odds with the principles of information processing in the biological brain. As demonstrated by Thorpe and others, the brain performs complex recognition tasks on timescales of approximately 100--150\,ms, a duration that allows for only a handful of spikes to be propagated through the cortical hierarchy. This timescale is far too rapid to be explained by rate-based codes, which would require averaging over much longer windows to achieve reliable information transmission \cite{simon_j_thorpe_biological_1989}. This ``temporal binding problem'' strongly suggests that the precise timing of discrete neural events---spikes---is not noise, but a critical carrier of information.
+
+\subsection{The Third Generation: The Paradigm Shift to Spiking Neural Networks}
+This realization led to the development of the third generation of neural networks: Spiking Neural Networks (SNNs). SNNs are dynamical systems that explicitly model the continuous-time evolution of a neuron's membrane potential and communicate through discrete, asynchronous spike events. This event-driven, temporally precise mode of computation is not merely a more detailed simulation; it is a fundamentally different computational paradigm. Maass proved that SNNs are computationally more powerful than their second-generation counterparts; by leveraging the temporal domain, SNNs can compute complex functions with fewer neurons and potentially greater efficiency \cite{maass_networks_1997}.
+
+%% ===================================================================
+%% SECTION 2: SPIKING NEURON MODELS
+%% ===================================================================
+\section{The Biophysics and Mathematics of Spiking Neuron Models}
+\label{sec:neuron_models}
+The behavior of an SNN is governed by the mathematical model of its constituent neurons. The choice of model represents a critical trade-off between biological realism and computational tractability.
+
+\subsection{The Leaky Integrate-and-Fire (LIF) Model}
+A canonical and widely used model is the Leaky Integrate-and-Fire (LIF) neuron \cite{gerstner_spiking_2002}. It abstracts the neuron's membrane as a simple RC circuit. The subthreshold dynamics of the membrane potential $v(t)$ are described by the first-order linear ordinary differential equation:
+\begin{equation}
+    \tau_m \frac{dv(t)}{dt} = -(v(t) - v_{\text{rest}}) + R_m I(t)
+    \label{eq:lif_continuous}
+\end{equation}
+where $\tau_m = R_m C_m$ is the membrane time constant, $v_{\text{rest}}$ is the resting potential, $R_m$ is the membrane resistance, and $I(t)$ is the total input current. When $v(t)$ reaches a threshold $v_{\text{th}}$, two events occur: a spike is emitted to downstream neurons, and the potential is reset to a value $v_{\text{reset}}$ for a brief refractory period during which it cannot spike. The LIF model's primary limitation is its inability to reproduce the rich diversity of firing patterns (e.g., bursting, adaptation) seen in biological neurons.
+
+\subsection{Beyond the LIF: The Izhikevich and AdEx Models}
+To capture this richer dynamical repertoire, more complex models have been proposed. The Izhikevich model, for instance, uses a two-dimensional system of ODEs to couple the membrane potential $v$ with a slower membrane recovery variable $u$:
+\begin{align}
+    \frac{dv}{dt} &= 0.04v^2 + 5v + 140 - u + I \\
+    \frac{du}{dt} &= a(bv - u)
+\end{align}
+with a reset condition: if $v \ge 30$\,mV, then $v \leftarrow c,\; u \leftarrow u+d$. By tuning just four parameters ($a, b, c, d$), this model can efficiently reproduce twenty of the most biologically significant firing patterns \cite{izhikevich_simple_2003}. The Adaptive Exponential Integrate-and-Fire (AdEx) model provides another powerful two-dimensional alternative that explicitly models both adaptation and the exponential spike initiation process.
+
+\subsection{Justification for the LIF Model in this Dissertation}
+\label{sec:lif_justification}
+Despite the existence of more complex models, the LIF model was chosen for this work. This is a deliberate methodological decision grounded in two complementary arguments. First, in the context of reservoir computing (discussed in Section~\ref{sec:reservoir_computing}), the computational power arises primarily from the high-dimensional, collective dynamics of the recurrently connected network, not from the complex behavior of any single neuron. The primary role of the individual neuron is to introduce the essential non-linearity of threshold-based spiking. The computational efficiency of the LIF model allows for the simulation of larger reservoirs, which is more critical for achieving a high-capacity feature transformation than the firing patterns of individual units.
+
+Second, the LIF model has a precise connection to the theory of temporal scale-space representations. Lindeberg proved that the truncated exponential kernel---mathematically equivalent to the subthreshold impulse response of the LIF neuron---is the uniquely determined temporal smoothing kernel satisfying non-creation of new structures under time-causal constraints \cite{lindeberg_2016}. The LIF's exponential decay $h(t) = \frac{1}{\tau_m} e^{-t/\tau_m}$ for $t \ge 0$ is therefore not merely a computationally convenient simplification; it is the canonical time-causal filter kernel, providing a principled mathematical basis for the temporal integration performed by each reservoir neuron.
+
+\subsection{Discrete-Time Implementation and the $\beta$--$\tau_m$ Relationship}
+\label{sec:discrete_lif}
+In this dissertation, the LIF neuron is implemented in discrete time using the \texttt{snnTorch} library \cite{eshraghian_training_2023}. The discrete-time update for the membrane potential of neuron $i$ takes the form
+\begin{equation}
+    M_i[t] = (1 - \beta)\, M_i[t-1]\,(1 - S_i[t-1]) + I_{\text{tot},i}[t]
+    \label{eq:lif_discrete}
+\end{equation}
+where $\beta \in (0,1)$ is the decay parameter, $S_i[t-1] \in \{0,1\}$ is the spike indicator at the previous step (implementing the reset-by-subtraction mechanism), and $I_{\text{tot},i}[t]$ is the total input current at step $t$. A spike is emitted when $M_i[t] \geq M_{\text{th}}$.
+
+The parameter $\beta$ relates to the continuous-time membrane time constant $\tau_m$ through the discretization step size $\Delta t$. For a forward-Euler discretization of Equation~\eqref{eq:lif_continuous} with step size $\Delta t$ and $v_{\text{rest}} = 0$, the decay factor per step is $(1 - \Delta t / \tau_m)$, giving the exact correspondence
+\begin{equation}
+    \beta = \frac{\Delta t}{\tau_m}, \qquad \tau_m = \frac{\Delta t}{\beta}.
+    \label{eq:beta_tau}
+\end{equation}
+The commonly cited approximation $\tau_m \approx 1/\beta$ holds only when $\Delta t = 1$ (i.e., when time is measured in units of the simulation step). Throughout this dissertation, unless otherwise stated, the simulation step serves as the unit of time, so $\tau_m \approx 1/\beta$ is used as a convenient shorthand. However, when relating reservoir dynamics to physical timescales of EEG (e.g., milliseconds), the mapping through $\Delta t$ must be applied explicitly. For the validated operating point $\beta = 0.05$, the effective time constant is $\tau_m = 20$ simulation steps, which corresponds to a physical time constant that depends on the sampling rate and step size of the specific EEG preprocessing pipeline.
+
+
+%% ===================================================================
+%% SECTION 3: MATHEMATICAL PRELIMINARIES
+%% ===================================================================
+\section{Mathematical Preliminaries}
+\label{sec:math_prelim}
+
+This section introduces the mathematical tools and conceptual frameworks that are deployed in the technical chapters of the dissertation. It is not intended as a self-contained textbook treatment; rather, it establishes notation, states the key results that the later chapters invoke, and provides the reader with sufficient context to follow the technical arguments without requiring external reference.
+
+\subsection{Information-Theoretic Foundations}
+\label{sec:info_theory}
+
+Several constructs from information theory are used in this dissertation, particularly in the feature-space analysis of Chapter~4 and the dynamical characterization framework of Chapter~6.
+
+\paragraph{Mutual Information.}
+For two random variables $X$ and $Y$ with joint distribution $p(x,y)$ and marginals $p(x)$, $p(y)$, the mutual information is defined as
+\begin{equation}
+    I(X; Y) = \sum_{x,y} p(x,y) \log_2 \frac{p(x,y)}{p(x)\,p(y)}\,,
+    \label{eq:mutual_info}
+\end{equation}
+with the continuous analogue replacing sums by integrals \cite{cover_elements_2006}. Mutual information quantifies the reduction in uncertainty about $Y$ obtained by observing $X$ (and vice versa). It is non-negative, symmetric, and zero if and only if $X$ and $Y$ are statistically independent.
+
+\paragraph{The Data Processing Inequality.}
+If $X \to Y \to Z$ forms a Markov chain---meaning $Z$ is conditionally independent of $X$ given $Y$---then
+\begin{equation}
+    I(X; Z) \leq I(X; Y).
+    \label{eq:dpi}
+\end{equation}
+This inequality is fundamental to the interpretation of reservoir-derived features: any processing of the EEG signal through the reservoir and subsequent feature extraction can only preserve or lose information about the latent state that generated the signal; it cannot create new information \cite{cover_elements_2006}. When Chapter~4 reports that the Fisher Discriminant Ratio increases after the reservoir transformation, the correct interpretation is that the reservoir has improved the \emph{representation geometry} for the chosen decoder, not that it has increased the mutual information between the signal and the class label. Chapter~6 invokes the DPI explicitly as the foundational constraint bounding what reservoir-derived dynamical metrics can claim about the input process.
+
+\paragraph{Fisher Discriminant Ratio.}
+For a two-class problem with class-conditional mean vectors $\boldsymbol{\mu}_0$, $\boldsymbol{\mu}_1$ and within-class scatter matrix $\mathbf{S}_W = \sum_{i \in \{0,1\}} \sum_{\mathbf{x} \in C_i} (\mathbf{x} - \boldsymbol{\mu}_i)(\mathbf{x} - \boldsymbol{\mu}_i)^\top$, the Fisher Discriminant Ratio is
+\begin{equation}
+    \text{FDR} = (\boldsymbol{\mu}_0 - \boldsymbol{\mu}_1)^\top \mathbf{S}_W^{-1} (\boldsymbol{\mu}_0 - \boldsymbol{\mu}_1).
+    \label{eq:fdr}
+\end{equation}
+The FDR measures the ratio of between-class separation to within-class spread along the optimal linear discriminant direction \cite{duda_pattern_2001}. A higher FDR indicates greater linear separability. When $\mathbf{S}_W$ is rank-deficient---as occurs when the feature dimensionality exceeds the number of samples---regularization is required; in this dissertation, a Tikhonov-regularized inverse $(\mathbf{S}_W + \lambda \mathbf{I})^{-1}$ is used, with $\lambda$ chosen by cross-validation. This point is noted because Chapter~4 applies the FDR to 1536-dimensional feature vectors with 200 samples per class, making regularization essential for a well-defined metric.
+
+\subsection{The Information Bottleneck Principle}
+\label{sec:info_bottleneck}
+
+The representation pipeline developed in Chapters~\ref{chap:lsm}--\ref{chap:embeddings} can be understood through the lens of the \emph{information bottleneck} (IB) principle \cite{tishby_deep_2015}. Given an input variable $X$ (the EEG signal), a target variable $Y$ (the affective condition or diagnostic label), and a compressed representation $T$ (the ARSPI-Net embedding), the IB framework seeks a representation that minimizes the mutual information $I(X; T)$ (compression) while maximizing the mutual information $I(T; Y)$ (relevance):
+\begin{equation}
+    \min_{p(t|x)} \; I(X; T) - \beta \, I(T; Y)
+    \label{eq:ib}
+\end{equation}
+where $\beta$ controls the compression-relevance trade-off. In the ARSPI-Net pipeline, the reservoir expands the input into a high-dimensional state space ($I(X; T)$ increases), and the BSC$_6$-PCA-64 coding compresses it back ($I(X; T)$ decreases). The net effect is a representation that preserves task-relevant structure while discarding irrelevant variability---precisely the operation described by the IB objective.
+
+The IB perspective illuminates two key empirical findings. First, the observation that BSC$_6$ temporal coding substantially outperforms mean firing rate (Chapter~\ref{chap:embeddings}) corresponds to a shift along the IB curve: temporal coding preserves more $I(T; Y)$ at a given compression level because it retains spike-timing structure that rate coding discards. Second, the subject-covariance entanglement characterized in Chapter~\ref{chap:arspi_net} ($\rho = 7.2$) reveals that much of the information preserved in the embedding is subject-identity information rather than condition-relevant information. Per-subject centering can be understood as an IB operation that removes the subject-identity component of $I(X; T)$ without reducing $I(T; Y)$, shifting the representation toward the optimal IB frontier.
+
+\subsection{Elements of Graph Theory and Graph Signal Processing}
+\label{sec:graph_theory}
+
+The graph-based component of ARSPI-Net (Chapter~5) relies on several constructs from algebraic graph theory and graph signal processing.
+
+\paragraph{Graph Definitions.}
+A graph $G = (V, E)$ consists of a set of $N = |V|$ nodes and a set of edges $E \subseteq V \times V$. For weighted graphs, an edge $(i,j)$ carries a weight $w_{ij} \geq 0$. The graph structure is encoded in the adjacency matrix $\mathbf{A} \in \mathbb{R}^{N \times N}$, where $A_{ij} = w_{ij}$ if $(i,j) \in E$ and $A_{ij} = 0$ otherwise. The degree of node $i$ is $d_i = \sum_j A_{ij}$, and the degree matrix $\mathbf{D} = \text{diag}(d_1, \ldots, d_N)$ collects these on the diagonal.
+
+\paragraph{The Graph Laplacian.}
+The combinatorial graph Laplacian is defined as $\mathbf{L} = \mathbf{D} - \mathbf{A}$. Its normalized form, used in spectral graph convolutions, is
+\begin{equation}
+    \mathbf{L}_{\text{norm}} = \mathbf{I}_N - \mathbf{D}^{-1/2} \mathbf{A}\, \mathbf{D}^{-1/2}.
+    \label{eq:normalized_laplacian}
+\end{equation}
+Both forms are symmetric positive semi-definite, admitting an eigendecomposition $\mathbf{L} = \mathbf{U} \boldsymbol{\Lambda} \mathbf{U}^\top$ where $\mathbf{U} = [\mathbf{u}_1, \ldots, \mathbf{u}_N]$ contains the orthonormal eigenvectors and $\boldsymbol{\Lambda} = \text{diag}(\lambda_1, \ldots, \lambda_N)$ contains the eigenvalues with $0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_N$. The eigenvectors $\mathbf{u}_k$ serve as the graph Fourier basis, and the eigenvalues $\lambda_k$ play the role of frequencies: small eigenvalues correspond to smooth, slowly varying signals on the graph, while large eigenvalues correspond to rapidly oscillating components \cite{shuman_emerging_2013}.
+
+\paragraph{Spectral Graph Convolution.}
+For a signal $\mathbf{x} \in \mathbb{R}^N$ defined on the nodes of $G$, a spectral graph convolution with a filter $g_\theta$ is defined as
+\begin{equation}
+    g_\theta \star \mathbf{x} = \mathbf{U}\, g_\theta(\boldsymbol{\Lambda})\, \mathbf{U}^\top \mathbf{x},
+    \label{eq:spectral_conv}
+\end{equation}
+where $g_\theta(\boldsymbol{\Lambda}) = \text{diag}(g_\theta(\lambda_1), \ldots, g_\theta(\lambda_N))$ is a learned spectral filter. Direct computation of Equation~\eqref{eq:spectral_conv} requires eigendecomposition of $\mathbf{L}$, which costs $O(N^3)$. Practical GNN architectures approximate $g_\theta$ with low-order polynomials of $\mathbf{L}$ to avoid this cost: ChebyNet uses Chebyshev polynomials \cite{Defferrard2016}, and the Graph Convolutional Network (GCN) uses a first-order approximation that yields the propagation rule $\mathbf{H}^{(k+1)} = \sigma(\tilde{\mathbf{D}}^{-1/2} \tilde{\mathbf{A}}\, \tilde{\mathbf{D}}^{-1/2} \mathbf{H}^{(k)} \mathbf{W}^{(k)})$, where $\tilde{\mathbf{A}} = \mathbf{A} + \mathbf{I}_N$ includes self-loops \cite{Kipf2017}.
+
+\paragraph{Message Passing.}
+Most GNN architectures used in this dissertation can be described within the message-passing neural network (MPNN) framework \cite{Gilmer2017}. At each layer $k$, a node $v$ updates its representation by aggregating messages from its neighbors:
+\begin{equation}
+    \mathbf{h}_v^{(k+1)} = \psi^{(k)}\!\left(\mathbf{h}_v^{(k)},\; \bigoplus_{u \in \mathcal{N}(v)} \phi^{(k)}(\mathbf{h}_u^{(k)}, \mathbf{h}_v^{(k)}, \mathbf{e}_{uv})\right),
+    \label{eq:mpnn}
+\end{equation}
+where $\phi^{(k)}$ is the message function, $\psi^{(k)}$ is the update function, $\mathbf{e}_{uv}$ denotes edge features, and $\bigoplus$ is a permutation-invariant aggregation operator (e.g., sum, mean, or max). Graph Attention Networks (GATs) instantiate this framework by learning attention coefficients $\alpha_{uv}$ that weight the messages from different neighbors \cite{Velickovic2018}. Chapter~5 develops the specific instantiations used in ARSPI-Net.
+
+\paragraph{Graph-Level Readout.}
+For graph classification---predicting a label for an entire graph rather than individual nodes---a readout function aggregates node representations into a single graph-level embedding:
+\begin{equation}
+    \mathbf{h}_G = \text{READOUT}\!\left(\left\{\mathbf{h}_v^{(K)} \mid v \in V\right\}\right),
+    \label{eq:readout}
+\end{equation}
+where common choices include global mean pooling, global sum pooling, or attention-based pooling. The graph embedding $\mathbf{h}_G$ is then passed to a classifier (typically a multi-layer perceptron) for the final prediction. In ARSPI-Net, each graph represents a single multichannel EEG trial, nodes correspond to electrodes, and the readout produces a trial-level classification.
+
+\subsection{Dynamical Systems Concepts}
+\label{sec:dynamical_systems}
+
+The dynamical characterization framework developed in Chapter~6 relies on concepts from nonlinear dynamical systems theory. This subsection introduces the key constructs and, critically, the distinction between autonomous and driven dynamics that underpins the dissertation's measurement-instrument paradigm.
+
+\paragraph{State Space and Trajectories.}
+A discrete-time dynamical system is specified by a state vector $\mathbf{x}[t] \in \mathbb{R}^n$ and an evolution rule $\mathbf{x}[t+1] = \mathbf{F}(\mathbf{x}[t])$. The sequence of states $\{\mathbf{x}[0], \mathbf{x}[1], \ldots\}$ is a trajectory in the $n$-dimensional state space. For the LSM reservoir in this dissertation, the state is the membrane potential vector $\mathbf{M}[t] \in \mathbb{R}^{N_{\text{res}}}$, and the evolution rule includes the input-dependent current and the threshold-and-reset nonlinearity defined in Equation~\eqref{eq:lif_discrete}.
+
+\paragraph{Stability and the Lyapunov Exponent.}
+The sensitivity of a dynamical system to small perturbations is quantified by Lyapunov exponents. For a trajectory starting at $\mathbf{x}[0]$, the largest Lyapunov exponent measures the average exponential rate of divergence or convergence of nearby trajectories:
+\begin{equation}
+    \lambda_{\max} = \lim_{T \to \infty} \frac{1}{T} \sum_{t=0}^{T-1} \ln \frac{\|\delta \mathbf{x}[t+1]\|}{\|\delta \mathbf{x}[t]\|}
+    \label{eq:lyapunov}
+\end{equation}
+where $\delta \mathbf{x}[t]$ is an infinitesimal perturbation evolved through the linearized dynamics \cite{strogatz_nonlinear_2015}. If $\lambda_{\max} < 0$, perturbations shrink exponentially and the system is \emph{contracting}: nearby trajectories converge. If $\lambda_{\max} > 0$, perturbations grow exponentially and the system exhibits \emph{sensitive dependence on initial conditions}---the hallmark of chaos. The boundary $\lambda_{\max} \approx 0$ is the \emph{edge of chaos}, where the system is marginally stable.
+
+\paragraph{Driven Versus Autonomous Dynamics.}
+A critical distinction for reservoir computing is between the \emph{autonomous} Lyapunov exponent (computed for the free-running system $\mathbf{x}[t+1] = \mathbf{F}(\mathbf{x}[t])$ with no external input) and the \emph{driven} or \emph{conditional} Lyapunov exponent (computed under a specific input drive $\mathbf{u}[t]$). For the LSM, the relevant quantity is the driven exponent:
+\begin{equation}
+    \lambda_1^{(\text{driven})} = \lim_{T \to \infty} \frac{1}{T} \sum_{t=0}^{T-1} \ln \frac{\|\mathbf{M}'[t+1] - \mathbf{M}[t+1]\|}{\|\mathbf{M}'[t] - \mathbf{M}[t]\|}
+    \label{eq:driven_lyapunov}
+\end{equation}
+where $\mathbf{M}[t]$ and $\mathbf{M}'[t]$ are two reservoir trajectories driven by the \emph{same} input $\mathbf{u}[t]$ but initialized from different states. If $\lambda_1^{(\text{driven})} < 0$, the reservoir forgets its initial condition under the given input drive and behaves as an input-determined system---this is the driven analogue of the Echo State Property (Section~\ref{sec:rc_theory}). The spectral radius condition $\rho(\mathbf{W}) < 1$ provides a sufficient condition for the autonomous system, but it is neither necessary nor sufficient for the driven system when the input modulates the effective dynamics through the spiking threshold. Chapter~6 therefore requires empirical verification of $\lambda_1^{(\text{driven})} < 0$ on actual EEG-driven reservoir trajectories.
+
+\paragraph{Practical Estimation.}
+For finite time series, $\lambda_{\max}$ is estimated using the Benettin renormalization algorithm \cite{benettin_lyapunov_1980}: a perturbed trajectory is evolved alongside the reference trajectory, and at regular intervals the perturbation vector is rescaled to unit norm while accumulating the logarithmic stretching factors. For spiking networks, the threshold-and-reset discontinuity requires care: when one trajectory crosses threshold while the other does not, a finite state-space jump occurs that is not captured by tangent-space linearization. Chapter~6 addresses this implementation detail in the context of the specific LIF reservoir used.
+
+\paragraph{Complexity Measures.}
+Two additional complexity measures are used in Chapter~6 to characterize reservoir trajectory structure. The \emph{Lempel-Ziv complexity} of a binary spike train quantifies the richness of its substring vocabulary, normalized by the theoretical maximum for a random sequence \cite{bandt_permutation_2002}. The \emph{permutation entropy} of a continuous-valued time series quantifies the diversity of ordinal patterns in delay-embedded segments, providing a model-free measure of temporal irregularity that is robust to monotone transformations of the signal amplitude \cite{bandt_permutation_2002}.
+
+\paragraph{Koopman Operator Theory and Linearization of Nonlinear Dynamics.}
+A powerful perspective on nonlinear dynamical systems is provided by the Koopman operator framework. For a discrete-time system $\mathbf{x}[t+1] = \mathbf{F}(\mathbf{x}[t])$, the Koopman operator $\mathcal{K}$ acts on \emph{observables}---scalar functions $g: \mathbb{R}^n \to \mathbb{R}$---by composition: $(\mathcal{K} g)(\mathbf{x}) = g(\mathbf{F}(\mathbf{x}))$. Although $\mathbf{F}$ is nonlinear, $\mathcal{K}$ is a \emph{linear} (but infinite-dimensional) operator on the space of observables. If a finite set of observables can be found that spans a $\mathcal{K}$-invariant subspace, the nonlinear dynamics are exactly represented by a finite-dimensional linear system in observable coordinates. This is the Koopman linearization principle. Data-driven methods such as Dynamic Mode Decomposition (DMD) and Extended DMD approximate the leading Koopman eigenfunctions from time-series data, enabling spectral decomposition of nonlinear dynamics into coherent spatiotemporal modes.
+
+The relevance to this dissertation is cautious but specific. The spiking reservoir's nonlinear transformation of the EEG input can be viewed as a \emph{lifting} operation: the low-dimensional scalp signal $x_p(s)$ is mapped into a high-dimensional reservoir state space where the dynamics may be more nearly linearizable. The BSC$_6$ temporal coding and PCA compression then extract a finite set of observables from the lifted space. If these observables approximately span a Koopman-invariant subspace, then the success of a linear readout (logistic regression) in classifying condition from the reservoir embedding is not surprising---it is predicted by the Koopman framework. This interpretation is consistent with the empirical observation that linear classifiers perform well on the ARSPI-Net embedding (Chapter~\ref{chap:arspi_net}). The Koopman perspective is adopted here as a theoretical lens for understanding \emph{why} the pipeline works, not as a computational tool applied to the data.
+
+
+%% ===================================================================
+%% SECTION 4: RESERVOIR COMPUTING
+%% ===================================================================
+\section{Reservoir Computing: A Framework for Harnessing Complex Dynamics}
+\label{sec:reservoir_computing}
+
+\subsection{Theoretical Underpinnings}
+\label{sec:rc_theory}
+Reservoir Computing (RC) is a computational framework that simplifies the training of recurrent neural networks by fixing the recurrent portion of the network, which is typically large, sparse, and randomly generated \cite{jaeger2001echo}. An input signal drives this ``reservoir,'' whose complex, non-linear dynamics project the input's history into a high-dimensional feature space. The only trainable component is a simple readout mechanism (often a linear classifier or regressor) that learns to map the reservoir's instantaneous state to the desired output. This approach elegantly sidesteps the notorious difficulties of training RNNs, such as vanishing/exploding gradients.
+
+The functionality of the reservoir is contingent on it possessing the \textbf{Echo State Property (ESP)}, also known as the fading memory property \cite{jaeger2001echo}. The ESP requires that for any given input signal, the state of the reservoir should asymptotically converge to the same trajectory, regardless of its initial state. This ensures that the reservoir's state is a unique function of the input history and not dependent on arbitrary initial conditions. Mathematically, a sufficient condition for the ESP in simple reservoirs is that the spectral radius (the largest absolute eigenvalue) of the reservoir's recurrent weight matrix, $\rho(\mathbf{W})$, is less than 1. As discussed in Section~\ref{sec:dynamical_systems}, this condition pertains to the \emph{autonomous} dynamics; for the \emph{driven} system, the relevant criterion is $\lambda_1^{(\text{driven})} < 0$, which must be verified empirically for the specific input statistics of interest.
+
+The universality of reservoir systems---their capacity, in principle, to approximate any time-invariant causal operator with fading memory---rests on a multi-step proof architecture. Boyd and Chua established that any such operator can be uniformly approximated by finite Volterra series, invoking the Stone-Weierstrass theorem to show that polynomial functionals of the fading-memory input history are dense in the space of continuous fading-memory filters \cite{boyd_chua_1985}. Maass, Natschl\"{a}ger, and Markram then decomposed the computational power of the LSM into two independent conditions: the \emph{separation property}, which requires that the liquid maps distinct input histories to distinct reservoir states, and the \emph{approximation property}, which requires that the readout can approximate any continuous function of the liquid state \cite{Maass2002RealTime}. When both conditions are satisfied, the LSM can approximate any fading-memory filter. More recently, Gonon and Ortega provided a direct Stone-Weierstrass application proving that echo state networks with fading memory are universal in the relevant function-space topology \cite{gonon_ortega_2020}.
+
+An important caveat accompanies these universality results. Dambre et al.\ demonstrated a fundamental trade-off between linear memory capacity and nonlinear computational capacity in dynamical systems: a reservoir cannot simultaneously maximize both \cite{dambre_2012}. Maximum linear memory tends to occur in the ordered (sub-critical) dynamical regime, while nonlinear transformation capacity peaks near the critical boundary. The so-called ``edge of chaos'' therefore provides an enhanced balance between memory and computation rather than a strict simultaneous optimum. Furthermore, B\"{u}sing, Schrauwen, and Legenstein showed that spiking and binary reservoirs exhibit qualitatively sharper phase transitions than continuous-valued reservoirs, with stronger dependence on network connectivity structure \cite{busing_2010}. These results are important for the present dissertation because they constrain the interpretation of any edge-of-chaos claims: the validated operating point developed in Chapters~3--4 should be understood as an empirically selected regime rather than a theoretically guaranteed optimum.
+
+\subsection{Echo State Networks vs.\ Liquid State Machines}
+Two main instantiations of RC exist, differing primarily in their choice of neuron model. The Echo State Network (ESN) uses a reservoir of continuous-valued artificial neurons, typically with hyperbolic tangent activation functions \cite{jaeger2001echo}. In contrast, the Liquid State Machine (LSM) uses a reservoir of more biologically plausible spiking neurons, such as the LIF model \cite{Maass2002RealTime}. While both operate on the same core principles, this difference is significant. The LSM is an event-driven, asynchronous system whose state is defined by sparse spike events, making it a natural fit for neuromorphic hardware and for processing spike-based data. The ESN is a clock-based, continuous system more suited to conventional hardware. This dissertation focuses exclusively on the LSM due to its closer alignment with the principles of neural computation and the nature of the physiological signals being analyzed.
+
+
+%% ===================================================================
+%% SECTION 5: AFFECTIVE NEUROSCIENCE
+%% ===================================================================
+\section{Affective Neuroscience: Task Formulation and Ontological Considerations}
+\label{sec:affect_ontology}
+
+This dissertation adopts a dimensional model of affect, operationalized through the valence--arousal framework, as its primary task formulation for EEG-based inference. This choice is an engineering convenience with important epistemological caveats.
+
+The valence--arousal circumplex model, originally proposed by Russell, represents affective states as points in a continuous two-dimensional space \cite{russell_1980}. This framework provides a tractable label structure for supervised classification and regression tasks using physiological signals. However, the dimensional model is not the only theoretical account of emotion, and its adequacy is actively debated. Constructionist theories, most notably Barrett's theory of constructed emotion, argue that discrete emotion categories (anger, sadness, fear) are not natural kinds with fixed neural signatures but are instead constructed through domain-general processes of interoception, categorization, and conceptual inference \cite{barrett_2017}. From this perspective, any attempt to decode ``emotion'' from a physiological signal is necessarily decoding a proxy---a pattern of bodily and neural activity whose mapping to subjective experience is probabilistic, context-dependent, and shaped by individual learning history. Appraisal-theoretic approaches offer yet another alternative, emphasizing the evaluative processes by which stimuli acquire emotional significance rather than the resulting affective state per se \cite{scherer_2009}.
+
+A further methodological concern is that ground-truth labels in affective computing are typically derived from self-report, which is an imperfect and potentially biased measure of the underlying construct. The correspondence between self-reported affect and the neural processes observable in EEG is indirect, subject to demand characteristics, alexithymia, and cultural variation.
+
+This dissertation does not attempt to resolve these ontological debates. Its contribution is architectural and methodological: a signal-processing pipeline that extracts discriminative spatiotemporal structure from multichannel EEG. The valence--arousal framework is adopted because it provides a well-defined, widely used, and publicly benchmarked task formulation, not because it is claimed to be the correct theory of emotion. The clinical extension to MDD biomarkers in later chapters likewise treats diagnostic group membership as a classification target without assuming that MDD corresponds to a unitary neurobiological mechanism.
+
+
+%% ===================================================================
+%% SECTION 6: EEG PREPROCESSING
+%% ===================================================================
+\section{Standard EEG Preprocessing}
+\label{sec:preprocessing}
+
+Before any computational model is applied to scalp EEG, the raw signal must be processed through a sequence of standard steps designed to attenuate the artifact contamination and measurement confounds described in Chapter~1. This section briefly reviews the standard pipeline so that the preprocessing choices made in Chapter~5 can be evaluated in context.
+
+The typical pipeline proceeds as follows. First, the continuous EEG is \emph{bandpass filtered} to retain frequencies of interest (commonly 0.1--30\,Hz or 0.1--40\,Hz for ERP studies, wider for oscillatory analyses) and to suppress low-frequency drift and high-frequency muscular contamination. Second, the data is \emph{re-referenced} to a common reference scheme---typically the average of all electrodes, linked mastoids, or the Reference Electrode Standardization Technique (REST) proposed by Yao \cite{yao_2001}---because the choice of reference affects all channel-to-channel correlation estimates and therefore directly impacts graph construction in GNN-based analyses. Third, the continuous data is segmented into \emph{epochs} time-locked to stimulus events, with each epoch spanning a defined pre-stimulus baseline and post-stimulus analysis window.
+
+Fourth, \emph{artifact rejection} is applied to remove or correct epochs contaminated by ocular, muscular, or other non-neural activity. Simple threshold-based rejection discards epochs in which any channel exceeds a voltage criterion (e.g., $\pm 100\;\mu$V). More sophisticated approaches use Independent Component Analysis (ICA) \cite{delorme_eeglab_2004} to decompose the multichannel signal into statistically independent components, identify components corresponding to blinks, saccades, or EMG on the basis of their topography and time course, and subtract them before reconstructing the cleaned signal. ICA-based correction preserves more trials than outright rejection but introduces its own assumptions (statistical independence of sources, linearity of mixing) that may not hold exactly.
+
+Finally, epochs may be \emph{baseline-corrected} by subtracting the mean voltage during the pre-stimulus interval from each time point, removing tonic voltage offsets that are unrelated to stimulus-evoked activity. The specific preprocessing choices adopted in this dissertation are detailed in Chapter~5.
+
+
+%% ===================================================================
+%% SECTION 6: INTERPRETABILITY IN CLINICAL MACHINE LEARNING
+%% ===================================================================
+\section{Interpretability in Clinical Machine Learning}
+\label{sec:interpretability_background}
+
+The clinical translation of machine learning models for EEG-based inference requires not only predictive accuracy but \emph{interpretability}---the ability of a clinician to understand, trust, and act upon a model's output. This section reviews the distinction between post-hoc and intrinsic interpretability and positions ARSPI-Net within this landscape.
+
+\subsection{The Clinical Requirement for Interpretable AI}
+
+In clinical neuroscience, a model that predicts a diagnosis without explaining the physiological basis of that prediction has limited translational value. A psychiatrist evaluating whether a patient's ERP profile indicates Substance Use Disorder requires more than a probability estimate; they need to know which temporal features of the neural response are atypical, how the patient's spatial network organization compares to the normative population, and whether the temporal and spatial characterizations are consistent. Regulatory frameworks for clinical decision support systems increasingly require that algorithmic outputs be explainable to clinicians, reinforcing the engineering importance of interpretability as a first-class design requirement rather than an afterthought.
+
+\subsection{Post-Hoc Versus Intrinsic Interpretability}
+
+Two fundamentally different approaches to model interpretability exist in the machine learning literature.
+
+\textbf{Post-hoc interpretability} applies explanation methods \emph{after} training to attribute model decisions to input features. Common methods include SHAP (Shapley Additive Explanations), which assigns each feature a contribution score based on game-theoretic marginal contributions; Integrated Gradients, which attributes predictions to input features by accumulating gradients along a path from a baseline to the actual input; and attention-weight visualization, which interprets transformer or GAT attention scores as importance indicators. These methods are valuable but fundamentally limited: they explain what the model attended to, not what the signal contains. The attribution scores are properties of the \emph{model's learned function}, not of the \emph{signal's underlying structure}. If the model has learned a shortcut or a spurious correlation, the post-hoc explanation faithfully explains that shortcut rather than the true generating process.
+
+\textbf{Intrinsic interpretability} means that the model's intermediate representations are themselves meaningful quantities---that every internal variable maps onto a named, measurable property of the input signal. A model with intrinsic interpretability does not require post-hoc explanation because its signal chain \emph{is} the explanation. The intermediate variables can be inspected, validated against domain knowledge, and communicated to clinicians in terms they understand.
+
+\subsection{ARSPI-Net as an Intrinsically Interpretable Architecture}
+
+ARSPI-Net is designed for intrinsic interpretability. At each stage of the pipeline, the intermediate representation is a named, physically grounded quantity with a direct mapping to the input ERP waveform:
+\begin{itemize}
+    \item \textbf{Reservoir stage}: membrane potential trajectories $\mathbf{V}[t]$ and binary spike rasters $\mathbf{S}[t]$ are determined by the input EEG through an explicit LIF differential equation with known parameters ($\beta$, $\theta$, spectral radius). No weights are learned in the recurrent stage; the transformation is fixed and reproducible.
+    \item \textbf{Temporal coding stage}: Binned Spike Counts (BSC$_6$) partition the spike raster into six temporal bins aligned with the ERP time course. Each bin value directly reflects the reservoir's spiking activity in a specific temporal window of the input, enabling clinicians to identify \emph{which temporal epoch} of the ERP drives the representation.
+    \item \textbf{Compression stage}: PCA-64 per channel produces interpretable principal components whose loadings can be projected back onto the temporal bins and, through the reservoir dynamics, onto the input ERP waveform.
+    \item \textbf{Dynamical characterization stage}: Seven named descriptors---mean firing rate, rate entropy, permutation entropy, autocorrelation time, active ratio, spike-count variance, and mean inter-spike interval---each has a physical unit and a direct interpretation in terms of reservoir response properties (excitability, temporal complexity, persistence).
+    \item \textbf{Spatial stage}: Graph-topological metrics (weighted strength, clustering coefficient, betweenness centrality) characterize each electrode's role in the functional network, providing a spatial interpretability layer that complements the temporal descriptors.
+    \item \textbf{Coupling stage}: Structure--function coupling $\kappa$ quantifies the alignment between temporal dynamics and spatial topology at each electrode, providing a systems-level interpretability metric.
+\end{itemize}
+
+This explicit signal chain---from input ERP to membrane dynamics to spikes to temporal codes to dynamical descriptors to graph topology to coupling---means that every output of the ARSPI-Net pipeline can be traced back to specific properties of the input signal without invoking any post-hoc explanation method. This is the interpretability architecture that Chapters~\ref{chap:lsm}--\ref{chap:synthesis} implement and validate.
+
+The trade-off is classification accuracy: ARSPI-Net's fixed reservoir achieves lower accuracy than end-to-end trained models such as EEGNet. But in clinical settings where the question is not ``which class?'' but ``why this patient, in what way, and with what confidence in the explanation?'', intrinsic interpretability is the more valuable engineering property.
+
+\subsection{Related Work on Interpretable EEG Classification}
+\label{sec:interp_related_work}
+
+The development of interpretable methods for EEG analysis spans three distinct research traditions: post-hoc attribution applied to conventional deep learning, brain-structured spiking neural networks, and prototype-based classification.
+
+\paragraph{Post-hoc attribution for EEG.} Gradient-based saliency \cite{shrikumar_deeplift_2017}, SHAP, and attention rollout have been applied to EEGNet and similar architectures to identify which temporal and spatial features drive classification. These methods explain the model's learned function but do not guarantee that the highlighted features correspond to the signal's intrinsic structure. Bitar et al.\ \cite{bitar_snn_grad_2023} adapted gradient-based attribution specifically for spiking neural networks, introducing SNN-Grad3D and SNN-IG3D for spike-form data. Kim and Panda \cite{kim_sam_2021} developed the Spike Activation Map (SAM), which generates per-timestep heatmaps by highlighting neurons with short inter-spike intervals---the first XAI method designed specifically for the discrete spike-driven computation of SNNs. Yao et al.\ \cite{yao_attention_snn_2023} introduced multi-dimensional attention (temporal, channel, spatial) for spiking networks that optimizes membrane potentials to regulate spiking response, providing implicit interpretability through attention weight inspection. These methods represent the emerging field of ``explainable neuromorphic computing,'' but none have been applied to clinical affective EEG at the scale of the present work.
+
+\paragraph{Brain-structured spiking networks.} NeuCube \cite{kasabov_neucube_2014} remains the most mature SNN architecture for interpretable brain data analysis. Its three-dimensional reservoir, structured according to the Talairach brain atlas, produces connectivity patterns after STDP learning that map directly to anatomical regions. Doborjeh et al.\ \cite{doborjeh_explainable_2021} demonstrated that NeuCube's spatiotemporal cluster dynamics align with ERP processing stages (N170, P200, P3b) in the 100--400~ms window, and that learned connectivity patterns distinguish clinical groups. A comparative study \cite{doborjeh_epilepsy_2024} showed NeuCube outperforming BiLSTM ($97\%$ vs.\ $90\%$) on epilepsy-versus-migraine classification while simultaneously identifying candidate biomarker channels---an interpretability output impossible with the LSTM. The NeuCube ecosystem provides the strongest existing evidence that SNN connectivity patterns in specific temporal windows align with ERP components. ARSPI-Net differs from NeuCube in two fundamental respects: it uses fixed reservoir weights (no STDP) for complete inspectability, and it provides formal geometric decomposition (variance ratio, principal angles) that NeuCube does not.
+
+\paragraph{Prototype-based classification.} ProtoPMed-EEG \cite{barnett_protopmed_2024}, published in \emph{NEJM AI} (2024), demonstrated that prototype-based case reasoning (``this EEG looks like that EEG'') improves clinician accuracy from $47\%$ to $71\%$ in classifying ICU EEG patterns on the ictal--interictal injury continuum. This is the strongest evidence to date that intrinsic interpretability directly improves clinical outcomes, and it directly challenges the assumption that accuracy and interpretability necessarily trade off. ARSPI-Net's prototype readout layer is inspired by this work but operates within a neuromorphic pipeline where each prototype is grounded in characterized reservoir dynamics rather than in a learned end-to-end feature space.
+
+\paragraph{Regulatory context.} The FDA's ``Transparency for Machine Learning-Enabled Medical Devices'' guidance (June 2024) recommends but does not mandate algorithmic explainability, using the qualifier ``when available.'' The EU AI Act (Regulation 2024/1689, high-risk obligations from August 2027) introduces legally binding transparency requirements but no harmonized standard specifically addresses AI interpretability in medical devices. Critically, clinician perspectives diverge from the technical XAI community's assumptions: a 2025 study found that clinician trust depends on context-sensitive, clinically meaningful explanations---case-based reasoning, spatial localization, temporal segment highlighting---rather than on full algorithmic transparency. ARSPI-Net's named descriptors and prototype explanations are designed to produce this clinically meaningful form of interpretability.
+
+\subsection{The Accuracy--Interpretability Frontier}
+\label{sec:accuracy_interpretability}
+
+The relationship between classification accuracy and interpretability is often framed as a tradeoff: more interpretable models are assumed to be less accurate. Rudin (2019) challenged this assumption, arguing that for high-stakes decisions, interpretable models should be preferred over black-box models with post-hoc explanations, because post-hoc explanations can be unfaithful to the model's actual computation. Barnett et al.\ \cite{barnett_protopmed_2024} provided empirical support: ProtoPMed-EEG's interpretable prototype model statistically outperformed its black-box counterpart on the same task while providing case-based explanations that improved clinician performance.
+
+ARSPI-Net's experimental program provides a quantitative characterization of this frontier for affective EEG. EEGNet achieves $86.3$--$89.1\%$ centered accuracy with post-hoc gradient saliency that peaks outside the classical ERP window ($402$--$691$~ms). ARSPI-Net achieves $57.5$--$66.7\%$ accuracy with intrinsic attention that peaks within the ERP window ($176$--$254$~ms) and shows condition-specific differentiation aligned with P300, LPP, and N2 components. The $\approx 20$~pp accuracy gap is the measured cost of intrinsic interpretability for this signal class and sample size. Whether this cost is acceptable depends on the clinical use case: for screening applications where sensitivity matters, EEGNet is preferable; for clinical characterization where the explanation is the primary output, ARSPI-Net provides information that EEGNet cannot.
+
+\subsection{A Four-Level Interpretability Taxonomy for Neuromorphic EEG}
+\label{sec:interp_taxonomy}
+
+The preceding discussion distinguishes post-hoc from intrinsic interpretability in general terms. For a staged neuromorphic pipeline processing multichannel EEG, interpretability can be decomposed into four measurable levels, each corresponding to a specific stage of the ARSPI-Net architecture and each testable by a specific experimental protocol.
+
+\textbf{Level~1: Temporal Traceability.} Can the output of the coding stage be traced back to specific temporal windows of the input ERP? This level is validated by measuring the correlation between temporal bin activations (BSC$_6$ or equivalent) and classical ERP scalars (P300 amplitude, LPP amplitude, N1 latency). A system achieves Level~1 interpretability when a clinician can identify \emph{which temporal epoch} of the neural response contributes to a given output variable. Chapter~\ref{chap:embeddings} validates this level.
+
+\textbf{Level~2: Geometric Transparency.} Can the structure of the embedding space be decomposed into named, quantifiable components whose relative contributions are measurable? This level is validated by variance decomposition (subject vs.\ condition vs.\ residual), by centering analysis (how much condition signal is recoverable after nuisance removal), and by attention-weighted readout (which temporal and spatial features drive classification). A system achieves Level~2 interpretability when a clinician can understand \emph{what proportion} of the representation encodes subject identity versus task-relevant signal. Chapter~\ref{chap:arspi_net} validates this level.
+
+\textbf{Level~3: Dynamical Characterization.} Can the reservoir's internal trajectory be described by named descriptors with physical units that map onto measurable properties of the input signal? This level is validated by regressing dynamical descriptors (firing rate, autocorrelation time, permutation entropy) against classical ERP scalars and by testing condition sensitivity (Friedman tests). A system achieves Level~3 interpretability when a clinician can locate a patient on a dynamical characterization axis (e.g., excitability--persistence) and understand what that location means in terms of the patient's neural response properties. Chapter~\ref{chap:dynamics} validates this level.
+
+\textbf{Level~4: Systems-Level Correspondence.} Does the coupling between temporal dynamics and spatial topology provide interpretable information about neural organization that is not accessible from either axis alone? This level is validated by structure--function coupling analysis ($\kappa$), by prototype-based classification with per-prototype clinical profiling, and by cross-granularity replication. A system achieves Level~4 interpretability when a clinician can assess whether a patient's temporal and spatial characterizations are internally consistent and how that consistency compares to the population. Chapter~\ref{chap:synthesis} validates this level.
+
+These four levels are cumulative: each builds on the preceding level's outputs. A system that achieves Level~4 interpretability necessarily satisfies Levels~1--3, because the systems-level analysis requires temporally traceable descriptors (Level~1), geometrically transparent embeddings (Level~2), and named dynamical characterizations (Level~3) as inputs. The ARSPI-Net architecture is designed to satisfy all four levels through its staged pipeline, and the experimental program across Chapters~\ref{chap:embeddings}--\ref{chap:synthesis} validates each level with quantitative evidence. Table~\ref{tab:taxonomy_metrics} summarizes the quantitative metrics and validation results for each level.
+
+\begin{table}[t]
+\centering
+\caption{Quantitative evaluation of the four-level interpretability taxonomy. Each level specifies a measurable criterion, a validation method, and the empirical result obtained on the SHAPE dataset ($N = 211$). All thresholds were specified before validation.}
+\label{tab:taxonomy_metrics}
+\small
+\begin{tabular}{p{2.5cm}p{3.5cm}p{3.5cm}p{3.5cm}}
+\toprule
+\textbf{Level} & \textbf{Metric} & \textbf{Validation} & \textbf{Result} \\
+\midrule
+L1: Temporal traceability & $|\text{Corr}(b^*, \phi_k)| \geq 0.5$ & Pearson $r$ vs.\ P300 and LPP amplitude & $r = 0.65$ (P300), $|r| = 0.82$ (LPP); per-channel peak $r = 0.837$ \\
+\midrule
+L2: Geometric transparency & $\rho = \text{SS}_\text{subj} / \text{SS}_\text{cond}$; centering gain $\Delta > 0$; readout accuracy $>$ chance & Variance decomposition; 7-architecture comparison; attention-prototype readout & $\rho = 7.2$; $\Delta = +13$ to $+21$~pp (all 7); $66.7\%$ balanced accuracy \\
+\midrule
+L3: Dynamical characterization & $R^2(\phi_k \mid \mathbf{d}) \geq 0.3$ & Cross-validated Ridge regression vs.\ ERP scalars & $R^2 = 0.661$ (LPP), $R^2 = 0.395$ (P300); mean amplitude $|r| = 0.820$ \\
+\midrule
+L4: Systems-level coupling & $\kappa > 0$, $p < 0.001$ (permutation) & Wilcoxon signed-rank + subject-level confirmation & $\kappa = 0.22$, $p < 0.001$ (844 obs); confirmed at $N = 211$ ($p < 0.001$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+To our knowledge, no existing EEG classification system achieves all four levels simultaneously. ProtoPMed-EEG \cite{barnett_protopmed_2024} achieves Level~2 (prototype transparency) but not Level~3 (no dynamical characterization). NeuCube \cite{kasabov_neucube_2014} achieves Levels~1 and~3 (temporal spike alignment and connectivity analysis) but does not formally decompose the embedding geometry (Level~2) or measure cross-scale coupling (Level~4). EEGNet with SHAP provides post-hoc approximations of Level~1 and Level~2 but satisfies neither intrinsically. To our knowledge, ARSPI-Net's contribution is the first architecture that provides intrinsic interpretability at all four levels within a single pipeline.
+
+
+%% ===================================================================
+%% SECTION 7: STATE OF THE ART
+%% ===================================================================
+\section{State-of-the-Art and Positioning of this Research}
+\label{sec:state_of_art}
+
+\subsection{LSMs and Reservoir Computing in Physiological Signal Processing}
+\label{sec:lsm_literature}
+The application of reservoir computing to physiological signals, and to EEG in particular, has been explored across several methodological lines over the past two decades. Verstraeten et al.\ provided early experimental evidence that reservoir-based approaches could classify isolated spoken digits with competitive accuracy, establishing that the high-dimensional projections generated by a fixed recurrent network are effective features for temporal pattern recognition tasks \cite{verstraeten_experimental_2007}. Subsequent work extended these ideas to EEG-based tasks. Bozhkov et al.\ applied Echo State Networks with intrinsic plasticity adaptation to EEG emotion recognition, demonstrating that reservoir-generated low-dimensional representations could discriminate positive and negative valence across multiple subjects \cite{bozhkov_reservoir_2017}. Montoya-Mart\'{i}nez et al.\ investigated the effect of reservoir size and input scaling on the decoding of auditory attention from EEG, finding that reservoir hyper-parameters substantially affect decoding performance and must be tuned to the signal statistics of the application \cite{montoya-martinez_effect_2021}.
+
+In the broader neuromorphic signal processing literature, Yang et al.\ surveyed the landscape of neuromorphic computing approaches for physiological signals, identifying reservoir computing and spiking neural networks as particularly promising architectures for real-time, low-power biosignal inference but noting the limited maturity of end-to-end validated pipelines \cite{yang_neuromorphic_2023}. Tanaka et al.\ provided a comprehensive review of recent advances in reservoir computing, highlighting the gap between theoretical universality results and the practical challenges of configuring reservoirs for specific signal domains \cite{tanaka_recent_2019}. Cai et al.\ applied deep learning methods to EEG-based emotion recognition, establishing performance benchmarks on the DEAP dataset that any new architecture must be evaluated against \cite{cai_eeg-based_2024}.
+
+A consistent finding across this literature is that reservoir-based approaches can achieve competitive performance on physiological time-series tasks, but that most published work relies on significant pre-processing or feature extraction \emph{before} the signal is presented to the reservoir. Hand-crafted features such as band-power summaries, spectral entropy, or Hjorth parameters are typically extracted in a separate pipeline and then fed into the reservoir as input, rather than allowing the reservoir to operate on raw or near-raw signals. A major gap remains in demonstrating the capability of LSMs to process EEG signals with minimal hand-crafting and to serve as a component in a larger, end-to-end deep learning system where the temporal features are learned jointly with the spatial and relational components.
+
+\subsection{The Emergence of Hybrid Neuromorphic-GNN Architectures}
+The integration of neuromorphic principles with other deep learning architectures is a burgeoning field. A particularly promising direction is the combination of SNNs and Graph Neural Networks (GNNs). GNNs are designed to perform computation on graph-structured data, making them ideal for modeling the network properties of multi-channel sensors like EEG. Recent work has begun to explore this synergy. For instance, the Dy-SIGN model demonstrated a method for propagating spike-based information through a GNN for dynamic link prediction tasks, showcasing the potential for event-driven graph computation \cite{Yoon2024DySIGN}. Other research has explored using GNNs to analyze functional connectivity graphs derived from neural activity. Preliminary work by the present author established the initial ARSPI-Net architectural concept and demonstrated feasibility on a reduced feature set \cite{lane_arspi_2024}.
+
+\subsection{GNNs in Affective EEG and the Volume Conduction Constraint}
+\label{sec:volume_conduction}
+Graph Neural Networks have become a mature modeling family for multichannel EEG in affective computing, with architectures including Graph Convolutional Networks (GCN) and Graph Attention Networks (GAT) applied to electrode-level graphs for emotion recognition \cite{Jia2024GNNEEGSentiment}. However, the application of GNNs to scalp EEG requires careful epistemological framing. Scalp EEG graphs are not direct maps of cortical structural connectivity; they are modeling devices whose edges encode statistical dependence between measurement channels. It is well established that the estimation of connectivity between EEG channels is heavily confounded by volume conduction and field spread: electric fields generated by cortical sources propagate through layers of cerebrospinal fluid, skull, and scalp, causing multiple electrodes to register activity from common underlying sources and producing spurious correlations that do not reflect true functional interactions \cite{nunez_srinivasan_2006}. Furthermore, the choice of recording reference (montage) and specific electrode geometry significantly alter the resulting correlation structure \cite{yao_2001}. Consequently, the edges within an EEG-derived graph must be strictly interpreted as representations of functional or spatial covariance rather than literal anatomical wiring. This constraint informs the graph construction strategies developed in Chapter~5, where adjacency is treated as an explicitly modeled relational prior rather than as a direct physiological measurement.
+
+\subsection{Architectural Alternatives and the Case for a Fixed-Reservoir Hybrid}
+\label{sec:architectural_comparison}
+A natural question is why this dissertation adopts a fixed spiking reservoir coupled with a graph-based readout rather than the most prominent alternative architectures. Three comparisons clarify the design rationale.
+
+First, \emph{end-to-end trained deep SNNs} represent a theoretically appealing alternative, but they face practical optimization challenges when applied to long-context temporal signals such as EEG. Training deep SNNs via backpropagation through time (BPTT) with surrogate gradients requires approximating the non-differentiable spike function with a smooth surrogate in the backward pass, introducing a mismatch between the forward and backward computations that can destabilize learning over long temporal horizons \cite{neftci_surrogate_2019}. Recent work has made substantial progress on this front---techniques such as threshold-dependent batch normalization and learnable membrane time constants have enabled successful training of deep SNNs on vision benchmarks \cite{zheng_tdbn_2021, fang_plif_2021}---but the fixed-reservoir approach bypasses the temporal credit assignment problem entirely. For the present dissertation, this avoidance is not merely a computational convenience; it is methodologically desirable because the untrained reservoir dynamics can be analyzed as a driven nonlinear system (Chapter~6), an interpretability contribution that would be substantially complicated by end-to-end weight adaptation.
+
+Second, \emph{GNNs with conventional EEG features}---such as band-power summaries, differential entropy, or epoched ERP amplitudes---are widely used and often effective \cite{Jia2024GNNEEGSentiment}. However, these approaches extract features from fixed temporal windows and therefore represent the signal as a static snapshot of spatial covariance. They do not capture the continuous, nonlinear transient dynamics or the fading-memory temporal integration that a reservoir provides. The hybrid LSM-GNN architecture addresses this limitation by supplying the GNN with node features that already encode rich temporal structure.
+
+Third, \emph{Transformer-based EEG models} have recently shown competitive results, but their temporal processing design introduces specific concerns for nonstationary signals. Liu et al.\ demonstrated that input-level temporal normalization---commonly applied as a preprocessing step to stabilize Transformer training---can suppress the non-stationary distributional shifts that carry meaningful information in time-series forecasting tasks \cite{liu_nonstationary_2022}. While this concern is specific to temporal normalization rather than to the Transformer architecture per se, it highlights a general tension between the statistical assumptions favoring stable training and the signal characteristics of nonstationary biosignals. Additionally, standard self-attention scales quadratically with sequence length, which becomes a practical constraint for high-resolution, multi-channel EEG at millisecond sampling rates, although efficient attention variants partially mitigate this cost.
+
+None of these comparisons should be read as a claim that the alternatives are fundamentally incapable. The argument is instead that for the specific combination of requirements in this dissertation---temporal expressivity, multichannel relational modeling, interpretable internal dynamics, and robustness under nonstationary input---the fixed-reservoir plus graph-readout architecture provides the most defensible engineering compromise.
+
+\subsection{Interpretability Landscape: Positioning ARSPI-Net}
+\label{sec:interp_landscape}
+
+Table~\ref{tab:interp_comparison} summarizes the interpretability capabilities of the four leading approaches to EEG analysis, mapped onto the four-level taxonomy defined in Section~\ref{sec:interp_taxonomy}. ARSPI-Net is the only architecture designed to achieve intrinsic interpretability at all four levels within a single pipeline.
+
+\begin{table}[t]
+\centering
+\caption{Interpretability comparison across EEG analysis architectures, mapped onto the four-level taxonomy. \checkmark = intrinsic, $\sim$ = post-hoc or partial, \texttimes = not provided.}
+\label{tab:interp_comparison}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Capability} & \textbf{ARSPI-Net} & \textbf{ProtoPMed} & \textbf{NeuCube} & \textbf{EEGNet+SHAP} \\
+\midrule
+L1: Temporal traceability   & \checkmark & \texttimes & \checkmark & $\sim$ \\
+L2: Geometric transparency  & \checkmark & \checkmark & \texttimes & $\sim$ \\
+L3: Dynamical characterization & \checkmark & \texttimes & \checkmark & \texttimes \\
+L4: Systems-level coupling  & \checkmark & \texttimes & \texttimes & \texttimes \\
+\midrule
+Fixed-weight reservoir      & \checkmark & N/A        & $\sim$ (STDP) & N/A \\
+Transdiagnostic profiling   & \checkmark & \texttimes & $\sim$ & \texttimes \\
+Clinician validation        & \texttimes & \checkmark & \texttimes & \texttimes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The ProtoPMed-EEG system \cite{barnett_protopmed_2024} demonstrated in a controlled clinician study (published in \emph{NEJM AI}, 2024) that prototype-based explanations improve classification accuracy from $47\%$ to $71\%$---the strongest evidence to date that intrinsic interpretability directly improves clinical outcomes. However, ProtoPMed operates on ICU EEG patterns and provides only prototype matching (Level~2), without dynamical characterization or cross-scale analysis. NeuCube \cite{kasabov_neucube_2014} provides brain-atlas-structured spike propagation (Level~1) and connectivity-based characterization (Level~3), with Doborjeh et al.\ \cite{doborjeh_explainable_2021} demonstrating that SNN spatiotemporal clusters align with known ERP components in the 280--400~ms window. However, NeuCube does not formally decompose embedding geometry or measure temporal-spatial coupling. EEGNet with SHAP \cite{lawhern_eegnet_2018} achieves the highest classification accuracy but provides only post-hoc attributions that describe the model's learned function rather than the signal's intrinsic structure.
+
+ARSPI-Net addresses the gap at the intersection of these approaches: it combines the fixed-reservoir inspectability of reservoir computing, the prototype-based explanation paradigm validated by ProtoPMed-EEG, the temporal spike alignment demonstrated by NeuCube, and a formal geometric and systems-level analysis that no prior architecture provides.
+
+\subsection{Identifying the Research Gap: The Need for a Principled Embedding Pipeline}
+\label{sec:research_gap}
+This review of the literature reveals a clear and compelling research gap. While LSMs are powerful temporal processors and GNNs are powerful relational learners, there is no established, rigorously validated methodology for bridging the two. A GNN requires meaningful feature vectors (``node embeddings'') for each node in the graph. The high-dimensional, sparse, and temporally complex spike trains produced by an LSM are not a suitable direct input. The critical missing piece---which this dissertation aims to provide---is a \emph{principled feature engineering pipeline} that transforms the raw output of an LSM into a low-dimensional, robust, and informative embedding. By developing and validating such a pipeline (Chapter~4) and integrating it into a full hybrid architecture (Chapter~5), this work provides a novel and significant contribution to the field of hybrid neuromorphic systems for physiological signal analysis.

@@ -1,0 +1,78 @@
+\documentclass[12pt]{report}
+
+% === Packages (deduplicated) ===
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{textcomp}
+\usepackage{float}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{hyperref}
+
+\doublespacing
+
+\begin{document}
+
+% === Title Page ===
+\begin{titlepage}
+\centering
+\vspace*{2cm}
+{\Large \textbf{Affective Reservoir-Spike Processing and Inference Network (ARSPI-Net):}}\\[0.5cm]
+{\Large \textbf{A Four-Level Interpretable Neuromorphic Framework}}\\[0.3cm]
+{\Large \textbf{for Clinical EEG Analysis}}\\[3cm]
+{\large A Dissertation Presented}\\[0.3cm]
+{\large by}\\[0.5cm]
+{\Large \textbf{Andrew Lane}}\\[3cm]
+{\large Submitted to the Graduate School of}\\[0.3cm]
+{\large Stony Brook University}\\[0.3cm]
+{\large in partial fulfillment of the requirements for the degree of}\\[0.5cm]
+{\Large \textbf{Doctor of Philosophy}}\\[0.5cm]
+{\large in}\\[0.3cm]
+{\Large \textbf{Electrical and Computer Engineering}}\\[2cm]
+{\large 2026}
+\end{titlepage}
+
+% === Abstract ===
+\begin{abstract}
+This dissertation introduces ARSPI-Net (Affective Reservoir-Spike Processing and Inference Network), a staged neuromorphic framework for extracting structured, interpretable, multi-scale representations from clinical electroencephalography (EEG). The architecture comprises a fixed-weight Leaky Integrate-and-Fire spiking reservoir, a binned spike count temporal coding bottleneck (BSC$_6$), and a graph-organized spatial analysis layer, producing a representation in which every intermediate variable---membrane trajectories, spike rasters, temporal bin activations, dynamical descriptors, graph-topological metrics, and structure--function coupling indices---is a named, physically grounded quantity traceable to the input event-related potential (ERP) waveform.
+
+The framework is validated on the SHAPE Community dataset ($N = 211$ subjects, $34$ channels, three affective conditions) and introduces a four-level interpretability taxonomy for neuromorphic EEG: temporal traceability (BSC$_6$ bins recover Late Positive Potential amplitude with $r = 0.82$), geometric transparency (subject-to-condition variance ratio $\rho = 7.2$, centering gain $+13$ to $+21$ percentage points across seven representations including EEGNet), dynamical characterization (six named descriptors predict $66\%$ of LPP variance), and systems-level correspondence (structure--function coupling $\kappa = 0.22$, $p < 0.001$). A head-to-head comparison demonstrates that EEGNet's gradient saliency peaks outside the classical ERP window ($402$--$691$~ms) while ARSPI-Net's learned attention peaks within it ($176$--$254$~ms) with condition-specific differentiation aligned to established ERP components.
+
+The principal discoveries include: (1) subject-covariance entanglement---a universal geometric property of affective EEG where subject and condition share identical principal directions, rendering PCA-based nuisance regression provably lossy; (2) a graph-propagation regime boundary for small dense electrode graphs; and (3) layer-specific clinical sensitivity, where different psychiatric disorders (SUD, GAD, PTSD, ADHD) are most detectable in different representational layers. To our knowledge, ARSPI-Net is the first neuromorphic EEG architecture achieving intrinsic interpretability at all four levels within a single pipeline, positioning it for clinical translation where black-box models cannot serve.
+\end{abstract}
+
+\tableofcontents
+\newpage
+\listoffigures
+\newpage
+
+\include{ch1}
+\newpage
+\include{ch2}
+\newpage
+\include{chLSM}
+\newpage
+\include{chLSMEmbeddings}
+\newpage
+\include{chgraph}
+\newpage
+\include{chDynamics}
+\newpage
+\include{chSynthesis}
+\newpage
+\include{chConclusion}
+\newpage
+\include{Appendixa}
+
+\newpage
+\bibliographystyle{ieeetr}
+\bibliography{Disso}
+
+\end{document}

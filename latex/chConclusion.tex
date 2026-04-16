@@ -1,0 +1,124 @@
+\chapter{Conclusion}
+\label{chap:conclusion}
+
+\section{Summary of the Research Program}
+
+This dissertation began with a question motivated by a gap at the intersection of neuromorphic computing and clinical electrophysiology: can a staged neuromorphic architecture---one that transforms raw EEG through a spiking reservoir, extracts structured embeddings, and organizes them across a multichannel electrode graph---provide both discriminative classification and interpretable multi-layer characterization of affective neural signals? The SHAPE Community dataset, with $211$ transdiagnostic subjects, three emotional conditions (Negative, Neutral, Pleasant), four affective subcategories (Threat, Mutilation, Cute, Erotic), and a mean comorbidity of $2.8$ diagnoses per subject, provided a demanding and clinically realistic testbed for answering this question.
+
+The answer that emerged across seven chapters is that ARSPI-Net's primary contribution is not classification accuracy but \emph{intrinsic interpretability}---the property that every intermediate variable in the pipeline is a named, physically grounded quantity that traces directly to the input ERP waveform through an explicit signal chain. ARSPI-Net classifies affective EEG: cross-subject balanced accuracy is $59.4\%$ uncentered and $78.8\%$ after per-subject centering on three-way emotion discrimination. EEGNet, a compact convolutional architecture trained end-to-end, achieves $89.1\%$ centered---the highest of any method tested. But EEGNet provides no interpretable decomposition of the signal. ARSPI-Net converts raw EEG into a staged representation that simultaneously supports discriminative classification, dynamical trajectory characterization with seven named descriptors, graph-topological phenotyping with clinically meaningful network metrics, and cross-layer coupling analysis. After centering, the reservoir matches trained recurrent models (GRU $78.4\%$, LSTM $71.1\%$) with zero trainable recurrent parameters. The centering gain ($+13$ to $+21$~pp) is universal across all seven tested representations---a signal-geometric discovery that ARSPI-Net's geometric transparency made visible and that applies to every model in the comparison.
+
+
+\section{The Three-Layer Architecture}
+
+The dissertation's central contribution is the identification and experimental validation of three operationally distinct response layers within the ARSPI-Net framework.
+
+The \textbf{discriminative embedding layer} (BSC$_6 \to$ PCA-64, Chapter~\ref{chap:arspi_net}) carries the richest linearly separable emotion signal within the ARSPI-Net feature families, achieving $59.4\%$ balanced accuracy at three-class under logistic regression---$+11.7$~pp above conventional spectral features ($47.7\%$) and matching trained recurrent models (GRU $59.9\%$, LSTM $58.0\%$) without any parameter optimization. External baseline comparison shows that EEGNet ($72.0\%$) and raw EEG with linear readout ($70.5\%$) outperform the reservoir embedding, placing ARSPI-Net's contribution in structured representation and interpretability rather than pure accuracy maximization. The paired-granularity comparison identifies a regime boundary: the reservoir outperforms band-power by $+12.5$~pp at three-class but is outperformed by $-6.2$~pp at four-class, establishing when temporal spike coding is and is not advantageous.
+
+The \textbf{dynamical response layer} (seven per-channel trajectory metrics, Chapter~\ref{chap:dynamics}) is condition-sensitive: all seven metrics distinguish emotional from non-emotional input (Friedman $p < 0.05$ for every metric), with the temporal-structure family ($\hat{H}_\pi$, $\tau_{AC}$) carrying $2.4\times$ larger condition effects than the amplitude-tracking family. The dynamical metrics are not strongly clinically sensitive at the channel-averaged level (zero of $49$ metric-diagnosis comparisons reach significance), but the layer ablation demonstrates that per-channel dynamical features carry the strongest clinical signals for SUD ($53.6\%$) and PTSD ($52.6\%$ in the D+T combination). The dynamical layer encodes what stimulus is being processed; the clinical signal it carries requires spatial resolution to access.
+
+The \textbf{topology/coupling layer} (graph-topological descriptors and electrode-wise coupling, Chapters~\ref{chap:arspi_net} and~\ref{chap:synthesis}) carries the strongest clinical signals at the graph level: SUD modulates emotional network reactivity across three complementary metrics ($p = 0.0004$, $0.003$, $0.012$), and GAD produces increased degree heterogeneity ($p = 0.032$). The structure-function coupling between dynamical and topological descriptors is real ($\kappa = 0.22$, permutation $p < 0.001$) and observation-specific, but organizational rather than strongly discriminative---combining temporal and spatial features never improves classification beyond the better individual family.
+
+These layers are not interchangeable. The layer ablation matrix (Chapter~\ref{chap:arspi_net}, Section~\ref{sec:ch5_ablation}) demonstrates that different clinical disorders are most detectable in different layers: dynamical metrics for SUD and PTSD, topological metrics for GAD, coupling for ADHD. This layer-specific clinical sensitivity pattern is one of the most distinctive findings in the dissertation. It means that a complete characterization of affective EEG in a transdiagnostic sample requires all three layers, not because they combine additively for any single classification task, but because they measure different properties of the underlying signal.
+
+
+\section{Key Scientific Findings}
+
+\subsection{The Graph-Propagation Regime Characterization}
+
+The Propagation Operating Characteristic (Chapter~\ref{chap:arspi_net}) demonstrates that no graph operator---smoothing, high-pass, residual, difference-aware, or attention-based---exceeds the non-propagated baseline on the $34$-node, $20\%$-density EEG graph. The regime boundary is robust across six graph densities, six propagation depths, three adjacency constructions, and four contrast-preserving operator families. The mechanism is a graph-spectral low-pass filtering effect: propagation suppresses inter-channel discriminative contrast faster than it suppresses subject-nuisance structure. To our knowledge, this is the first systematic characterization in the EEG-GNN literature of when and why message-passing reduces classification performance, and the design criterion it produces---for sensor graphs with $< 50$ nodes and $> 15\%$ density, per-channel feature extraction preserves more discriminative information than graph propagation---generalizes to any small dense sensor array (ECG, EMG, fNIRS).
+
+\subsection{The Subject-Nuisance Geometry}
+
+Subject identity accounts for $62.6\%$ of embedding variance, with emotional condition accounting for $8.7\%$ ($7\times$ ratio). Per-subject centering increases classification from $63.4\%$ to $79.4\%$ in the reservoir embedding and from $70.5\%$ to $88.4\%$ in raw EEG, confirming that the nuisance-geometry phenomenon is a general property of the SHAPE affective EEG task rather than a reservoir-specific artifact. PCA nuisance regression monotonically destroys accuracy because subject and condition share principal components---a structural discovery about the geometry of multichannel EEG embeddings with implications for any study that uses PCA preprocessing for subject-nuisance removal.
+
+\subsection{The Temporal Coding Regime Boundary}
+
+The paired-granularity comparison reveals that the reservoir's advantage over spectral features reverses at four-class resolution: from $+12.5$~pp at three-class to $-6.2$~pp at four-class. The condition variance fraction drops from $8.7\%$ to $2.4\%$, and the subject-to-condition variance ratio increases from $7.2\times$ to $19.6\times$. The BSC$_6$ temporal binning is sufficiently resolved for the coarse valence discrimination (Negative vs.\ Neutral vs.\ Pleasant) but insufficiently resolved for the finer within-valence discriminations (Threat vs.\ Mutilation, Cute vs.\ Erotic). This boundary-of-validity result characterizes the operating regime of the present ARSPI-Net instantiation and motivates investigation of finer temporal coding schemes.
+
+\subsection{Clinical Signal Hierarchy}
+
+The clinical signal hierarchy shifts with affective resolution. At three-class, SUD produces the strongest observed clinical effects ($p = 0.0004$ for strength reactivity, validated by permutation testing). At four-class, PTSD displaces SUD as the strongest clinical variable ($11$ significant channel-metric pairs, $28$ significant edges), with a threat-specificity interaction ($p = 0.036$) that is structurally invisible at three-class resolution. All clinical findings in this dissertation are exploratory: they are hypothesis-generating with within-variable comparison and permutation testing, pending independent replication on a separate cohort and formal multiple-comparison correction across all variables tested.
+
+
+\section{Engineering Contributions}
+
+The dissertation makes five engineering contributions that extend beyond the specific ARSPI-Net architecture.
+
+First, the \textbf{Propagation Operating Characteristic} provides the field with a systematic framework for evaluating graph operators on finite sensor arrays, replacing the common assumption that more graph structure helps with a quantitative, task-specific regime characterization.
+
+Second, the \textbf{spike-to-embedding pipeline} (BSC$_6 \to$ PCA-64) demonstrates a principled method for converting continuous multichannel biosignals into compact, structured, and interpretable representations via a fixed spiking reservoir. The pipeline is reproducible (no training), initialization-robust ($< 2\%$ accuracy variance across seeds), and produces a representation that supports multiple downstream analyses simultaneously while preserving temporal traceability from each embedding dimension back to specific ERP temporal windows.
+
+Third, the \textbf{measurement-instrument paradigm} (Chapter~\ref{chap:dynamics}) establishes the theoretical framework for treating a spiking reservoir as a calibrated nonlinear measurement instrument rather than as a black-box feature generator. The echo-state property, data processing inequality, and metric-specific validity arguments provide a defense structure that extends to any reservoir-based biosignal processing system.
+
+Fourth, the \textbf{layer ablation methodology} demonstrates how to test whether the layers of a staged architecture carry redundant or complementary information. The combination of linear-readout content comparison (Rule~5: expose geometric separability without classifier rescue) and cross-disorder clinical profiling produces a principled answer to the complementarity question.
+
+Fifth, the \textbf{complete centered baseline comparison} establishes that centering is the dominant intervention across all seven representations ($+13$ to $+21$~pp), with architecture choice secondary. After centering, ARSPI-Net ($78.8\%$) matches GRU ($78.4\%$) with zero trainable recurrent parameters while providing a fully traceable, intrinsically interpretable signal chain---quantifying the engineering trade-off between classification accuracy and structural interpretability for clinical EEG applications.
+
+
+\section{Scope and Future Directions}
+
+The present work opens several productive directions for further investigation.
+
+\textbf{Temporal coding resolution.} The baseline comparison reveals that the BSC$_6$ compression discards temporal detail that raw EEG retains. A systematic temporal-resolution ablation---BSC$_3$, BSC$_6$, BSC$_{12}$, BSC$_{24}$---would determine whether the accuracy gap is attributable to the spiking transform itself or to the coarse temporal aggregation after the transform. If accuracy recovers with finer binning, the reservoir principle is sound and the present six-bin code is simply too aggressive for this real-data regime.
+
+\textbf{Conventional deep learning comparators.} EEGNet and recurrent architectures (GRU, LSTM) provide the standard end-to-end deep learning baselines for EEG classification. The present sklearn-based comparison establishes the linear-model landscape; the deep learning comparison will establish whether trained nonlinear architectures close the gap with raw EEG under the same subject-level cross-validation protocol.
+
+\textbf{Independent clinical replication.} The SUD network phenotype ($p = 0.0004$) and the PTSD threat-specificity interaction ($p = 0.036$) are the strongest clinical findings in the dissertation. Both survive within-variable permutation testing but have not been replicated on an independent cohort. The SUD triple-interaction pattern (strength $\times$ efficiency $\times$ clustering) provides a specific, testable prediction for replication studies. The PTSD interaction additionally requires four-class affective resolution, which constrains the replication paradigm.
+
+\textbf{Electrode mapping.} The dissertation operates on unlabeled channel indices ($0$--$33$). Electrode labeling from the collaborating laboratory will enable cortical mapping of the channel-level findings to standard brain regions, connecting the reservoir-derived network phenotypes to the functional neuroanatomy literature.
+
+\textbf{Single-trial processing.} The present validation characterizes spike-based transformation on trial-averaged evoked structure. Single-trial EEG processing would exploit the full asynchronous richness of the spiking representation and enable real-time applications. The subject-centering discovery motivates adversarial subject-invariant training as a deployment-viable alternative to per-subject normalization.
+
+\textbf{External dataset generalization.} The geometric findings in this dissertation---the variance ratio $\rho = 7.2$, the shared principal subspace, the monotonic PCA destruction---are established on the SHAPE dataset exclusively. Preliminary analysis on the DEAP dataset (Koelstra et al., 2012; $N = 32$, single-trial continuous EEG, binary valence) yielded $\rho = 30.5$ but a centering gain of only $+0.7$~pp, consistent with the absence of trial-averaged ERP structure in that paradigm. The subject-covariance dominance ratio generalizes across datasets, but the centering recovery requires trial-averaged ERP representations where condition-discriminative structure has been elevated above within-trial noise. This regime distinction---trial-averaged versus single-trial---defines the boundary condition for the centering result and motivates investigation of domain-adaptation methods that can approximate centering in single-trial deployment settings.
+
+\textbf{Dimensional clinical measures.} The present analyses use binary diagnostic categories. Dimensional symptom severity scales (PHQ-9, PCL-5, AUDIT) may reveal continuous coupling--symptom associations that categorical comparisons miss, and would address the heterogeneity inherent in binary diagnostic groupings.
+
+
+\section{Significance and Position in the Field}
+\label{sec:significance}
+
+ARSPI-Net makes three contributions to the field that, taken together, constitute a novel position in the landscape of EEG analysis methods.
+
+\subsection{The First Four-Level Interpretable Neuromorphic EEG Architecture}
+
+To our knowledge, no existing EEG classification system provides intrinsic interpretability at all four levels defined in Section~\ref{sec:interp_taxonomy}. ProtoPMed-EEG \cite{barnett_protopmed_2024}---the current gold standard for clinically validated interpretable EEG---achieves geometric transparency (Level~2) through prototype-based case reasoning, but does not provide dynamical characterization (Level~3) or cross-scale coupling analysis (Level~4). NeuCube \cite{kasabov_neucube_2014}---the most mature SNN architecture for brain data---achieves temporal traceability (Level~1) through brain-atlas-structured spike propagation and dynamical characterization (Level~3) through connectivity analysis, but does not formally decompose embedding geometry (Level~2) or measure temporal-spatial coupling (Level~4). EEGNet with SHAP provides post-hoc approximations of Levels~1--2 but satisfies neither intrinsically: the explanations describe the model's learned function, not the signal's structure. A direct comparison (Section~\ref{sec:shap_comparison}) confirms this: EEGNet's gradient saliency peaks at $402$--$691$~ms---outside the classical ERP window---while ARSPI-Net's attention peaks at $176$--$254$~ms with condition-specific differentiation aligned to P300, LPP, and N2 components.
+
+To our knowledge, ARSPI-Net is the first architecture that achieves all four levels through a single staged pipeline: temporal bin activations that correlate with P300 ($r = 0.65$) and LPP ($|r| = 0.82$) amplitudes (Level~1, Chapter~\ref{chap:embeddings}), variance decomposition revealing the $7.2\times$ subject-to-condition ratio with universal centering gains across seven representations (Level~2, Chapter~\ref{chap:arspi_net}), six named descriptors that collectively predict $66\%$ of LPP variance (Level~3, Chapter~\ref{chap:dynamics}), and structure--function coupling with prototype-based clinical profiling (Level~4, Chapter~\ref{chap:synthesis}). This four-level interpretability is intrinsic---it requires no post-hoc attribution methods because the pipeline's intermediate variables are themselves clinically meaningful quantities.
+
+\begin{table}[t]
+\centering
+\caption{Interpretability comparison across leading EEG analysis architectures. \checkmark = intrinsic, $\sim$ = post-hoc or partial, \texttimes = not provided. ARSPI-Net is the only architecture achieving all four interpretability levels.}
+\label{tab:sota_comparison}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Capability} & \textbf{ARSPI-Net} & \textbf{ProtoPMed} & \textbf{NeuCube} & \textbf{EEGNet+SHAP} \\
+\midrule
+L1: Temporal traceability ($r = 0.82$ LPP)   & \checkmark & \texttimes & \checkmark & $\sim$ \\
+L2: Geometric transparency ($\rho = 7.2$)    & \checkmark & \checkmark & \texttimes & $\sim$ \\
+L3: Dynamical characterization ($R^2 = 0.66$) & \checkmark & \texttimes & \checkmark & \texttimes \\
+L4: Systems-level coupling ($\kappa = 0.22$)  & \checkmark & \texttimes & \texttimes & \texttimes \\
+\midrule
+Layer-specific clinical profiling             & \checkmark & \texttimes & $\sim$ & \texttimes \\
+Fixed-weight reservoir (inspectable)          & \checkmark & N/A        & $\sim$ & N/A \\
+Clinician validation study                    & \texttimes & \checkmark & \texttimes & \texttimes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The Geometric Discovery: Subject-Covariance Entanglement}
+
+The variance decomposition and shared-subspace analysis constitute a geometric discovery about affective EEG that is independent of the ARSPI-Net architecture. Subject identity accounts for $62.6\%$ of embedding variance versus $8.7\%$ for emotional condition ($\rho = 7.2$). Per-subject centering recovers $+13$ to $+21$ percentage points of buried accuracy across all seven tested representations, including EEGNet ($72.0\% \to 89.1\%$). PCA-based nuisance regression is provably lossy because subject and condition share a principal subspace (principal angles $= 0^\circ$). These findings apply to every model in the comparison and to any affective EEG system operating on a transdiagnostic clinical population. ARSPI-Net's geometric transparency is what made the discovery visible, but the discovery itself is a property of the signal.
+
+\subsection{Layer-Specific Clinical Interpretability}
+
+The most distinctive finding in the dissertation is that different psychiatric disorders are most detectable in different layers of the ARSPI-Net representation: dynamical descriptors for SUD and PTSD, graph topology for GAD, coupling for ADHD. This layer-specific clinical sensitivity pattern means that a complete characterization of affective EEG in a transdiagnostic sample requires all three representational layers---not because they combine additively for any single classification task, but because they measure different properties of the underlying neural organization. This multi-scale structural decomposition is the clinical contribution that no single-stage classifier, however accurate, can provide. A psychiatrist evaluating a patient's ARSPI-Net output receives not just a classification but a structured profile: which temporal descriptors are atypical, which spatial network properties differ from the cohort, whether the temporal-spatial characterizations are consistent, and which known clinical patterns the profile resembles. That is the interpretability that clinical translation requires.
+
+The governing question posed in Chapter~\ref{chap:introduction}---whether hidden dynamical order can be recovered from noisy neural measurements through nonlinear transformation, and whether that order remains stable, compressible, structurally coherent, and interpretable in terms meaningful to clinicians---is answered affirmatively, with boundary conditions. Three forms of hidden order become visible through the staged transformation: temporal organization in the dynamical response layer ($7/7$ metrics condition-sensitive, temporal family $2.4\times$ larger than amplitude), relational organization in the topological layer (SUD $p = 0.0004$, GAD $p = 0.032$), and their alignment in the coupling layer ($\kappa = 0.22$, observation-specific). The subject-covariance entanglement discovery ($\rho = 7.2$, centering gain $+13$ to $+21$~pp across seven representations) demonstrates that the hidden order was present in the signal all along---buried beneath subject-identity geometry and recoverable by the correct transformation across every tested architecture.
+
+Every stage of this recovery is intrinsically interpretable. The reservoir's operating regime is characterized by named dynamical parameters (Chapter~\ref{chap:lsm}). The temporal coding preserves interpretable bin-level activations aligned to ERP windows (Chapter~\ref{chap:embeddings}). The variance decomposition exposes the geometric structure of the embedding space (Chapter~\ref{chap:arspi_net}). The seven dynamical descriptors produce named, physically grounded characterizations of each patient's reservoir response (Chapter~\ref{chap:dynamics}). The coupling metric tells a clinician whether temporal dynamics and spatial topology agree at each electrode (Chapter~\ref{chap:synthesis}). This intrinsic interpretability---the property that the architecture \emph{is} the explanation, rather than requiring one---is ARSPI-Net's primary engineering contribution and the property that positions it for clinical translation where black-box models cannot serve.
+
+The question remains open and productive: whether multi-timescale reservoir dynamics, finer temporal coding, formal XAI benchmarking against post-hoc methods, and trainable spiking architectures can recover additional forms of hidden order that the present single-timescale, fixed-weight framework cannot access.
+\section{Code and Data Availability}
+
+The experimental code, analysis scripts, and reproduction pipeline for all experiments reported in this dissertation are publicly available at \texttt{https://github.com/TheAwesomeAndy/dissoAdventureExperiments}. The SHAPE Community dataset is maintained by the Stony Brook University Affective Science Laboratory (\texttt{lab-can.com/shape/}) and is available upon request to qualified researchers with appropriate institutional review board approval.
