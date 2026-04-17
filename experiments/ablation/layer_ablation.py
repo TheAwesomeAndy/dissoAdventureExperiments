@@ -224,7 +224,8 @@ def compute_coupling(D_obs, T_obs):
 C_block = np.zeros((N_obs, 3))
 for i in range(N_obs):
     C_mat = compute_coupling(D_perchannel[i], T_perchannel[i])
-    C_block[i, 0] = np.mean(np.abs(C_mat))           # κ
+    p, q = C_mat.shape
+    C_block[i, 0] = np.linalg.norm(C_mat, 'fro') / np.sqrt(p * q)  # κ (Frobenius-normalized)
     C_block[i, 1] = C_mat[:, 0].mean()               # mean signed strength coupling
     C_block[i, 2] = C_mat[:, 1].mean()               # mean signed clustering coupling
 print(f"  C (coupling):    {C_block.shape}")

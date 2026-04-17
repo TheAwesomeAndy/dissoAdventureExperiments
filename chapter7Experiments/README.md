@@ -1,5 +1,7 @@
 # Chapter 7: Dynamical-Topological Coupling Analysis
 
+> **Note:** This folder contains the **4-class** exploration experiments. The dissertation's final reported results for Chapter 7 use the **3-class** design (Negative / Neutral / Pleasant) implemented in [`experiments/ch6_ch7_3class/`](../experiments/ch6_ch7_3class/). These 4-class scripts are retained for provenance and reproducibility of the exploratory analysis.
+
 This folder contains the experimental scripts, results, and figures for Chapter 7 of the ARSPI-Net dissertation. Chapter 7 investigates the coupling between LIF reservoir dynamical descriptors and EEG connectivity topological descriptors, using data from the [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/).
 
 ## Experiment Overview

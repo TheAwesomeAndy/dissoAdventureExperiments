@@ -52,7 +52,7 @@ PSYCH_FILE = os.path.join(SCRIPT_DIR, '..', 'SHAPE_Community_Andrew_Psychopathol
 FIGURE_DIR = '/mnt/user-data/outputs/pictures/chSynthesis'
 CATS = ['Threat', 'Mutilation', 'Cute', 'Erotic']
 DX_LIST = ['MDD', 'SUD', 'PTSD', 'GAD', 'ADHD']
-N_PERM_INTERACTION = 2000
+N_PERM_INTERACTION = 5000
 RANDOM_SEED = 42
 ALPHA = 0.05
 # ═══════════════════════════════════════════════════════════════════

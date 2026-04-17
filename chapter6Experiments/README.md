@@ -1,5 +1,7 @@
 # Chapter 6: Dynamical Characterisation of the LIF Reservoir
 
+> **Note:** This folder contains the **4-class** exploration experiments (Threat / Mutilation / Cute / Erotic). The dissertation's final reported results for Chapter 6 use the **3-class** design (Negative / Neutral / Pleasant) implemented in [`experiments/ch6_ch7_3class/`](../experiments/ch6_ch7_3class/). These 4-class scripts are retained for provenance and reproducibility of the exploratory analysis.
+
 This folder contains the experimental scripts for Chapter 6 of the ARSPI-Net dissertation. Chapter 6 validates the Leaky Integrate-and-Fire (LIF) spiking reservoir as a measurement instrument before using it for scientific discovery, using EEG data from the [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/). The experiments operate at 4-class granularity (Threat / Mutilation / Cute / Erotic), enabling within-valence subcategory contrasts.
 
 ---

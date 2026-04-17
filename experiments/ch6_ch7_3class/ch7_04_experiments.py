@@ -140,8 +140,9 @@ def compute_coupling_matrix(D_obs, T_obs):
 
 
 def coupling_scalar(C):
-    """Scalar coupling strength κ = mean |C[j,k]|."""
-    return float(np.mean(np.abs(C)))
+    """Scalar coupling strength κ = ||C||_F / sqrt(p*q) (Frobenius-normalized)."""
+    p, q = C.shape
+    return float(np.linalg.norm(C, 'fro') / np.sqrt(p * q))
 
 
 def get_clinical_groups(var_name):

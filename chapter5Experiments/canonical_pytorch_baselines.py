@@ -23,20 +23,16 @@ All models use:
   - 10 random seeds × 5 initializations per fold = 50 runs per model
   - Balanced class weights via CrossEntropyLoss
 
+This script produces 3 of the 7 rows in the dissertation's baseline table
+(the deep learning baselines). The remaining 4 rows (Raw EEG, PCA-200,
+Reservoir, BandPower) are produced by run_chapter5_experiments.py using
+LogReg/SVM readouts on pre-extracted features.
+
 Results (SHAPE dataset, 211 subjects, 3-class):
   Uncentered:                    Centered:
   EEGNet:     72.0% ± 4.9%      EEGNet:     89.1% ± 3.1%   (+17.1 pp)
   GRU:        59.9% ± 6.4%      GRU:        78.4% ± 3.5%   (+18.5 pp)
   LSTM:       58.0% ± 5.5%      LSTM:       71.1% ± 6.8%   (+13.1 pp)
-
-Additional representations (LogReg/SVM readout):
-  Raw EEG:    70.5% → 88.4%   (+17.9 pp)
-  PCA-200:    64.9% → 86.4%   (+21.5 pp)
-  Reservoir:  59.4% → 78.8%   (+19.4 pp)
-  BandPower:  47.7% → 61.0%   (+13.3 pp)
-
-Variance decomposition on ARSPI-Net embedding:
-  Subject: 62.6%, Condition: 8.7%, Residual: 28.7% (rho = 7.2x)
 
 Centering is the dominant intervention; architecture choice is secondary.
 
