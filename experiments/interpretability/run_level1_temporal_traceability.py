@@ -7,15 +7,19 @@ Validates Level 1 of the four-level interpretability taxonomy:
 every output variable traces back to specific input ERP transients
 through the explicit BSC₆ temporal coding.
 
-Key results:
-  r = 0.82   Pearson correlation between input LPP amplitude and
-             BSC₆-reconstructed temporal envelope (per-channel median)
+Key results (this script — post-reservoir analysis):
+  r ≈ 0.23   Pearson correlation between LIF reservoir BSC₆ spike-count
+             envelope and input LPP amplitude (per-channel median)
   R² = 0.661 Ridge regression from 7 dynamical descriptors to
              per-trial LPP amplitude
 
-These demonstrate that the reservoir's fixed-weight transformation
-preserves — rather than destroys — the dominant temporal structure
-of the input ERP.
+Note: r = 0.82 is the PRE-reservoir temporal-bin analysis (raw EEG
+temporal bin amplitudes correlated with LPP), reported in Ch4/Ch6 of the
+dissertation. That analysis is distinct from what this script computes.
+This script measures how much LPP structure survives the reservoir's
+nonlinear spike-encoding transform — a weaker but still significant
+correlation (r ≈ 0.23), demonstrating partial preservation of temporal
+structure through the fixed-weight LIF reservoir.
 
 Publication: Lane, A. A. (2026). Affective Reservoir-Spike Processing and
 Inference Network (ARSPI-Net): A Four-Level Interpretable Neuromorphic
@@ -348,7 +352,8 @@ def main():
     print("=" * 60)
     print("LEVEL 1 INTERPRETABILITY: Temporal Traceability")
     print("=" * 60)
-    print(f"Targets: r = 0.82 (LPP recovery), R² = 0.661 (prediction)\n")
+    print(f"Targets: r ≈ 0.23 (post-reservoir LPP recovery), R² = 0.661 (prediction)")
+    print(f"  Note: r = 0.82 is the pre-reservoir temporal bin analysis (Ch4/Ch6)\n")
 
     eeg, subjects = load_eeg(args.data_dir)
     print(f"  Data: {eeg.shape[0]} obs, {eeg.shape[2]} channels, "
@@ -361,7 +366,7 @@ def main():
     print("\n" + "=" * 60)
     print("SUMMARY — Level 1 Temporal Traceability")
     print("=" * 60)
-    print(f"  LPP recovery (median r): {r1['median_r']:.3f}  (target: 0.82)")
+    print(f"  LPP recovery (median r): {r1['median_r']:.3f}  (post-reservoir target: ~0.23)")
     print(f"  LPP prediction (R²):     {r2['r2']:.3f}  (target: 0.661)")
 
 

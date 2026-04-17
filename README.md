@@ -28,7 +28,7 @@ All classification results use 10-fold StratifiedGroupKFold cross-validation (ra
 
 | Level | Property | Key Metric | Chapter |
 |---|---|---|---|
-| 1 | Temporal traceability | r = 0.82 LPP recovery | Ch4 |
+| 1 | Temporal traceability | r = 0.82 pre-reservoir, r = 0.23 post-reservoir LPP correlation | Ch4 |
 | 2 | Geometric transparency | ρ = 7.2 variance ratio, +13 to +21 pp centering gain | Ch5 |
 | 3 | Dynamical characterization | R² = 0.661 LPP prediction | Ch6 |
 | 4 | Systems-level correspondence | κ = 0.22, p < 0.001 | Ch7 |
@@ -127,7 +127,9 @@ The dissertation's final results for Chapters 5–7 use the **3-class** design. 
 | Dissertation Element | Script | Key Result |
 |---|---|---|
 | Deep learning baselines (EEGNet/GRU/LSTM) | `chapter5Experiments/canonical_pytorch_baselines.py` | 3 deep learning rows |
-| Full 7-row baseline table | `chapter5Experiments/run_chapter5_experiments.py` | All 7 rows (incl. Raw EEG, PCA-200, Reservoir, BandPower) |
+| Raw EEG + LogReg, Reservoir + LogReg | `chapter5Experiments/experiment_zero.py` | 2 baseline rows (Raw EEG, ARSPI-Net reservoir) |
+| Band Power + SVM (and other sklearn classifiers) | `chapter5Experiments/sklearn_baselines.py` | 1 baseline row (Band Power + SVM) + extended Table 5.4 |
+| GNN ablation table (7 rows) | `chapter5Experiments/run_chapter5_experiments.py` | BandPower+LogReg/MLP, LSM+PCA+MLP, GAT variants (not the headline 7-row table) |
 | Experiment Zero disambiguation | `chapter5Experiments/experiment_zero.py` | 70.5% confirmed uncentered |
 | Ch6 3-class dynamical descriptors | `experiments/ch6_ch7_3class/ch6_03_experiments.py` | 7/7 condition-sensitive |
 | Ch7 3-class coupling | `experiments/ch6_ch7_3class/ch7_04_experiments.py` | κ = 0.22, p < 0.001 |
@@ -146,7 +148,7 @@ The dissertation's final results for Chapters 5–7 use the **3-class** design. 
 | Dissertation Element | Script | Key Result |
 |---|---|---|
 | Ch3 LIF reservoir characterization | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Separation, fading memory, kernel quality (synthetic) |
-| Level 1 temporal traceability | `experiments/interpretability/run_level1_temporal_traceability.py` | r = 0.82 LPP recovery, R² = 0.661 prediction |
+| Level 1 temporal traceability | `experiments/interpretability/run_level1_temporal_traceability.py` | r ≈ 0.23 post-reservoir LPP correlation, R² = 0.661 prediction |
 | EEGNet saliency comparison | `experiments/interpretability/run_eegnet_saliency_comparison.py` | EEGNet 402–691 ms vs ARSPI-Net 176–254 ms |
 | Attention-prototype readout | `experiments/interpretability/run_arspinet_v2_attention_prototype.py` | 66.7%, permutation p = 0.634 (not significant) |
 

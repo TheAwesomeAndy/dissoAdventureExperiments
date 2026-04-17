@@ -7,7 +7,7 @@ Full end-to-end trained deep learning baselines for 3-class affective EEG
 classification on the SHAPE Community dataset (N=211 subjects, 34 channels).
 
 This script replaces the NumPy reference implementations in
-eegnet_gru_lstm_baselines.py with canonical PyTorch models:
+deprecated/eegnet_gru_lstm_baselines.py with canonical PyTorch models:
 
   1. EEGNet (Lawhern et al. 2018) — full architecture with depthwise +
      separable convolutions, BatchNorm, dropout, end-to-end training.
@@ -56,7 +56,7 @@ try:
     from torch.utils.data import DataLoader, TensorDataset
 except ImportError:
     print("ERROR: This script requires PyTorch. Install with: pip install torch")
-    print("The NumPy reference implementations are in eegnet_gru_lstm_baselines.py")
+    print("The NumPy reference implementations are in deprecated/eegnet_gru_lstm_baselines.py")
     sys.exit(1)
 
 from sklearn.model_selection import StratifiedGroupKFold

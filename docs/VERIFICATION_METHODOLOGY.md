@@ -76,7 +76,7 @@ Every Python script in the repository is tested by at least one verification scr
 | `experiments/ch6_ch7_3class/ch7_04_experiments.py` | `verify_ch6_ch7_3class.py` | Syntax + component |
 | `experiments/ablation/layer_ablation.py` | `verify_ablation.py` | Component + integration |
 | `chapter5Experiments/sklearn_baselines.py` | `verify_baselines.py` | Component + integration (8 classifiers, feature extraction, CV) |
-| `chapter5Experiments/eegnet_gru_lstm_baselines.py` | `verify_baselines.py` | Component + integration (EEGNet/GRU/LSTM forward, fit, determinism) |
+| `chapter5Experiments/deprecated/eegnet_gru_lstm_baselines.py` | `verify_baselines.py` | Component + integration (EEGNet/GRU/LSTM forward, fit, determinism) |
 | `validation/validate_shape_data.py` | `verify_validators.py` | Syntax + mock data QC |
 | `validation/validate_subcategory_data.py` | `verify_validators.py` | Syntax + mock data QC |
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Verification script for sklearn_baselines.py and eegnet_gru_lstm_baselines.py.
+Verification script for sklearn_baselines.py and deprecated/eegnet_gru_lstm_baselines.py.
 
 Tests all core components on synthetic data without requiring the SHAPE dataset.
 Validates classifier instantiation, feature extraction, deep model forward passes,
@@ -32,12 +32,12 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     print("=" * 70)
-    print("VERIFICATION: sklearn_baselines.py + eegnet_gru_lstm_baselines.py")
+    print("VERIFICATION: sklearn_baselines.py + deprecated/eegnet_gru_lstm_baselines.py")
     print("=" * 70)
 
     # ── 1. Syntax validation ──
     print("\n── Syntax Validation ──")
-    for script in ["sklearn_baselines.py", "eegnet_gru_lstm_baselines.py"]:
+    for script in ["sklearn_baselines.py", os.path.join("deprecated", "eegnet_gru_lstm_baselines.py")]:
         path = os.path.join(script_dir, script)
         try:
             with open(path) as f:
@@ -107,10 +107,19 @@ def main():
     check("Accuracies in [0, 1]", np.all((accs >= 0) & (accs <= 1)))
     check(f"5 fold F1 scores returned", len(f1s) == 5)
 
-    # ── 6. Import eegnet_gru_lstm_baselines ──
-    print("\n── eegnet_gru_lstm_baselines.py Imports ──")
+    # ── 6. Import eegnet_gru_lstm_baselines (from deprecated/) ──
+    print("\n── deprecated/eegnet_gru_lstm_baselines.py Imports ──")
     try:
-        from eegnet_gru_lstm_baselines import EEGNetNumpy, GRUClassifier, LSTMClassifier
+        import importlib.util
+        _spec = importlib.util.spec_from_file_location(
+            "eegnet_gru_lstm_baselines",
+            os.path.join(script_dir, "deprecated", "eegnet_gru_lstm_baselines.py"),
+        )
+        _mod = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)
+        EEGNetNumpy = _mod.EEGNetNumpy
+        GRUClassifier = _mod.GRUClassifier
+        LSTMClassifier = _mod.LSTMClassifier
         check("Deep baseline classes importable", True)
     except ImportError as e:
         check("Deep baseline classes importable", False, str(e))

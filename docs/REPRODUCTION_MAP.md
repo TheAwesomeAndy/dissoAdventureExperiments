@@ -38,11 +38,11 @@ This document maps every table, figure, and statistical result in the ARSPI-Net 
 | Table 5.2: GNN architecture comparison | `chapter5Experiments/run_chapter5_experiments.py` | Experiment 2 |
 | Table 5.3: Graph sparsity sweep | `chapter5Experiments/run_chapter5_experiments.py` | Experiment 3 |
 | Table 5.4: Conventional sklearn baselines | `chapter5Experiments/sklearn_baselines.py` | 8 classifier results |
-| Table 5.5: Deep baselines (NumPy reference) | `chapter5Experiments/eegnet_gru_lstm_baselines.py` | NumPy implementations (see note) |
+| Table 5.5: Deep baselines (NumPy reference) | `chapter5Experiments/deprecated/eegnet_gru_lstm_baselines.py` | NumPy implementations (see note) |
 | Figure 5.1: Confusion matrix | `chapter5Experiments/run_chapter5_experiments.py` | `confusion_matrix.pdf` |
 | Full reproducibility | `chapter5Experiments/reproduce_chapter5.py` | All Ch5 figures |
 
-**Note:** `eegnet_gru_lstm_baselines.py` contains simplified NumPy reference implementations retained for reproducibility. The canonical results use `canonical_pytorch_baselines.py` with full end-to-end PyTorch training.
+**Note:** `deprecated/eegnet_gru_lstm_baselines.py` contains simplified NumPy reference implementations retained for reproducibility. The canonical results use `canonical_pytorch_baselines.py` with full end-to-end PyTorch training.
 
 ---
 
@@ -111,7 +111,7 @@ This document maps every table, figure, and statistical result in the ARSPI-Net 
 
 | Dissertation Element | Script | Output |
 |---|---|---|
-| Level 1: LPP recovery (r = 0.82) | `experiments/interpretability/run_level1_temporal_traceability.py` | Per-channel correlation + PDF |
+| Level 1: LPP recovery (r ≈ 0.23 post-reservoir) | `experiments/interpretability/run_level1_temporal_traceability.py` | Per-channel correlation + PDF |
 | Level 1: LPP prediction (R² = 0.661) | `experiments/interpretability/run_level1_temporal_traceability.py` | Ridge regression + PDF |
 | EEGNet saliency peaks (402–691 ms) | `experiments/interpretability/run_eegnet_saliency_comparison.py` | Saliency profile + PDF |
 | Attention-prototype readout (66.7%, p = 0.634) | `experiments/interpretability/run_arspinet_v2_attention_prototype.py` | Readout comparison + PDF |
