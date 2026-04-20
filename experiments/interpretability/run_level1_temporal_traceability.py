@@ -10,8 +10,13 @@ through the explicit BSC₆ temporal coding.
 Key results (this script — post-reservoir analysis):
   r ≈ 0.23   Pearson correlation between LIF reservoir BSC₆ spike-count
              envelope and input LPP amplitude (per-channel median)
-  R² = 0.661 Ridge regression from 7 dynamical descriptors to
-             per-trial LPP amplitude
+
+Note: The Ridge regression analysis (Analysis 2) is retained for exploratory
+reference but is NOT cited in the dissertation.  The original R² = 0.661
+claim was removed after verification showed it was not reproducible under
+subject-grouped cross-validation (actual R² = -0.747).  The dissertation's
+Level 3 claim now uses per-channel univariate correlations computed by
+run_level3_descriptor_erp_alignment.py.
 
 Note: r = 0.82 is the PRE-reservoir temporal-bin analysis (raw EEG
 temporal bin amplitudes correlated with LPP), reported in Ch4/Ch6 of the
@@ -352,8 +357,9 @@ def main():
     print("=" * 60)
     print("LEVEL 1 INTERPRETABILITY: Temporal Traceability")
     print("=" * 60)
-    print(f"Targets: r ≈ 0.23 (post-reservoir LPP recovery), R² = 0.661 (prediction)")
-    print(f"  Note: r = 0.82 is the pre-reservoir temporal bin analysis (Ch4/Ch6)\n")
+    print(f"Targets: r ≈ 0.23 (post-reservoir LPP recovery)")
+    print(f"  Note: r = 0.82 is the pre-reservoir temporal bin analysis (Ch4/Ch6)")
+    print(f"  Note: Ridge R² analysis below is exploratory (not cited in dissertation)\n")
 
     eeg, subjects = load_eeg(args.data_dir)
     print(f"  Data: {eeg.shape[0]} obs, {eeg.shape[2]} channels, "
@@ -367,7 +373,7 @@ def main():
     print("SUMMARY — Level 1 Temporal Traceability")
     print("=" * 60)
     print(f"  LPP recovery (median r): {r1['median_r']:.3f}  (post-reservoir target: ~0.23)")
-    print(f"  LPP prediction (R²):     {r2['r2']:.3f}  (target: 0.661)")
+    print(f"  LPP prediction (R²):     {r2['r2']:.3f}  (exploratory; not cited in dissertation)")
 
 
 if __name__ == '__main__':

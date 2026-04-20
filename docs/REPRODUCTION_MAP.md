@@ -125,7 +125,7 @@ This document maps every table, figure, and statistical result in the ARSPI-Net 
 | Dissertation Element | Script | Output |
 |---|---|---|
 | Level 1: LPP recovery (r ≈ 0.23 post-reservoir) | `experiments/interpretability/run_level1_temporal_traceability.py` | Per-channel correlation + PDF |
-| Level 1: LPP prediction (R² = 0.661) | `experiments/interpretability/run_level1_temporal_traceability.py` | Ridge regression + PDF |
+| Level 3: Descriptor-ERP alignment (\|r\| = 0.82 LPP, r = 0.837 Ch31) | `experiments/interpretability/run_level3_descriptor_erp_alignment.py` | Per-channel correlation table + PDF |
 | EEGNet saliency peaks (402–691 ms) | `experiments/interpretability/run_eegnet_saliency_comparison.py` | Saliency profile + PDF |
 | Attention-prototype readout (66.7%, p = 0.634) | `experiments/interpretability/run_arspinet_v2_attention_prototype.py` | Readout comparison + PDF |
 
