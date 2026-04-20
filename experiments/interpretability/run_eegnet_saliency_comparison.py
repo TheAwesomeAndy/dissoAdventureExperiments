@@ -14,7 +14,9 @@ Interpretation:
   EEGNet learns to attend to the sustained LPP component — the dominant
   source of between-condition variance. ARSPI-Net's fixed reservoir
   captures the EARLY transient response through its explicit temporal
-  coding, yet still recovers LPP information (Level 1: r = 0.82).
+  coding, while still maintaining LPP alignment at two complementary
+  scales (Level 1: |r| = 0.82 pre-reservoir temporal-bin analysis;
+  |r| = 0.23 post-reservoir BSC₆ spike-count analysis, Ch7).
   The contrast demonstrates post-hoc vs intrinsic interpretability.
 
 Publication: Lane, A. A. (2026). Affective Reservoir-Spike Processing and

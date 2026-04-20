@@ -72,11 +72,12 @@ dissoAdventureExperiments/
 │   └── verify_chapter4.py                #   Verification (31 tests)
 │
 ├── chapter5Experiments/                   # Ch5: Clinical EEG classification + baselines
-│   ├── run_chapter5_experiments.py        #   7-row baseline table + GNN experiments
+│   ├── run_chapter5_experiments.py        #   GNN ablation table (7 architecture variants) + sparsity sweep
+│   │                                      #   NOT the headline 7-row baseline — see canonical_pytorch_baselines.py + experiment_zero.py + sklearn_baselines.py
 │   ├── sklearn_baselines.py              #   8 sklearn classifiers
 │   ├── deprecated/
 │   │   └── eegnet_gru_lstm_baselines.py  #   NumPy reference implementations (superseded, see note below)
-│   ├── canonical_pytorch_baselines.py    #   Canonical PyTorch EEGNet/GRU/LSTM (produces centered table)
+│   ├── canonical_pytorch_baselines.py    #   Canonical PyTorch EEGNet/GRU/LSTM (3 of 7 headline baseline rows)
 │   ├── experiment_zero.py                #   Baseline disambiguation (centered vs uncentered)
 │   ├── reproduce_chapter5.py             #   Standalone reproducibility pipeline
 │   └── verify_*.py                       #   Verification scripts (157 tests total)

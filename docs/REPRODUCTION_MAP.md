@@ -24,21 +24,34 @@ This document maps every table, figure, and statistical result in the ARSPI-Net 
 
 ### PRIMARY: Complete Centered Baseline Table (Dissertation Table 5.X)
 
+**The dissertation's headline 7-row centered baseline table is assembled from multiple scripts; no single script produces all 7 rows.**
+
+| Dissertation Row | Uncentered → Centered | Script |
+|---|---|---|
+| EEGNet (Lawhern 2018) | 72.0% → 89.1% | `chapter5Experiments/canonical_pytorch_baselines.py` |
+| GRU (2-layer bidir) | 59.9% → 78.4% | `chapter5Experiments/canonical_pytorch_baselines.py` |
+| LSTM (2-layer bidir) | 58.0% → 71.1% | `chapter5Experiments/canonical_pytorch_baselines.py` |
+| Raw EEG + LogReg | 70.5% → 88.4% | `chapter5Experiments/experiment_zero.py` |
+| ARSPI-Net reservoir + LogReg | 59.4% → 78.8% | `chapter5Experiments/experiment_zero.py` |
+| PCA-200 + LogReg | 64.9% → 86.4% | (not in repo — see note below) |
+| Band Power + SVM | 47.7% → 61.0% | `chapter5Experiments/sklearn_baselines.py` |
+
+**Note on PCA-200:** The dissertation reports 64.9% → 86.4% for PCA-200 + LogReg, but no committed script currently produces this row. The result was computed during Chapter 5 development and the number has been retained as an uncommitted intermediate. Running `sklearn_baselines.py` with the PCA-200 feature stack as input is the intended reproduction path.
+
+| Supporting Analysis | Script | Output |
+|---|---|---|
+| Variance decomposition (ρ = 7.2×) | `chapter5Experiments/canonical_pytorch_baselines.py` (`--centered` flag run) | 62.6% subject, 8.7% condition, 28.7% residual |
+| Experiment Zero disambiguation | `chapter5Experiments/experiment_zero.py` | Confirms 70.5% is uncentered; centered Raw EEG = 88.4% |
+
+### Supporting: GNN Ablation Tables and Alternative Readouts
+
 | Dissertation Element | Script | Output |
 |---|---|---|
-| **Complete 7-row centered baseline table** | **`chapter5Experiments/canonical_pytorch_baselines.py`** | **EEGNet 89.1%, all 7 models centered** |
-| Variance decomposition (ρ = 7.2×) | `chapter5Experiments/canonical_pytorch_baselines.py` | 62.6% subject, 8.7% condition |
-| Experiment Zero disambiguation | `chapter5Experiments/experiment_zero.py` | 70.5% confirmed uncentered |
-
-### Supporting: Original Exploration Scripts
-
-| Dissertation Element | Script | Output |
-|---|---|---|
-| Table 5.1: 7-row uncentered baseline | `chapter5Experiments/run_chapter5_experiments.py` | Rows 1-7 (uncentered only) |
+| Table 5.1: GNN ablation (7 architecture variants — NOT the headline baseline table above) | `chapter5Experiments/run_chapter5_experiments.py` | 7 rows: BandPower+LogReg, BandPower+MLP, LSM+PCA+MLP, BandPower+GAT(spat), ARSPI-Net (full), ARSPI-Net (func), LSM-MFR+GAT(spat) |
 | Table 5.2: GNN architecture comparison | `chapter5Experiments/run_chapter5_experiments.py` | Experiment 2 |
 | Table 5.3: Graph sparsity sweep | `chapter5Experiments/run_chapter5_experiments.py` | Experiment 3 |
 | Table 5.4: Conventional sklearn baselines | `chapter5Experiments/sklearn_baselines.py` | 8 classifier results |
-| Table 5.5: Deep baselines (NumPy reference) | `chapter5Experiments/deprecated/eegnet_gru_lstm_baselines.py` | NumPy implementations (see note) |
+| Table 5.5: Deep baselines (NumPy reference, superseded) | `chapter5Experiments/deprecated/eegnet_gru_lstm_baselines.py` | NumPy implementations (see note) |
 | Figure 5.1: Confusion matrix | `chapter5Experiments/run_chapter5_experiments.py` | `confusion_matrix.pdf` |
 | Full reproducibility | `chapter5Experiments/reproduce_chapter5.py` | All Ch5 figures |
 
