@@ -51,9 +51,9 @@ Spearman $\mathbf{C}_{s,c}$ and scalar $\kappa_{s,c}$ are the primary coupling i
 
 \subsection{Null Model}
 
-The electrode-permutation null shuffles the row indices of $\mathbf{T}_{s,c}$ relative to $\mathbf{D}_{s,c}$, breaking the electrode correspondence while preserving the marginal distributions of both descriptor families. For each of 2,000 permutations~$\pi$, a null coupling $\kappa_{s,c}^{(\pi)}$ is computed. The per-observation $p$-value is
+The electrode-permutation null shuffles the row indices of $\mathbf{T}_{s,c}$ relative to $\mathbf{D}_{s,c}$, breaking the electrode correspondence while preserving the marginal distributions of both descriptor families. For each of 5,000 permutations~$\pi$, a null coupling $\kappa_{s,c}^{(\pi)}$ is computed. The per-observation $p$-value is
 \begin{equation}
-p_{s,c} = \frac{1 + \#\{\kappa_{s,c}^{(\pi)} \ge \kappa_{s,c}\}}{1 + 2000}.
+p_{s,c} = \frac{1 + \#\{\kappa_{s,c}^{(\pi)} \ge \kappa_{s,c}\}}{1 + 5000}.
 \end{equation}
 
 
@@ -76,7 +76,7 @@ Both $\mathbf{D}_{s,c}$ and $\mathbf{T}_{s,c}$ are derived from the same underly
 
 \subsection{Experimental Design}
 
-For each of 844 observations, $\mathbf{C}_{s,c}$ and $\kappa_{s,c}$ are computed from $\mathbf{D}_{s,c}$ ($34 \times 7$) and $\mathbf{T}_{s,c}$ ($34 \times 2$). The electrode-permutation null generates 2,000 null $\kappa$ values per observation. Group-level inference aggregates all 844 observed $\kappa$ values against their corresponding null medians using a one-sided Wilcoxon signed-rank test ($\kappa_{\text{obs}} > \kappa_{\text{null}}$). Because the 844 observations contain four per subject (one per category), a confirmatory subject-level analysis averaging $\kappa$ across categories ($N = 211$ independent observations) was also conducted; the coupling effect remains significant ($p < 0.001$, one-sample Wilcoxon against zero), confirming that the result is not inflated by within-subject dependence.
+For each of 844 observations, $\mathbf{C}_{s,c}$ and $\kappa_{s,c}$ are computed from $\mathbf{D}_{s,c}$ ($34 \times 7$) and $\mathbf{T}_{s,c}$ ($34 \times 2$). The electrode-permutation null generates 5,000 null $\kappa$ values per observation. Group-level inference aggregates all 844 observed $\kappa$ values against their corresponding null medians using a one-sided Wilcoxon signed-rank test ($\kappa_{\text{obs}} > \kappa_{\text{null}}$). Because the 844 observations contain four per subject (one per category), a confirmatory subject-level analysis averaging $\kappa$ across categories ($N = 211$ independent observations) was also conducted; the coupling effect remains significant ($p < 0.001$, one-sample Wilcoxon against zero), confirming that the result is not inflated by within-subject dependence.
 
 \subsection{Raw Observation}
 
@@ -275,7 +275,7 @@ All diagnosis comparisons are one-versus-rest within a transdiagnostic sample wi
 
 \subsection{Experimental Design}
 
-Five diagnoses are tested: MDD ($n^+ = 142$, $n^- = 64$), SUD ($n^+ = 85$, $n^- = 121$), PTSD ($n^+ = 82$, $n^- = 124$), GAD ($n^+ = 60$, $n^- = 146$), and ADHD ($n^+ = 50$, $n^- = 156$). Group comparisons use Mann--Whitney~$U$ on $\bar{\kappa}_s$ with Bonferroni correction across five tests ($\alpha = 0.01$). A secondary analysis tests diagnosis $\times$ category interactions by permutation (2,000 iterations). Power analysis reports the minimum detectable Cohen's~$d$ at $\alpha = 0.05$, power $= 0.80$ for each comparison.
+Five diagnoses are tested: MDD ($n^+ = 142$, $n^- = 64$), SUD ($n^+ = 85$, $n^- = 121$), PTSD ($n^+ = 82$, $n^- = 124$), GAD ($n^+ = 60$, $n^- = 146$), and ADHD ($n^+ = 50$, $n^- = 156$). Group comparisons use Mann--Whitney~$U$ on $\bar{\kappa}_s$ with Bonferroni correction across five tests ($\alpha = 0.01$). A secondary analysis tests diagnosis $\times$ category interactions by permutation (5,000 iterations). Power analysis reports the minimum detectable Cohen's~$d$ at $\alpha = 0.05$, power $= 0.80$ for each comparison.
 
 \subsection{Raw Observation}
 
@@ -406,14 +406,14 @@ The four-class experiments in Sections~\ref{sec:exp7_coupling}--\ref{sec:exp7_au
 
 \subsection{Coupling Existence at Three-Class}
 
-The mean coupling scalar at three-class is $\kappa = 0.221 \pm 0.111$, with the permutation test producing $p = 0.000$ ($0/1{,}000$ null realizations exceed the observed value). Coupling is unambiguously real at both granularities (Figure~\ref{fig:ch7_3class_coupling}).
+The mean coupling scalar at three-class is $\kappa = 0.221 \pm 0.111$, with the permutation test producing $p = 0.000$ ($0/5{,}000$ null realizations exceed the observed value). Coupling is unambiguously real at both granularities (Figure~\ref{fig:ch7_3class_coupling}).
 
 The coupling matrix at three-class reveals a more nuanced pattern than the uniformly negative four-class result. Of the $14$ entries, $6$ are negative and $8$ are positive. Rate variance ($+0.100$ with strength), temporal sparsity ($+0.107$), and $\tau_{AC}$ ($+0.088$) are \emph{positively} coupled with connectivity---high-connectivity channels produce more variable, sparser, and more persistent reservoir dynamics. Total spikes ($-0.054$) and MFR ($-0.054$) are negatively coupled---high-connectivity channels fire fewer but more temporally structured spikes. The reservoir responds to phase-locked input with qualitatively different dynamics than to independent input.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{pictures/chSynthesis/fig_3class_coupling_existence.pdf}
-    \caption{Coupling existence at three-class resolution ($N = 211$, $633$ observations). Left: group-mean $7 \times 2$ coupling matrix showing mixed positive/negative pattern ($6/14$ negative, $8/14$ positive), contrasting with the uniformly negative four-class result. Right: permutation test ($1{,}000$ shuffles). Observed $\kappa = 0.221$ exceeds every null realization ($p = 0.000$).}
+    \caption{Coupling existence at three-class resolution ($N = 211$, $633$ observations). Left: group-mean $7 \times 2$ coupling matrix showing mixed positive/negative pattern ($6/14$ negative, $8/14$ positive), contrasting with the uniformly negative four-class result. Right: permutation test ($5{,}000$ shuffles). Observed $\kappa = 0.221$ exceeds every null realization ($p = 0.000$).}
     \label{fig:ch7_3class_coupling}
 \end{figure}
 
@@ -476,7 +476,7 @@ Table~\ref{tab:ch7_cross_granularity} summarizes the coupling results across bot
 \hline
 \textbf{Property} & \textbf{3-class} & \textbf{4-class} \\
 \hline
-Mean $\kappa$ & $0.221$ & $0.199$ \\
+Mean $\kappa$ & $0.221$ & $0.290$ \\
 Permutation $p$ & $0.000$ & $5.0 \times 10^{-113}$ \\
 Coupling direction & Mixed ($6/14$ negative) & Uniform (all negative) \\
 Subject variance & $40.3\%$ & $29.2\%$ \\

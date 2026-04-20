@@ -318,11 +318,11 @@ These four levels are cumulative: each builds on the preceding level's outputs. 
 \toprule
 \textbf{Level} & \textbf{Metric} & \textbf{Validation} & \textbf{Result} \\
 \midrule
-L1: Temporal traceability & $|\text{Corr}(b^*, \phi_k)| \geq 0.5$ & Pearson $r$ vs.\ P300 and LPP amplitude & $r = 0.65$ (P300), $|r| = 0.82$ (LPP); per-channel peak $r = 0.837$ \\
+L1: Temporal traceability & $|\text{Corr}(b^*, \phi_k)| \geq 0.5$ & Pearson $r$ vs.\ P300 and LPP amplitude (pre- and post-reservoir) & Pre-reservoir: $r = 0.65$ (P300), $|r| = 0.82$ (LPP), per-channel peak $r = 0.837$. Post-reservoir (BSC$_6$ spike bins): $r = 0.33$ (P300), $|r| = 0.23$ (LPP). \\
 \midrule
 L2: Geometric transparency & $\rho = \text{SS}_\text{subj} / \text{SS}_\text{cond}$; centering gain $\Delta > 0$; readout accuracy $>$ chance & Variance decomposition; 7-architecture comparison; attention-prototype readout & $\rho = 7.2$; $\Delta = +13$ to $+21$~pp (all 7); $66.7\%$ balanced accuracy \\
 \midrule
-L3: Dynamical characterization & $R^2(\phi_k \mid \mathbf{d}) \geq 0.3$ & Cross-validated Ridge regression vs.\ ERP scalars & $R^2 = 0.661$ (LPP), $R^2 = 0.395$ (P300); mean amplitude $|r| = 0.820$ \\
+L3: Dynamical characterization & $|\text{Corr}(\phi_k, \mathbf{d})| \geq 0.5$ per channel & Per-channel univariate correlation: amplitude descriptor vs.\ ERP scalar & Amplitude-domain: mean amplitude $|r| = 0.820$ (LPP), $r = 0.647$ (P300); strongest per-channel $r = 0.837$. Spike-domain (post-reservoir BSC$_6$): $|r| = 0.23$ (LPP), $r = 0.33$ (P300). \\
 \midrule
 L4: Systems-level coupling & $\kappa > 0$, $p < 0.001$ (permutation) & Wilcoxon signed-rank + subject-level confirmation & $\kappa = 0.22$, $p < 0.001$ (844 obs); confirmed at $N = 211$ ($p < 0.001$) \\
 \bottomrule
