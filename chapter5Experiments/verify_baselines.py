@@ -12,6 +12,15 @@ Run:
 
 import sys
 import os
+
+# Windows cp1252 portability: scripts print Unicode box-drawing chars (─, ═)
+# and read source files containing UTF-8 (µ, ≈, ≥). Without this, they crash
+# on default Windows consoles. Python 3.7+ has reconfigure; older silently skip.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except (AttributeError, OSError):
+    pass
 import numpy as np
 
 PASS = 0
@@ -40,7 +49,7 @@ def main():
     for script in ["sklearn_baselines.py", os.path.join("deprecated", "eegnet_gru_lstm_baselines.py")]:
         path = os.path.join(script_dir, script)
         try:
-            with open(path) as f:
+            with open(path, encoding='utf-8') as f:
                 compile(f.read(), path, 'exec')
             check(f"{script} parses without syntax errors", True)
         except SyntaxError as e:

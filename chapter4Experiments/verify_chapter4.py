@@ -13,6 +13,15 @@ Exit code 0 = all checks pass, 1 = at least one check failed.
 import subprocess
 import sys
 import os
+
+# Windows cp1252 portability: scripts print Unicode box-drawing chars (─, ═)
+# and read source files containing UTF-8 (µ, ≈, ≥). Without this, they crash
+# on default Windows consoles. Python 3.7+ has reconfigure; older silently skip.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except (AttributeError, OSError):
+    pass
 import re
 from pathlib import Path
 
@@ -41,7 +50,9 @@ def main():
     print("\n[1/2] Running run_chapter4_experiments.py...")
     r1 = subprocess.run(
         [sys.executable, "chapter4Experiments/run_chapter4_experiments.py"],
-        capture_output=True, text=True, timeout=600
+        capture_output=True, text=True, timeout=600,
+        encoding='utf-8', errors='replace',
+        env=dict(os.environ, PYTHONUTF8='1', PYTHONIOENCODING='utf-8'),
     )
     out1 = r1.stdout + r1.stderr
     check("Experiments script exits cleanly", r1.returncode == 0,
@@ -51,7 +62,9 @@ def main():
     print("\n[2/2] Running run_chapter4_observations.py...")
     r2 = subprocess.run(
         [sys.executable, "chapter4Experiments/run_chapter4_observations.py"],
-        capture_output=True, text=True, timeout=600
+        capture_output=True, text=True, timeout=600,
+        encoding='utf-8', errors='replace',
+        env=dict(os.environ, PYTHONUTF8='1', PYTHONIOENCODING='utf-8'),
     )
     out2 = r2.stdout + r2.stderr
     check("Observations script exits cleanly", r2.returncode == 0,

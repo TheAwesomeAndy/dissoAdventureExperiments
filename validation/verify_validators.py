@@ -13,6 +13,15 @@ Exit code 0 = all checks pass, 1 = at least one check failed.
 """
 import sys
 import os
+
+# Windows cp1252 portability: scripts print Unicode box-drawing chars (─, ═)
+# and read source files containing UTF-8 (µ, ≈, ≥). Without this, they crash
+# on default Windows consoles. Python 3.7+ has reconfigure; older silently skip.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except (AttributeError, OSError):
+    pass
 import ast
 import numpy as np
 import tempfile
@@ -46,7 +55,7 @@ def main():
             check(f"File exists: {script}", False, "not found")
             continue
         try:
-            with open(path, 'r') as f:
+            with open(path, 'r', encoding='utf-8') as f:
                 ast.parse(f.read())
             check(f"Syntax valid: {script}", True)
         except SyntaxError as e:

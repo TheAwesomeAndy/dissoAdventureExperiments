@@ -18,6 +18,15 @@ Exit code 0 = all checks pass, 1 = at least one check failed.
 import subprocess
 import sys
 import os
+
+# Windows cp1252 portability: scripts print Unicode box-drawing chars (─, ═)
+# and read source files containing UTF-8 (µ, ≈, ≥). Without this, they crash
+# on default Windows consoles. Python 3.7+ has reconfigure; older silently skip.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except (AttributeError, OSError):
+    pass
 import ast
 import re
 import numpy as np
@@ -63,7 +72,7 @@ def main():
             check(f"File exists: {script}", False, "file not found")
             continue
         try:
-            with open(path, 'r') as f:
+            with open(path, 'r', encoding='utf-8') as f:
                 ast.parse(f.read())
             check(f"Syntax valid: {script}", True)
         except SyntaxError as e:
@@ -132,7 +141,9 @@ def main():
     r_b = subprocess.run(
         [sys.executable,
          os.path.join(base, "run_chapter7_experiment_B.py")],
-        capture_output=True, text=True, timeout=120
+        capture_output=True, text=True, timeout=120,
+        encoding='utf-8', errors='replace',
+        env=dict(os.environ, PYTHONUTF8='1', PYTHONIOENCODING='utf-8'),
     )
     out_b = r_b.stdout + r_b.stderr
     check("Experiment B exits cleanly", r_b.returncode == 0,
@@ -187,7 +198,9 @@ def main():
     r_c = subprocess.run(
         [sys.executable,
          os.path.join(base, "run_chapter7_experiment_C.py")],
-        capture_output=True, text=True, timeout=120
+        capture_output=True, text=True, timeout=120,
+        encoding='utf-8', errors='replace',
+        env=dict(os.environ, PYTHONUTF8='1', PYTHONIOENCODING='utf-8'),
     )
     out_c = r_c.stdout + r_c.stderr
     check("Experiment C exits cleanly", r_c.returncode == 0,

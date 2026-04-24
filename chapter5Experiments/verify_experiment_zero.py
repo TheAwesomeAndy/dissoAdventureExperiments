@@ -12,6 +12,15 @@ Run:
 
 import sys
 import os
+
+# Windows cp1252 portability: scripts print Unicode box-drawing chars (─, ═)
+# and read source files containing UTF-8 (µ, ≈, ≥). Without this, they crash
+# on default Windows consoles. Python 3.7+ has reconfigure; older silently skip.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except (AttributeError, OSError):
+    pass
 import numpy as np
 import tempfile
 import pickle
@@ -41,7 +50,7 @@ def main():
     print("\n── Syntax Validation ──")
     exp_zero_path = os.path.join(script_dir, "experiment_zero.py")
     try:
-        with open(exp_zero_path) as f:
+        with open(exp_zero_path, encoding='utf-8') as f:
             compile(f.read(), exp_zero_path, 'exec')
         check("experiment_zero.py parses without syntax errors", True)
     except SyntaxError as e:
@@ -196,7 +205,7 @@ def main():
     check("main() takes no arguments (uses argparse)", len(sig.parameters) == 0)
 
     # Check the script has all 4 experimental conditions defined
-    with open(exp_zero_path) as f:
+    with open(exp_zero_path, encoding='utf-8') as f:
         source = f.read()
     check("Script references 'raw_uncentered'", "raw_uncentered" in source)
     check("Script references 'raw_centered'", "raw_centered" in source)

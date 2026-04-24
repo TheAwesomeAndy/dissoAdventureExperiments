@@ -14,6 +14,15 @@ Run:
 
 import sys
 import os
+
+# Windows cp1252 portability: scripts print Unicode box-drawing chars (─, ═)
+# and read source files containing UTF-8 (µ, ≈, ≥). Without this, they crash
+# on default Windows consoles. Python 3.7+ has reconfigure; older silently skip.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except (AttributeError, OSError):
+    pass
 import numpy as np
 import pickle
 import tempfile
@@ -44,7 +53,7 @@ def main():
     for script in ["extract_kappa_matrix.py", "extract_C_matrices.py"]:
         path = os.path.join(script_dir, script)
         try:
-            with open(path) as f:
+            with open(path, encoding='utf-8') as f:
                 compile(f.read(), path, 'exec')
             check(f"{script} parses without syntax errors", True)
         except SyntaxError as e:
@@ -204,7 +213,7 @@ def main():
     print("\n── Script Structure ──")
     for script_name in ["extract_kappa_matrix.py", "extract_C_matrices.py"]:
         path = os.path.join(script_dir, script_name)
-        with open(path) as f:
+        with open(path, encoding='utf-8') as f:
             src = f.read()
         check(f"{script_name} uses pickle.load", "pickle.load" in src)
         check(f"{script_name} references ch7_full_results.pkl",

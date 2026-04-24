@@ -12,6 +12,15 @@ Run:
 
 import sys
 import os
+
+# Windows cp1252 portability: scripts print Unicode box-drawing chars (─, ═)
+# and read source files containing UTF-8 (µ, ≈, ≥). Without this, they crash
+# on default Windows consoles. Python 3.7+ has reconfigure; older silently skip.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except (AttributeError, OSError):
+    pass
 import numpy as np
 
 PASS = 0
@@ -39,7 +48,7 @@ def main():
     print("\n── Syntax Validation ──")
     repro_path = os.path.join(script_dir, "reproduce_chapter5.py")
     try:
-        with open(repro_path) as f:
+        with open(repro_path, encoding='utf-8') as f:
             compile(f.read(), repro_path, 'exec')
         check("reproduce_chapter5.py parses without syntax errors", True)
     except SyntaxError as e:
@@ -84,7 +93,7 @@ def main():
         bsc_func = getattr(mod, 'bsc6_encode', None) or getattr(mod, 'extract_bsc6', None)
         if bsc_func is None:
             # Search for a function that does BSC encoding
-            source = open(repro_path).read()
+            source = open(repro_path, encoding='utf-8').read()
             check("BSC6 encoding function exists", "bsc" in source.lower() or "binned" in source.lower(),
                   "BSC encoding logic present in source")
         else:
@@ -112,13 +121,13 @@ def main():
             check("Band power non-negative", np.all(bp >= 0))
         else:
             check("Band power function found in source",
-                  "band" in open(repro_path).read().lower())
+                  "band" in open(repro_path, encoding='utf-8').read().lower())
     except Exception as e:
         check("Conventional features", False, str(e))
 
     # ── 6. GNN Implementations ──
     print("\n── GNN Implementations ──")
-    source = open(repro_path).read()
+    source = open(repro_path, encoding='utf-8').read()
 
     # Check GNN types are implemented
     check("GCN implementation present", "gcn" in source.lower())
