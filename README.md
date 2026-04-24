@@ -173,12 +173,15 @@ Every output variable traces to input through: membrane voltage → spike times 
 ## Dependencies
 
 ```
-numpy>=1.21
-scipy>=1.7
-scikit-learn>=1.0
-matplotlib>=3.5
+numpy>=2.0           # Code uses np.trapezoid (numpy 2.0 API); saved pickles use the 2.0 format
+scipy>=1.13          # For numpy 2.0 ABI compatibility
+scikit-learn>=1.5    # For numpy 2.0 ABI compatibility
+pandas>=2.2.3        # For numpy 2.0 ABI compatibility (used by reproduce_chapter5.py)
+matplotlib>=3.9
 torch>=1.12          # For canonical_pytorch_baselines.py only
 ```
+
+**Windows note:** verifier scripts use Unicode box-drawing characters in stdout and read source files as UTF-8. If your console defaults to cp1252, run with `PYTHONUTF8=1` (Python 3.7+) or `set PYTHONIOENCODING=utf-8`. The scripts now reconfigure stdout themselves where they can, but setting the env var is the belt-and-suspenders fix.
 
 ## Input Data Format
 
