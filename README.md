@@ -27,7 +27,7 @@ All classification results use 10-fold StratifiedGroupKFold cross-validation (ra
 | 1 | Temporal traceability | r = 0.82 pre-reservoir, r = 0.23 post-reservoir LPP correlation | Ch4 |
 | 2 | Geometric transparency | ρ = 7.2 variance ratio, +13 to +21 pp centering gain | Ch5 |
 | 3 | Dynamical characterization | Per-channel amplitude descriptor \|r\| = 0.82 (LPP), peak r = 0.837 (Ch31) | Ch6 |
-| 4 | Systems-level correspondence | κ = 0.22, p < 0.001 | Ch7 |
+| 4 | Systems-level correspondence | median κ = 0.273, p < 0.001 | Ch7 |
 
 ### Complete Baseline Table (Uncentered → Centered)
 
@@ -51,7 +51,7 @@ All deep learning baselines trained with canonical PyTorch implementations: Adam
 - **4-class:** Cross-subject accuracy 40.4%; centered 52.0% (PTSD threat-specificity p=0.036)
 - **Regime boundary:** Reservoir +12.5 pp at 3-class, −6.2 pp at 4-class
 - **Dynamical descriptors (Ch6):** 7/7 condition-sensitive, 0/49 clinical significant; temporal family 2.4× > amplitude
-- **Structure-function coupling (Ch7):** κ = 0.22, p < 0.001; no clinical coupling; Cute-Erotic p=0.025 (4-class only)
+- **Structure-function coupling (Ch7):** median κ = 0.273, p < 0.001; no clinical coupling; Cute-Erotic p=0.025 (4-class only)
 - **Latent axis:** Continuous excitability-persistence axis (PC1, 19.1%), condition-modulated (Friedman p=6×10⁻⁶), diagnostically independent
 
 ---
@@ -129,7 +129,7 @@ The dissertation's final results for Chapters 5–7 use the **3-class** design. 
 | GNN ablation table (7 rows) | `chapter5Experiments/run_chapter5_experiments.py` | BandPower+LogReg/MLP, LSM+PCA+MLP, GAT variants (not the headline 7-row table) |
 | Experiment Zero disambiguation | `chapter5Experiments/experiment_zero.py` | 70.5% confirmed uncentered |
 | Ch6 3-class dynamical descriptors | `experiments/ch6_ch7_3class/ch6_03_experiments.py` | 7/7 condition-sensitive |
-| Ch7 3-class coupling | `experiments/ch6_ch7_3class/ch7_04_experiments.py` | κ = 0.22, p < 0.001 |
+| Ch7 3-class coupling | `experiments/ch6_ch7_3class/ch7_04_experiments.py` | median κ = 0.273, p < 0.001 |
 | Layer ablation | `experiments/ablation/layer_ablation.py` | A1–A9, C1–C6 complete |
 
 ### Extended Results (4-Class)
