@@ -50,6 +50,9 @@ import time
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import balanced_accuracy_score
 
 import matplotlib
 matplotlib.use('Agg')
@@ -393,9 +396,9 @@ def animate_diffusion(outdir, pkl_path, n_obs, fmt, fps, dpi):
     n_frames = len(sched)
 
     # ---- figure ---------------------------------------------------------
-    fig = plt.figure(figsize=(12.4, 5.5))
+    fig = plt.figure(figsize=(12.4, 5.9))
     gs = fig.add_gridspec(1, 2, width_ratios=[1.15, 1.0],
-                          left=0.04, right=0.95, top=0.88, bottom=0.13,
+                          left=0.04, right=0.95, top=0.89, bottom=0.21,
                           wspace=0.22)
     axL = fig.add_subplot(gs[0])
     axR = fig.add_subplot(gs[1])
@@ -430,23 +433,19 @@ def animate_diffusion(outdir, pkl_path, n_obs, fmt, fps, dpi):
     axR2.set_ylabel('Mean pairwise cosine similarity', color=ACCENT, fontsize=12)
     axR2.set_ylim(0, max(cos) * 1.18)
     axR2.tick_params(axis='y', labelcolor=ACCENT)
-    lineD, = axR.plot([], [], 'o-', color=NAVY, lw=2.4, ms=6,
-                      label='Dirichlet energy (node-feature spread)')
-    lineC, = axR2.plot([], [], 's--', color=ACCENT, lw=2.4, ms=6,
-                       label='mean pairwise cosine similarity')
-    axR.legend([lineD, lineC], [lineD.get_label(), lineC.get_label()],
-               loc='center right', fontsize=9, framealpha=0.95)
+    lineD, = axR.plot([], [], 'o-', color=NAVY, lw=2.4, ms=6)
+    lineC, = axR2.plot([], [], 's--', color=ACCENT, lw=2.4, ms=6)
     rep_drop = 100 * (dr[2] - dr[0]) / abs(dr[0])
     ann = axR.annotate(
         f'exp03 classification accuracy\nfalls fastest here\n'
         f'(Dirichlet energy $-${abs(rep_drop):.0f}% by $K=2$)',
-        xy=(1.0, dr[1]), xytext=(2.7, max(dr) * 0.78),
+        xy=(1.0, dr[1]), xytext=(2.85, max(dr) * 0.52),
         fontsize=9.5, color=TEAL, alpha=0.0,
         arrowprops=dict(arrowstyle='->', color=TEAL, lw=1.3))
 
     set_prog = add_progress_bar(
         fig, 'Animation 1 / 3  -  message passing as discrete diffusion')
-    fig.text(0.5, 0.052,
+    fig.text(0.5, 0.085,
              f'34-node SHAPE functional graph  -  GCN operator = (normalised '
              f'adjacency)$^K$  -  representative of {len(valid)} valid graphs; '
              f'aggregate Dirichlet drop {abs(agg_drop):.0f}%  -  {source}',
@@ -617,106 +616,153 @@ def animate_raster(outdir, fmt, fps, dpi):
 
 
 # ================================================================
-# Animation 3 -- Reservoir state trajectory + Koopman overlay
+# Animation 3 -- BSC6 feature trajectory + linear readout (Koopman lens)
 # ================================================================
 def animate_trajectory(outdir, fmt, fps, dpi):
-    print("\n[3/3] Reservoir state trajectory + Koopman overlay", flush=True)
-    T = 150
+    print("\n[3/3] BSC6 feature trajectory + linear readout", flush=True)
     X_list, y = generate_temporal_task(n_per_class=100, seed=42)
     res = LIFReservoirMC(N_INPUT, N_RES, seed=SEED)
-
     spk = np.array([res.forward(x)[0] for x in X_list])    # (200, T, 256)
-    traj0 = spk[y == 0].mean(0)                            # (T, 256)
-    traj1 = spk[y == 1].mean(0)
 
-    # PCA on the per-trial BSC6-window mean state -- the same window the
-    # real classifier reads -- so the 2-D plane best separates the trials.
-    feat_raw = spk[:, 10:70, :].mean(1)                    # (200, 256)
-    pca = PCA(n_components=2).fit(feat_raw)
-    feat = pca.transform(feat_raw)                         # (200, 2)
-    Z0, Z1 = pca.transform(traj0), pca.transform(traj1)
-    clf = LogisticRegression(max_iter=1000).fit(feat, y)
+    # BSC6 over the window [10:70] -- the actual ARSPI-Net readout feature.
+    # The discriminative information is temporal (WHEN spikes occur), so the
+    # readout space must keep the 6 bins; a time-average would destroy it.
+    W0, W1, NB = 10, 70, 6
+    bw = (W1 - W0) // NB                                   # bin width = 10
 
-    # one-step linear (Koopman / DMD) operator in the PC plane
+    def partial_bsc6(spk_T256, t):
+        """Cumulative BSC6 with bins filled only up to time t."""
+        feats = []
+        for b in range(NB):
+            lo = W0 + b * bw
+            hi = min(max(t, lo), lo + bw)
+            feats.append(spk_T256[lo:hi].sum(axis=0))
+        return np.concatenate(feats)                       # (1536,)
+
+    bsc = np.array([partial_bsc6(s, W1) for s in spk])     # (200, 1536) full
+    scaler = StandardScaler().fit(bsc)
+    Xs = scaler.transform(bsc)
+    clf = LogisticRegression(C=0.1, solver='liblinear', max_iter=1000)
+    clf.fit(Xs, y)
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    acc = float(np.mean([
+        balanced_accuracy_score(
+            y[te],
+            LogisticRegression(C=0.1, solver='liblinear', max_iter=1000)
+            .fit(Xs[tr], y[tr]).predict(Xs[te]))
+        for tr, te in skf.split(Xs, y)]))
+
+    # projection plane: axis 1 = the readout's own decision direction,
+    # axis 2 = leading residual (PCA) direction orthogonal to it
+    coef = clf.coef_[0]
+    cnorm = np.linalg.norm(coef) + 1e-12
+    u = coef / cnorm
+    resid = Xs - np.outer(Xs @ u, u)
+    v = PCA(n_components=1).fit(resid).components_[0]
+    v = v / (np.linalg.norm(v) + 1e-12)
+
+    def project(raw_bsc):
+        Z = scaler.transform(np.atleast_2d(raw_bsc))
+        return np.column_stack([Z @ u, Z @ v])
+
+    feat = project(bsc)                                    # (200, 2)
+    mean0, mean1 = spk[y == 0].mean(0), spk[y == 1].mean(0)
+    ts = np.arange(W0, W1 + 1)
+    Z0 = project(np.array([partial_bsc6(mean0, t) for t in ts]))   # (61, 2)
+    Z1 = project(np.array([partial_bsc6(mean1, t) for t in ts]))
+
+    # one-step linear (DMD / Koopman) operator on the readout-plane trajectory
     Zin = np.vstack([Z0[:-1], Z1[:-1]])
     Zout = np.vstack([Z0[1:], Z1[1:]])
     Amat, *_ = np.linalg.lstsq(Zin, Zout, rcond=None)      # z_next ~ z @ Amat
+    b_x = -clf.intercept_[0] / cnorm                       # boundary: x = b_x
 
-    allZ = np.vstack([Z0, Z1, feat])
+    allZ = np.vstack([Z0, Z1, feat, [[b_x, 0.0]]])
     xlo, xhi = allZ[:, 0].min(), allZ[:, 0].max()
     ylo, yhi = allZ[:, 1].min(), allZ[:, 1].max()
-    mx, my = 0.16 * (xhi - xlo) + 1e-6, 0.16 * (yhi - ylo) + 1e-6
+    mx = 0.14 * (xhi - xlo) + 1e-6
+    my = 0.18 * (yhi - ylo) + 1e-6
 
-    HOLD0, BOUND, ARROW, ENDFREEZE = 6, 26, 26, 34
-    n_frames = HOLD0 + T + BOUND + ARROW + ENDFREEZE
+    nidx = len(ts)                                         # 61
+    HOLD0, PERSTEP, HOLD, BOUND, ARROW, ENDFREEZE = 6, 2, 12, 24, 24, 32
+    n_frames = HOLD0 + nidx * PERSTEP + HOLD + BOUND + ARROW + ENDFREEZE
 
     fig = plt.figure(figsize=(10.6, 8.0))
-    ax = fig.add_axes([0.10, 0.12, 0.84, 0.78])
+    ax = fig.add_axes([0.115, 0.13, 0.83, 0.76])
     ax.set_xlim(xlo - mx, xhi + mx)
     ax.set_ylim(ylo - my, yhi + my)
-    ax.set_xlabel('reservoir-state PC 1', fontsize=11)
-    ax.set_ylabel('reservoir-state PC 2', fontsize=11)
-    ax.set_title('Reservoir lifting: trajectories become linearly separable',
-                 fontsize=13.5, color=NAVY, weight='bold', pad=12)
+    ax.set_xlabel('linear-readout axis  (logistic decision direction)',
+                  fontsize=11)
+    ax.set_ylabel('leading residual axis  (orthogonal PC)', fontsize=11)
+    ax.set_title('Reservoir lifting: the BSC6 feature becomes linearly '
+                 'separable', fontsize=13, color=NAVY, weight='bold', pad=12)
 
-    # per-trial burst-window state clouds (context for the readout)
-    ax.scatter(feat[y == 0, 0], feat[y == 0, 1], s=20, color=C0, alpha=0.30)
-    ax.scatter(feat[y == 1, 0], feat[y == 1, 1], s=20, color=C1, alpha=0.30)
+    # decision half-planes (faded in with the boundary)
+    span0 = ax.axvspan(xlo - mx, b_x, color=C0, alpha=0.0)
+    span1 = ax.axvspan(b_x, xhi + mx, color=C1, alpha=0.0)
 
-    lineT0, = ax.plot([], [], '-', color=C0, lw=2.6, label='class 0 (early)')
-    lineT1, = ax.plot([], [], '-', color=C1, lw=2.6, label='class 1 (late)')
-    headT0, = ax.plot([], [], 'o', color=C0, ms=12, mec='white', mew=1.4)
-    headT1, = ax.plot([], [], 'o', color=C1, ms=12, mec='white', mew=1.4)
-    ax.plot(Z0[0, 0], Z0[0, 1], '*', color=C0, ms=15, mec='white', mew=1.0)
-    ax.plot(Z1[0, 0], Z1[0, 1], '*', color=C1, ms=15, mec='white', mew=1.0)
+    # per-trial full-window BSC6 clouds
+    ax.scatter(feat[y == 0, 0], feat[y == 0, 1], s=22, color=C0, alpha=0.35,
+               edgecolors='none')
+    ax.scatter(feat[y == 1, 0], feat[y == 1, 1], s=22, color=C1, alpha=0.35,
+               edgecolors='none')
 
-    # decision boundary line (faded in at the end)
-    w, b = clf.coef_[0], clf.intercept_[0]
-    xs = np.array([xlo - mx, xhi + mx])
-    if abs(w[1]) > 1e-9:
-        ys = -(w[0] * xs + b) / w[1]
-    else:
-        ys = np.array([ylo - my, yhi + my])
-    bound, = ax.plot(xs, ys, color=TEAL, lw=2.6, alpha=0.0)
-    btxt = ax.text(0.985, 0.04, 'linear readout boundary  (logistic, PC plane)',
+    lineT0, = ax.plot([], [], '-', color=C0, lw=2.8,
+                      label='class 0 (early burst)')
+    lineT1, = ax.plot([], [], '-', color=C1, lw=2.8,
+                      label='class 1 (late burst)')
+    headT0, = ax.plot([], [], 'o', color=C0, ms=13, mec='white', mew=1.5)
+    headT1, = ax.plot([], [], 'o', color=C1, ms=13, mec='white', mew=1.5)
+    ax.plot(Z0[0, 0], Z0[0, 1], '*', color=NAVY, ms=17, mec='white', mew=1.0,
+            zorder=5)
+    ax.annotate('empty feature\n(both classes identical)',
+                xy=(Z0[0, 0], Z0[0, 1]),
+                xytext=(Z0[0, 0], Z0[0, 1] + 0.11 * (yhi - ylo)),
+                fontsize=8.5, color=GREY, ha='center', va='bottom')
+
+    bound, = ax.plot([b_x, b_x], [ylo - my, yhi + my], color=NAVY, lw=2.4,
+                     ls='--', alpha=0.0)
+    btxt = ax.text(0.985, 0.035,
+                   f'linear readout boundary  -  5-fold CV balanced '
+                   f'accuracy {acc:.0%}',
                    transform=ax.transAxes, ha='right', fontsize=9.5,
-                   color=TEAL, alpha=0.0)
+                   color=NAVY, alpha=0.0)
 
-    # Koopman one-step flow arrows (faded in last)
-    GAIN = 4.0
-    sel = np.arange(4, T - 1, 9)
-    q0 = ax.quiver(Z0[sel, 0], Z0[sel, 1],
-                   GAIN * (Z0[sel] @ Amat - Z0[sel])[:, 0],
-                   GAIN * (Z0[sel] @ Amat - Z0[sel])[:, 1],
-                   color=C0, alpha=0.0, width=0.004, scale=1.0,
-                   scale_units='xy', angles='xy')
-    q1 = ax.quiver(Z1[sel, 0], Z1[sel, 1],
-                   GAIN * (Z1[sel] @ Amat - Z1[sel])[:, 0],
-                   GAIN * (Z1[sel] @ Amat - Z1[sel])[:, 1],
-                   color=C1, alpha=0.0, width=0.004, scale=1.0,
-                   scale_units='xy', angles='xy')
-    ktxt = ax.text(0.015, 0.04,
-                   f'Koopman one-step flow  $z_{{t+1}}\\approx \\hat{{A}}z_t$  '
-                   f'(arrows x{GAIN:.0f})',
-                   transform=ax.transAxes, fontsize=9.5, color=GREY, alpha=0.0)
-    ax.legend(loc='upper left', fontsize=9.5, framealpha=0.95)
+    GAIN = 5.0
+    sel = np.arange(2, nidx - 1, 6)
+
+    def arrows(Z):
+        d = GAIN * (Z[sel] @ Amat - Z[sel])
+        return Z[sel, 0], Z[sel, 1], d[:, 0], d[:, 1]
+    q0 = ax.quiver(*arrows(Z0), color=C0, alpha=0.0, width=0.004,
+                   scale=1.0, scale_units='xy', angles='xy')
+    q1 = ax.quiver(*arrows(Z1), color=C1, alpha=0.0, width=0.004,
+                   scale=1.0, scale_units='xy', angles='xy')
+    ktxt = ax.text(0.015, 0.035,
+                   f'one-step linear operator  $z_{{t+1}}\\approx\\hat A z_t$  '
+                   f'(DMD, arrows x{GAIN:.0f})', transform=ax.transAxes,
+                   fontsize=9.5, color=GREY, alpha=0.0)
+    ax.legend(loc='upper right', fontsize=9.5, framealpha=0.95)
 
     set_prog = add_progress_bar(
         fig, 'Animation 3 / 3  -  why a linear readout suffices (Koopman lens)')
 
     def update(frame):
         frame = int(np.clip(frame, 0, n_frames - 1))
-        t = int(np.clip(frame - HOLD0 + 1, 1, T))
-        lineT0.set_data(Z0[:t, 0], Z0[:t, 1])
-        lineT1.set_data(Z1[:t, 0], Z1[:t, 1])
-        headT0.set_data([Z0[t - 1, 0]], [Z0[t - 1, 1]])
-        headT1.set_data([Z1[t - 1, 0]], [Z1[t - 1, 1]])
-        ba = np.clip((frame - HOLD0 - T) / BOUND, 0.0, 1.0)
+        i = int(np.clip((frame - HOLD0) // PERSTEP, 0, nidx - 1))
+        lineT0.set_data(Z0[:i + 1, 0], Z0[:i + 1, 1])
+        lineT1.set_data(Z1[:i + 1, 0], Z1[:i + 1, 1])
+        headT0.set_data([Z0[i, 0]], [Z0[i, 1]])
+        headT1.set_data([Z1[i, 0]], [Z1[i, 1]])
+        f_b = frame - HOLD0 - nidx * PERSTEP - HOLD
+        ba = float(np.clip(f_b / BOUND, 0.0, 1.0))
         bound.set_alpha(ba)
         btxt.set_alpha(ba)
-        aa = np.clip((frame - HOLD0 - T - BOUND) / ARROW, 0.0, 1.0)
-        q0.set_alpha(0.7 * aa)
-        q1.set_alpha(0.7 * aa)
+        span0.set_alpha(0.07 * ba)
+        span1.set_alpha(0.07 * ba)
+        aa = float(np.clip((f_b - BOUND) / ARROW, 0.0, 1.0))
+        q0.set_alpha(0.75 * aa)
+        q1.set_alpha(0.75 * aa)
         ktxt.set_alpha(aa)
         set_prog(frame / (n_frames - 1))
         return ()
