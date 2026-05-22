@@ -1,224 +1,429 @@
-# ARSPI-Net: A Four-Level Interpretable Neuromorphic Framework for Clinical EEG Analysis
+# Chapter 5: Clinical EEG Classification with ARSPI-Net
 
-**Dissertation:** Lane, A. A. (2026). *Affective Reservoir-Spike Processing and Inference Network (ARSPI-Net): A Four-Level Interpretable Neuromorphic Framework for Clinical EEG Analysis.* PhD Dissertation, Department of Electrical and Computer Engineering, Stony Brook University.
+This folder contains the experimental scripts, results archive, and figures for Chapter 5 of the ARSPI-Net dissertation. Chapter 5 validates the full ARSPI-Net pipeline on real clinical EEG data — classifying affective responses (Negative/Neutral/Pleasant) from the [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/).
 
-ARSPI-Net is the first neuromorphic EEG architecture that achieves intrinsic interpretability at four simultaneous levels — temporal, geometric, dynamical, and systems-level — within a single staged pipeline. Where existing approaches require post-hoc attribution methods (SHAP, gradient saliency) to explain their predictions after the fact, ARSPI-Net's signal chain *is* the explanation: every intermediate variable, from membrane trajectories to spike rasters to named dynamical descriptors to structure-function coupling indices, is a physically grounded, independently inspectable quantity that traces directly back to the input ERP waveform. No other published architecture provides this. NeuCube achieves two of the four levels; ProtoPMed-EEG achieves one; EEGNet with SHAP achieves none intrinsically. ARSPI-Net closes this gap by converting a fixed-weight LIF spiking reservoir into a calibrated nonlinear measurement instrument — a Koopman-theoretic lifting that maps low-dimensional scalp EEG into a high-dimensional spike-domain representation where temporal coding (BSC₆), geometric compression (PCA-64), dynamical characterization (seven named descriptors per channel), and graph-organized spatial analysis operate as decomposable, independently verifiable layers. The framework discovers that different psychiatric disorders are most detectable in different representational layers (dynamics for SUD/PTSD, topology for GAD, coupling for ADHD), a multi-scale clinical sensitivity pattern that no single-stage classifier can provide. For clinical translation — where a psychiatrist needs to know *which temporal features* are atypical, *how* a patient's network organization compares to the population, and *whether* the temporal and spatial characterizations are internally consistent — this intrinsic decomposition is the enabling capability.
+## Experiment Overview
 
----
-
-## Publications
-
-1. **Lane, A., Nelson, B. D., & Tang, K. W.** (2023). "Towards ARSPI-Net: Development of an Efficient Hybrid Deep Learning Framework." *Proc. IEEE Long Island Systems, Applications and Technology Conference (LISAT)*. [[IEEE Xplore]](https://ieeexplore.ieee.org/document/10179592)
-
-2. **Lane, A., Nelson, B. D., & Tang, K. W.** (2024). "Towards ARSPI-NET: Advancing EEG Feature Extraction with Neuromorphic Algorithms." *Proc. IEEE Long Island Systems, Applications and Technology Conference (LISAT)*.
-
-3. **Lane, A. A., Tang, K. W., & Nelson, B. D.** (2026). "Subject-Covariance Entanglement in Affective EEG Embeddings." *IEEE Signal Processing Letters* — **submitted, under review**.
+| Experiment | Script | Purpose |
+|------------|--------|---------|
+| 5.1 | `run_chapter5_experiments.py` | Complete pipeline: 7-row baseline table + GNN architecture comparison + sparsity sweep + depth ablation |
+| 5.2 | `reproduce_chapter5.py` | Standalone reproducibility pipeline — regenerates every figure, table, and statistical result in Chapter 5 |
 
 ---
 
-## Key Results Summary
+## The ARSPI-Net Architecture
 
-All classification results use 10-fold StratifiedGroupKFold cross-validation (random_state=42) with subject-level splitting on the SHAPE Community dataset (N=211 transdiagnostic subjects, 34 channels, trial-averaged ERPs). Dataset: [https://lab-can.com/shape/](https://lab-can.com/shape/)
-
-### Four-Level Interpretability Taxonomy
-
-| Level | Property | Key Metric | Chapter |
-|---|---|---|---|
-| 1 | Temporal traceability | r = 0.82 pre-reservoir, r = 0.23 post-reservoir LPP correlation | Ch4 |
-| 2 | Geometric transparency | ρ = 7.2 variance ratio, +13 to +21 pp centering gain | Ch5 |
-| 3 | Dynamical characterization | Spike-domain BSC₆ descriptor \|r\| = 0.23 (LPP, architecture); amplitude-domain analog on the centered ERP within the reservoir feature window \|r\| = 0.82 (LPP, input bound), peak r = 0.837 (Ch31) | Ch6 |
-| 4 | Systems-level correspondence | median κ = 0.273, p < 0.001 | Ch7 |
-
-### Complete Baseline Table (Uncentered → Centered)
-
-All deep learning baselines trained with canonical PyTorch implementations: Adam optimizer, early stopping, gradient clipping, ReduceLROnPlateau, 10 × 5 seeds.
-
-| Model | Uncentered | Centered | Gain |
-|---|---|---|---|
-| EEGNet (Lawhern 2018) | 72.0% ± 4.9% | 89.1% ± 3.1% | **+17.1 pp** |
-| Raw EEG + LogReg | 70.5% ± 3.0% | 88.4% | **+17.9 pp** |
-| PCA-200 + LogReg | 64.9% ± 5.0% | 86.4% | **+21.5 pp** |
-| GRU (2-layer bidir) | 59.9% ± 6.4% | 78.4% ± 3.5% | **+18.5 pp** |
-| **ARSPI-Net (reservoir)** | **59.4% ± 3.6%** | **78.8%** | **+19.4 pp** |
-| LSTM (2-layer bidir) | 58.0% ± 5.5% | 71.1% ± 6.8% | **+13.1 pp** |
-| Band Power + SVM | 47.7% ± 5.1% | 61.0% | **+13.3 pp** |
-
-**Centering is the dominant intervention; architecture choice is secondary.** Subject-mean centering removes the subject-specific DC offset, revealing +13 to +21 pp of hidden condition signal across all 7 representations. Variance decomposition: 62.6% subject, 8.7% condition, 28.7% residual (ρ = 7.2×).
-
-### Key Experimental Results
-
-- **3-class:** Cross-subject accuracy 63.4%; subject-centering reveals latent capacity of 79.4% (SUD p=0.0004)
-- **4-class:** Cross-subject accuracy 40.4%; centered 52.0% (PTSD threat-specificity p=0.036)
-- **Regime boundary:** Reservoir +12.5 pp at 3-class, −6.2 pp at 4-class
-- **Dynamical descriptors (Ch6):** 7/7 condition-sensitive, 0/49 clinical significant; temporal family 2.4× > amplitude
-- **Structure-function coupling (Ch7):** median κ = 0.273, p < 0.001; no clinical coupling; Cute-Erotic p=0.025 (4-class only)
-- **Latent axis:** Continuous excitability-persistence axis (PC1, 19.1%), condition-modulated (Friedman p=6×10⁻⁶), diagnostically independent
-
----
-
-## Repository Structure
+The full ARSPI-Net pipeline validated in Chapter 5 has five stages:
 
 ```
-dissoAdventureExperiments/
-├── README.md                              # This file
-│
-├── chapter4Experiments/                   # Ch4: Spike-to-embedding pipeline (synthetic + EEG)
-│   ├── run_chapter4_experiments.py        #   6 experiments: ablation, FDR, coding, PCA, robustness, sensitivity
-│   ├── run_chapter4_observations.py       #   6 raw observation figures
-│   └── verify_chapter4.py                #   Verification (31 tests)
-│
-├── chapter5Experiments/                   # Ch5: Clinical EEG classification + baselines
-│   ├── run_chapter5_experiments.py        #   GNN ablation table (7 architecture variants) + sparsity sweep
-│   │                                      #   NOT the headline 7-row baseline — see canonical_pytorch_baselines.py + experiment_zero.py + sklearn_baselines.py
-│   ├── sklearn_baselines.py              #   8 sklearn classifiers
-│   ├── deprecated/
-│   │   └── eegnet_gru_lstm_baselines.py  #   NumPy reference implementations (superseded, see note below)
-│   ├── canonical_pytorch_baselines.py    #   Canonical PyTorch EEGNet/GRU/LSTM (3 of 7 headline baseline rows)
-│   ├── experiment_zero.py                #   Baseline disambiguation (centered vs uncentered)
-│   ├── reproduce_chapter5.py             #   Standalone reproducibility pipeline
-│   └── verify_*.py                       #   Verification scripts (157 tests total)
-│
-├── chapter6Experiments/                   # Ch6: Dynamical characterization of LIF reservoir
-│   ├── run_chapter6_exp1-6.py            #   ESP, reliability, surrogate, value-add, dissociation, temporal
-│   ├── reproduce_chapter6.py             #   Standalone reproducibility pipeline
-│   └── verify_*.py                       #   Verification scripts (73 tests)
-│
-├── chapter7Experiments/                   # Ch7: Dynamical-topological coupling
-│   ├── run_chapter7_experiment_A-E.py    #   Coupling, variance, category, diagnosis, ablation
-│   ├── extract_kappa_matrix.py           #   Utility: export coupling as CSV
-│   └── verify_*.py                       #   Verification scripts (78 tests)
-│
-├── experiments/                           # Extended experiments (March 2026)
-│   ├── ch5_4class/                       #   4-class classification extension
-│   ├── ch6_ch7_3class/                   #   3-class dynamical + coupling pipeline (PRIMARY for Ch6/Ch7)
-│   ├── ablation/                         #   Layer ablation keystone experiment
-│   ├── chapter3/                         #   Ch3: Controlled LIF reservoir characterization (synthetic)
-│   └── interpretability/                 #   Four-level interpretability validation scripts
-│
-├── validation/                            # Data quality control
-│   ├── validate_shape_data.py            #   QC for 3-class SHAPE data
-│   └── validate_subcategory_data.py      #   QC for 4-class subcategory data
-│
-├── data/clinical_profile.csv             # 211-subject clinical profiles
-├── docs/
-│   ├── methodology_rules.md              #   12 governing methodology rules
-│   ├── VERIFICATION_METHODOLOGY.md       #   Verification trustworthiness rationale
-│   └── REPRODUCTION_MAP.md              #   Script → dissertation table/figure mapping
-├── latex/                                 # LaTeX chapter sources
-├── pictures/chLSMEmbeddings/             # Ch4 publication figures
-└── .gitignore
+Raw EEG (1024 Hz) → Preprocess → LIF Reservoir → Feature Coding → Graph Construction → GNN Classification
 ```
 
-### Note on Baseline Implementations
+### Stage 1: Preprocessing
 
-`deprecated/eegnet_gru_lstm_baselines.py` contains simplified NumPy reference implementations where EEGNet trains only the FC layer and GRU/LSTM use fixed random recurrent weights. These were the original exploration baselines and are retained for provenance only. The dissertation's final baseline table (above) uses `canonical_pytorch_baselines.py`, which implements full end-to-end training with canonical architectures (Lawhern et al. 2018 for EEGNet), Adam optimization, early stopping, gradient clipping, and ReduceLROnPlateau scheduling.
+- **Baseline removal:** Discard first 205 samples (200 ms at 1024 Hz)
+- **Downsampling:** Decimate 4x (1024 Hz → 256 Hz), producing (N, 256, 34) arrays
+- **Normalization:** Z-score per epoch per channel (zero mean, unit variance)
 
----
+### Stage 2: LIF Reservoir
 
-## Reproduction Map
+Each of 34 EEG channels is processed by an independent 256-neuron Leaky Integrate-and-Fire reservoir. Canonical parameters from Chapter 3 characterization:
 
-### Primary Results (3-Class: Negative / Neutral / Pleasant)
+| Parameter | Value |
+|-----------|-------|
+| Reservoir neurons (N_RES) | 256 |
+| Membrane leak (beta) | 0.05 |
+| Firing threshold | 0.5 |
+| Spectral radius | 0.9 |
+| Input weights | Xavier-uniform, (256, 1) |
+| Recurrent weights | Xavier-uniform, (256, 256), scaled to spectral radius |
 
-The dissertation's final results for Chapters 5–7 use the **3-class** design. The 4-class experiments (chapter6Experiments/, chapter7Experiments/) represent the original exploration; the 3-class scripts under `experiments/ch6_ch7_3class/` produce the numbers reported in the final dissertation.
-
-| Dissertation Element | Script | Key Result |
-|---|---|---|
-| Deep learning baselines (EEGNet/GRU/LSTM) | `chapter5Experiments/canonical_pytorch_baselines.py` | 3 deep learning rows |
-| Raw EEG + LogReg, Reservoir + LogReg | `chapter5Experiments/experiment_zero.py` | 2 baseline rows (Raw EEG, ARSPI-Net reservoir) |
-| Band Power + SVM (and other sklearn classifiers) | `chapter5Experiments/sklearn_baselines.py` | 1 baseline row (Band Power + SVM) + extended Table 5.4 |
-| GNN ablation table (7 rows) | `chapter5Experiments/run_chapter5_experiments.py` | BandPower+LogReg/MLP, LSM+PCA+MLP, GAT variants (not the headline 7-row table) |
-| Experiment Zero disambiguation | `chapter5Experiments/experiment_zero.py` | 70.5% confirmed uncentered |
-| Ch6 3-class dynamical descriptors | `experiments/ch6_ch7_3class/ch6_03_experiments.py` | 7/7 condition-sensitive |
-| Ch7 3-class coupling | `experiments/ch6_ch7_3class/ch7_04_experiments.py` | median κ = 0.273, p < 0.001 |
-| Layer ablation | `experiments/ablation/layer_ablation.py` | A1–A9, C1–C6 complete |
-
-### Extended Results (4-Class)
-
-| Dissertation Element | Script | Key Result |
-|---|---|---|
-| 4-class classification | `experiments/ch5_4class/ch5_4class_03_classification_full.py` | 52.0% centered, 40.4% raw |
-| 4-class Ch6 experiments | `chapter6Experiments/run_chapter6_exp*.py` | Original exploration |
-| 4-class Ch7 experiments | `chapter7Experiments/run_chapter7_experiment_*.py` | Original exploration |
-
-### Interpretability Validation & Chapter 3
-
-| Dissertation Element | Script | Key Result |
-|---|---|---|
-| Ch3 LIF reservoir characterization | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Separation, fading memory, kernel quality (synthetic) |
-| Level 1 temporal traceability | `experiments/interpretability/run_level1_temporal_traceability.py` | r ≈ 0.23 post-reservoir LPP correlation |
-| Level 3 descriptor-ERP alignment | `experiments/interpretability/run_level3_descriptor_erp_alignment.py` | Spike-domain BSC₆ \|r\| = 0.23 (LPP, architecture); centered-ERP amplitude-domain analog within feature window \|r\| = 0.82 (LPP, input bound), peak r = 0.837 (Ch31) |
-| EEGNet saliency comparison | `experiments/interpretability/run_eegnet_saliency_comparison.py` | EEGNet 402–691 ms vs ARSPI-Net 176–254 ms |
-| Attention-prototype readout | `experiments/interpretability/run_arspinet_v2_attention_prototype.py` | 66.7%, permutation p = 0.634 (not significant) |
-
----
-
-## Architecture Overview
-
-The ARSPI-Net pipeline implements a Koopman-theoretic signal processing chain:
-
-1. **LIF Spiking Reservoir** (Ch3) — Fixed-weight leaky integrate-and-fire reservoir converts continuous EEG into spike trains. The separation property (Maass 2002) guarantees distinct inputs produce distinct reservoir states. Chapter 3 is theoretical/analytical — it derives the reservoir properties and separation guarantees. The computational validation (reservoir size ablation, coding scheme comparison, cross-seed robustness, parameter sensitivity) is performed in `chapter4Experiments/`.
-
-2. **BSC₆ Temporal Coding** (Ch4) — Binned Spike Count with 6 temporal bins discretizes the continuous spike response into a structured temporal representation. Each bin is independently analyzable (temporal traceability).
-
-3. **PCA-64 Compression** (Ch5) — Truncated PCA compresses the BSC₆ output while preserving condition-discriminative geometry. Subject-mean centering removes the dominant subject variance (62.6%) to expose the condition signal (8.7%).
-
-4. **Graph-Organized Spatial Analysis** (Ch5, Ch7) — Electrode-level features organized by channel topology enable clinical phenotyping through graph metrics and structure-function coupling (κ).
-
-### Interpretability Signal Chain
-
-Every output variable traces to input through: membrane voltage → spike times → BSC₆ bins → PCA components → named descriptors → graph topology → coupling κ. No learned recurrent weights. No black-box layers. This is intrinsic interpretability, not post-hoc explanation.
-
----
-
-## Dependencies
+The membrane update rule:
 
 ```
-numpy>=2.0           # Code uses np.trapezoid (numpy 2.0 API); saved pickles use the 2.0 format
-scipy>=1.13          # For numpy 2.0 ABI compatibility
-scikit-learn>=1.5    # For numpy 2.0 ABI compatibility
-pandas>=2.2.3        # For numpy 2.0 ABI compatibility (used by reproduce_chapter5.py)
-matplotlib>=3.9
-torch>=1.12          # For canonical_pytorch_baselines.py only
+mem[t] = (1 - beta) * mem[t-1] * (1 - spk[t-1]) + W_in * x[t] + W_rec @ spk[t-1]
+spk[t] = (mem[t] >= threshold)
+mem[t] = max(mem[t] - spk[t] * threshold, 0)
 ```
 
-**Windows note:** verifier scripts use Unicode box-drawing characters in stdout and read source files as UTF-8. If your console defaults to cp1252, run with `PYTHONUTF8=1` (Python 3.7+) or `set PYTHONIOENCODING=utf-8`. The scripts now reconfigure stdout themselves where they can, but setting the env var is the belt-and-suspenders fix.
+Each reservoir is seeded deterministically (`seed + ch * 17`) so that channel-specific weights are reproducible but independent across channels.
 
-## Input Data Format
+### Stage 3: Feature Coding
 
-The SHAPE Community dataset is available at [https://lab-can.com/shape/](https://lab-can.com/shape/). Raw EEG data (not included in this repository) should be placed in `batch_data/` (3-class) or `categories/` (4-class) following the structure described in the validation scripts.
+Four feature extraction methods are compared:
 
-**3-class data** (`batch_data/`): Baseline-corrected text files, one per subject per condition.
-- Format: `SHAPE_Community_{SUBJECT_ID}_IAPS{Neg,Neu,Pos}_BC.txt`
-- Dimensions: 1229 rows (timepoints at 1024 Hz) x 34 columns (EEG channels)
-- Units: microvolts, loadable with `np.loadtxt(filepath)`
+| Feature | Extraction | Per-Channel Dim | Total Dim (34 ch) |
+|---------|-----------|----------------|-------------------|
+| **BSC₆ + PCA-64** | 6 temporal bins x 256 neurons = 1536 → PCA to 64 | 64 | 2,176 |
+| **MFR** | Mean firing rate across timesteps | 256 | 8,704 |
+| **BandPower** | Welch PSD in 5 frequency bands (delta 1-4, theta 4-8, alpha 8-13, beta 13-30, gamma 30-100 Hz) | 5 | 170 |
+| **Hjorth** | Activity (variance), Mobility (sqrt(var(dx)/var(x))), Complexity | 3 | 102 |
 
-**4-class data** (`categories/`): `.mat` files organized by affective subcategory (Threat / Mutilation / Cute / Erotic), loadable with `scipy.io.loadmat()`.
+**BSC₆ (Binned Spike Counts):** The spike train from each reservoir is divided into 6 equal temporal bins. Spike counts per bin per neuron are concatenated to produce a 1536-dimensional vector. PCA (fitted on training data only per fold) reduces this to 64 dimensions — the primary ARSPI-Net embedding.
 
-**Intermediate pickle files** (generated by the pipeline, not included in the repo):
-- `shape_features_211.pkl` — Chapter 5 features (from `run_chapter5_experiments.py`)
-- `ch6_ch7_3class_features.pkl` — 3-class features (from `ch6_ch7_01_feature_extraction.py`)
+**MFR (Mean Firing Rate):** Average spike count per neuron across the full window. This rate-based code discards temporal structure — it serves as a control to prove temporal coding matters.
 
-These pickles are required by the ablation script (`experiments/ablation/layer_ablation.py`).
+### Stage 4: Graph Construction
+
+Two adjacency strategies define how electrode-level features interact:
+
+**Spatial adjacency (primary):** k-nearest neighbors (k=5) from standard 10-20 3D electrode positions. The 34-channel montage uses: Fp1, Fp2, F7, F3, Fz, F4, F8, FC5, FC1, FC2, FC6, T7, C3, Cz, C4, T8, CP5, CP1, CP2, CP6, P7, P3, Pz, P4, P8, PO7, PO3, POz, PO4, PO8, O1, Oz, O2, REF. Adjacency is symmetric and binary.
+
+**Functional adjacency (secondary):** Absolute Pearson correlation of node feature vectors across electrodes, thresholded at the 75th percentile. This is data-driven and varies with the embedding.
+
+### Stage 5: GNN Classification
+
+All GNN implementations are **from-scratch NumPy** — no PyTorch, TensorFlow, or DGL dependencies:
+
+| Architecture | Propagation Rule | Key Property |
+|-------------|-----------------|-------------|
+| **GCN** | `H' = D^{-1/2} A_tilde D^{-1/2} @ H` | Symmetric normalized message passing |
+| **GraphSAGE** | `H' = [H; mean(H_neighbors)]` | Concatenates self with mean-aggregated neighbors |
+| **GAT** | Multi-head attention (4 heads), LeakyReLU, softmax | Attention-weighted neighbor aggregation |
+
+After GNN propagation (2 layers by default), a mean-pooling graph readout produces a single graph-level embedding per sample. This is fed to a downstream classifier (LogReg or MLP).
+
+**Validation:** Subject-stratified 10-fold cross-validation (`StratifiedGroupKFold`) — all conditions from one subject stay in the same fold to prevent data leakage. PCA is fitted on training folds only.
 
 ---
 
-## Verification Summary
+## Experiment 1: The 7-Row Baseline Table
 
-| Suite | Script | Tests | Status |
-|---|---|---|---|
-| Ch4 Core | `verify_chapter4.py` | 31 | PASS |
-| Ch5 Core | `verify_chapter5.py` | 32 | PASS |
-| Ch5 Exp Zero | `verify_experiment_zero.py` | 37 | PASS |
-| Ch5 Reproduce | `verify_reproduce_chapter5.py` | 33 | PASS |
-| Ch5 Baselines | `verify_baselines.py` | 55 | PASS |
-| Ch6 Core | `verify_chapter6.py` | 31 | PASS |
-| Ch6 Reproduce | `verify_reproduce_chapter6.py` | 42 | PASS |
-| Ch7 Experiments | `verify_chapter7.py` | 38 | PASS |
-| Ch7 Utilities | `verify_extract_utilities.py` | 40 | PASS |
-| Validation | `verify_validators.py` | 20 | PASS |
-| Ch5 4-class | `verify_ch5_4class.py` | 25 | PASS |
-| Ch6/7 3-class | `verify_ch6_ch7_3class.py` | 28 | PASS |
-| Ablation | `verify_ablation.py` | 23 | PASS |
-| **Total** | | **435** | **435/435 PASS** |
+### Research Question
 
-Methodology: [docs/VERIFICATION_METHODOLOGY.md](docs/VERIFICATION_METHODOLOGY.md)
+What is the individual and combined contribution of (a) LSM spiking embeddings vs conventional EEG features, and (b) graph-structured classification vs flat classifiers, to affective EEG classification?
+
+### Method
+
+Seven experimental conditions are arranged to isolate each component's contribution through systematic ablation:
+
+| Row | Features | Classifier | Graph | Purpose |
+|-----|----------|-----------|-------|---------|
+| 1 | BandPower + Hjorth | LogReg | No | Conventional baseline |
+| 2 | BandPower + Hjorth | MLP | No | Nonlinear conventional baseline |
+| 3 | LSM-BSC₆-PCA64 | MLP | No | LSM benefit without graph structure |
+| 4 | BandPower + Hjorth | GAT | Spatial | Graph benefit on conventional features |
+| **5** | **LSM-BSC₆-PCA64** | **GAT** | **Spatial** | **Full ARSPI-Net (best expected)** |
+| 6 | LSM-BSC₆-PCA64 | GAT | Functional | Functional adjacency variant |
+| 7 | LSM-MFR | GAT | Spatial | Rate-based variant (expected worse) |
+
+### Key Comparisons
+
+Three pairwise differences isolate the contribution of each architectural component:
+
+- **Graph structure value (Row 5 - Row 3):** Does spatial graph structure improve classification beyond flat LSM embeddings?
+- **LSM embedding value (Row 5 - Row 4):** Do spiking reservoir features outperform conventional EEG features when both use the same graph architecture?
+- **Temporal coding value (Row 5 - Row 7):** Does the temporally-coded BSC₆ representation outperform the rate-coded MFR representation? This validates that temporal structure — not just spiking activity level — carries affective information.
+
+### Usage
+
+```bash
+# Full pipeline with real SHAPE data:
+python run_chapter5_experiments.py --data_dir /path/to/shape_eeg_files/
+
+# Demo mode with synthetic data (pipeline verification):
+python run_chapter5_experiments.py --demo
+```
+
+### Output Figures
+
+- `figures/ch5/baseline_comparison.pdf` — 7-row bar chart with balanced accuracy per condition
+- `figures/ch5/confusion_matrix.pdf` — 3x3 confusion matrix for Row 5 (full ARSPI-Net)
+
+---
+
+## Experiment 2: GNN Architecture Comparison
+
+### Research Question
+
+Which GNN propagation mechanism (GCN, GraphSAGE, GAT) is most effective for electrode-graph classification when using LSM-BSC₆-PCA64 features on the spatial adjacency graph?
+
+### Method
+
+All three GNN architectures are evaluated under identical conditions:
+- Features: LSM-BSC₆-PCA64 (the best embedding from Experiment 1)
+- Graph: Spatial k-NN (k=5)
+- Classifier: LogReg
+- Layers: 2
+- Validation: Subject-stratified 10-fold CV
+
+The comparison tests whether attention-based neighbor weighting (GAT) provides benefit over uniform aggregation (GCN) or concatenation-based aggregation (GraphSAGE) for EEG electrode graphs.
+
+### Output Figures
+
+- `figures/ch5/architecture_comparison.pdf` — Bar chart of GCN vs GraphSAGE vs GAT balanced accuracy
+
+---
+
+## Experiment 3: Graph Sparsity Sweep
+
+### Research Question
+
+How sensitive is classification performance to graph sparsity? The spatial adjacency uses k-nearest neighbors — what is the optimal k?
+
+### Method
+
+The spatial adjacency is reconstructed for k ∈ {3, 5, 7, 10, 15} neighbors. For each k value, the full subject-stratified 10-fold CV is re-run using GCN propagation with LSM-BSC₆-PCA64 features.
+
+- k=3: Very sparse graph (each electrode connects to ~3 nearest neighbors)
+- k=5: Default setting
+- k=15: Nearly half of all 34 electrodes are neighbors — approaches a fully connected graph
+
+### Interpretation
+
+If accuracy is stable across k, the graph adds value through its existence (distinguishing connected from unconnected) rather than through precise topology. If accuracy peaks at a specific k and degrades at extremes, the spatial neighborhood radius matters and over-smoothing (too many neighbors) or under-connection (too few) hurts.
+
+### Output Figures
+
+- `figures/ch5/sparsity_sweep.pdf` — Line plot of balanced accuracy vs k
+
+---
+
+## Experiment 4: GNN Depth Ablation
+
+### Research Question
+
+How many GNN propagation layers are optimal? More layers allow information to propagate further across the electrode graph, but risk over-smoothing (all node representations converging to the same vector).
+
+### Method
+
+GCN propagation with 1, 2, 3, and 4 layers using LSM-BSC₆-PCA64 features on the spatial adjacency (k=5). Full subject-stratified 10-fold CV for each depth.
+
+- **1 layer:** Each node sees only direct neighbors (1-hop)
+- **2 layers (default):** Each node aggregates 2-hop neighborhood
+- **3-4 layers:** Broader receptive field, but increasingly homogeneous representations
+
+### Interpretation
+
+Over-smoothing is a known failure mode for deep GNNs on small graphs. With 34 electrodes and k=5 spatial neighbors, 3+ layers mean every node's representation contains information from most of the graph. If accuracy degrades at depth 3-4, this confirms that the 34-electrode EEG graph is too small for deep GNN propagation.
+
+### Output Figures
+
+- `figures/ch5/depth_ablation.pdf` — Line plot of balanced accuracy vs GNN depth
+
+---
+
+## Data Specification
+
+### SHAPE EEG Dataset
+
+| Property | Value |
+|----------|-------|
+| Per file dimensions | 1229 rows x 34 columns (microvolts) |
+| Sampling rate | 1024 Hz |
+| Rows 0-204 | 200 ms pre-stimulus baseline (already baseline-corrected) |
+| Rows 205-1228 | 1000 ms post-stimulus |
+| Conditions | IAPSNeg (Negative), IAPSNeu (Neutral), IAPSPos (Pleasant) |
+| Subjects | 80+ |
+| Files per subject | 3 (one per condition) |
+| Naming convention | `SHAPE_Community_{SUBJECT_ID}_{CONDITION}_BC.txt` |
+| Channels | 34 (standard 10-20 extended montage) |
+
+### Preprocessing Pipeline
+
+```
+Raw (1229, 34) → Remove baseline rows 0-204 → (1024, 34) → Decimate 4x → (256, 34) → Z-score per epoch per channel
+```
+
+---
+
+## Shared Parameters
+
+| Parameter | Value | Source |
+|-----------|-------|--------|
+| Reservoir neurons | 256 | Chapter 3 characterization |
+| Leak rate (beta) | 0.05 | Chapter 3 characterization |
+| Spike threshold | 0.5 | Chapter 3 characterization |
+| Spectral radius | 0.9 | Chapter 3 characterization |
+| BSC temporal bins | 6 | Chapter 4 validation |
+| PCA components | 64 | Chapter 4 validation |
+| Feature window | Timesteps 10-70 of 256 (for some analyses) | Post-transient steady state |
+| Spatial k-NN | k=5 | Experiment 3 sweep |
+| Functional threshold | 75th percentile | Standard practice |
+| GNN layers | 2 | Experiment 4 ablation |
+| GAT attention heads | 4 | Standard multi-head attention |
+| CV folds | 10 | Subject-stratified (`StratifiedGroupKFold`) |
+| LogReg regularization | C=0.1, max_iter=2000 | Default |
+| MLP architecture | (128, 64), early stopping | Default |
+| Random seed | 42 | Reproducibility |
+| Figure DPI | 300 | Publication quality |
+| Figure format | PDF | Vector graphics |
+
+---
+
+## Files
+
+### Scripts
+
+| File | Lines | Description |
+|------|-------|-------------|
+| `run_chapter5_experiments.py` | 1,050 | Complete Chapter 5 pipeline: data loading, preprocessing, LIF reservoir, 4 feature extractors, 2 graph constructors, 3 GNN architectures, 7-row baseline table, architecture comparison, sparsity sweep, depth ablation, 5 publication figures |
+| `reproduce_chapter5.py` | 672 | Standalone reproducibility script: regenerates every figure, table, and statistical result. Runtime ~15-20 min on modern CPU. Outputs `ch5_all_results.pkl` + all figures |
+
+### Archive
+
+| File | Size | Description |
+|------|------|-------------|
+| `arspi_net_chapter5_complete (1).zip` | 6.1 MB | Complete experimental package: 13 exploration/classification/interpretability scripts, 7 NPZ data files (8.4 MB raw observations), 49 PDF figures (2.2 MB), LaTeX source (`chgraph_final.tex`), experimental log, negative results documentation |
+
+### ZIP Archive Contents
+
+The archive contains the full experimental development history:
+
+```
+arspi_net_chapter5_complete/
+├── github_repo/
+│   ├── README.md
+│   ├── chgraph_final.tex              # LaTeX figure generation (36 KB)
+│   ├── docs/
+│   │   ├── experimental_log.md        # Experimental development history
+│   │   └── negative_results_summary.md # Failed approaches (documented)
+│   ├── data/ch5_raw_observations/     # 7 NPZ files (8.4 MB)
+│   │   ├── obs01_data.npz             # Raw EEG waveforms
+│   │   ├── obs02_data.npz             # Spike trains
+│   │   ├── obs03_data.npz             # BSC₆ PCA-64 embeddings
+│   │   ├── obs04_data.npz             # Connectivity matrices
+│   │   ├── obs05_data.npz             # Clinical distributions
+│   │   ├── obs06_data.npz             # Condition differences
+│   │   └── obs07_data.npz             # Graph variability
+│   ├── figures/
+│   │   ├── ch5_raw_data/              # 7 observation PDFs
+│   │   └── chGraphNeuralNetworks/     # 40+ publication figures
+│   └── scripts/
+│       ├── classification/            # Baseline + GNN classifiers (incl. failed approaches)
+│       ├── exploration/               # Raw data visualization
+│       ├── gnn_experiments/           # Personality topology analysis
+│       └── interpretability/          # Clinical graph biomarkers + figure generation
+```
+
+### Expected Output Figures (from `run_chapter5_experiments.py`)
+
+| File | Description |
+|------|-------------|
+| `figures/ch5/baseline_comparison.pdf` | 7-row bar chart: balanced accuracy per experimental condition |
+| `figures/ch5/architecture_comparison.pdf` | GCN vs GraphSAGE vs GAT balanced accuracy |
+| `figures/ch5/sparsity_sweep.pdf` | Balanced accuracy vs spatial k-NN k value |
+| `figures/ch5/depth_ablation.pdf` | Balanced accuracy vs GNN layer depth |
+| `figures/ch5/confusion_matrix.pdf` | 3x3 confusion matrix for full ARSPI-Net (Row 5) |
+
+### Expected Output Data (from `reproduce_chapter5.py`)
+
+| File | Description |
+|------|-------------|
+| `ch5_all_results.pkl` | Complete numerical results: accuracies, F1, confusion matrices for all conditions |
+| `shape_features.pkl` | Preprocessed features passed forward to Chapter 6 |
+
+---
+
+## Verification Results
+
+<!-- Last run: 2026-03-27, Result: 102/102 PASS across 3 verification scripts -->
+
+### `verify_chapter5.py` — Core Infrastructure (32/32 PASS)
+
+```bash
+python chapter5Experiments/verify_chapter5.py
+```
+
+Verified components:
+- **Script import:** `run_chapter5_experiments.py` imports successfully
+- **LIF Reservoir (7 tests):** Instantiation, weight shapes, forward pass shapes, binary spikes, non-zero activity, sparsity
+- **Feature extraction (4 tests):** BSC6 produces 384-dim vector with non-negative values; MFR produces 64-dim vector in [0,1]
+- **Conventional features (3 tests):** BandPower shape (2, 34, 5), non-negative; Hjorth shape (2, 34, 3)
+- **Graph construction (6 tests):** 34 electrode positions, spatial adjacency (symmetric, binary, no self-loops), functional adjacency
+- **GNN propagation (5 tests):** GCN preserves shape, GraphSAGE doubles features, GAT returns features + attention matrices, attention rows sum to ~1
+- **Graph readout (1 test):** Mean readout produces 64-dim vector
+- **Classification (3 tests):** Full CV pipeline runs, returns accuracy and predictions
+
+### `verify_experiment_zero.py` — Baseline Disambiguation (37/37 PASS)
+
+```bash
+python chapter5Experiments/verify_experiment_zero.py
+```
+
+Verified components:
+- **Syntax validation (1 test):** `experiment_zero.py` parses without errors
+- **Import validation (1 test):** All core functions importable (LIFReservoir, bsc6_encode, flatten_raw, subject_center, evaluate)
+- **LIF Reservoir (7 tests):** Instantiation, weight shapes, spectral radius = 0.9, forward pass shape, binary spikes, non-silent
+- **BSC6 encoding (4 tests):** Correct dimensionality (384-dim), non-negative, nonzero entries, sum consistency
+- **Flatten raw (2 tests):** Shape transformation (N,256,34) -> (N,8704), value preservation
+- **Subject centering (4 tests):** Correct shape, values change, per-subject mean is zero, does not modify input
+- **CV pipeline (4 tests):** Returns numpy array, correct fold count, accuracies in [0,1], finite mean
+- **Determinism (2 tests):** Same seed produces identical spikes, different seed produces different spikes
+- **Channel seeding (1 test):** Different channels produce different reservoir responses
+- **End-to-end (4 tests):** Raw and reservoir paths with centering produce correct shapes
+- **Script structure (7 tests):** All 4 experimental conditions defined, SVM cross-check present, pickle output saved
+
+### `verify_reproduce_chapter5.py` — Reproducibility Pipeline (33/33 PASS)
+
+```bash
+python chapter5Experiments/verify_reproduce_chapter5.py
+```
+
+Verified components:
+- **Syntax and import (2 tests):** Module parses and imports successfully
+- **LIF Reservoir (8 tests):** Instantiation, weight shapes, spectral radius, forward pass, binary spikes, non-silent, returns spikes only (not tuple)
+- **Feature extraction (2 tests):** BSC6 encoding present, band power referenced
+- **GNN implementations (7 tests):** GCN, GraphSAGE/skip, GAT/attention present in source; manual GCN/SAGE/attention produce valid shapes and finite outputs; attention weights sum to 1
+- **Graph construction (3 tests):** Graph structure, electrode topology, and k-NN referenced
+- **Classification pipeline (3 tests):** StratifiedGroupKFold CV runs, returns correct fold count, finite accuracies
+- **Graph readout (1 test):** Mean pooling produces correct-dim vector
+- **No-leakage checks (2 tests):** StratifiedGroupKFold used, PCA fitted per fold
+- **Output structure (3 tests):** Pickle saved, PDF figures generated, Agg backend used
+- **Deep baselines (2 tests):** Baseline results pickle exists and contains data
+
+Full end-to-end verification requires the SHAPE EEG dataset. Use `--demo` mode for pipeline testing:
+```bash
+python chapter5Experiments/run_chapter5_experiments.py --demo
+```
+
+### Relationship to Extended 4-Class Experiments
+
+The `experiments/ch5_4class/` directory extends this 3-class pipeline to 4 IAPS subcategories (Threat, Mutilation, Cute, Erotic). That extension includes its own verification script (`verify_ch5_4class.py`, 25/25 PASS) testing the same infrastructure components plus band power extraction and 4-category configuration.
+
+---
+
+## Relationship to Other Chapters
+
+- **Chapter 3** established the LIF reservoir parameters (256 neurons, beta=0.05, threshold=0.5, spectral radius=0.9) through systematic characterization.
+- **Chapter 4** validated BSC₆ + PCA-64 as the optimal feature coding (>90% on synthetic data; MFR ~50% — proving temporal coding is necessary).
+- **Chapter 5** applies the full pipeline to real clinical EEG for the first time, adding graph-structured classification.
+- **Chapter 6** uses the Chapter 5 feature pipeline to characterize reservoir dynamics per affective condition (Lyapunov exponents, permutation entropy, relaxation time).
+- **Chapter 7** couples Chapter 5's topological descriptors with Chapter 6's dynamical descriptors to study their alignment structure.
+
+## Sample
+
+- 80+ subjects from the [SHAPE project](https://lab-can.com/shape/)
+- 3 affective conditions: Negative, Neutral, Pleasant (IAPS picture viewing)
+- Subject-stratified cross-validation prevents data leakage
+- Demo mode available with `--demo` flag for pipeline testing without SHAPE data access
+
+---
+
+## Graph-Diffusion Over-Smoothing Analysis (`graph_diffusion_oversmoothing.py`)
+
+Mechanistic explanation for the message-passing regime boundary characterized
+in `exp03` (run_chapter5_experiments.py): *why* propagation underperforms the
+non-propagated embedding on the SHAPE electrode graph.
+
+Repeated GCN propagation is diffusion on the normalized graph Laplacian. On a
+small, dense electrode graph, node features homogenize faster than relational
+signal accumulates. Measured vs. propagation depth K on the real reservoir node
+features (regenerated from `X_ds` via the verbatim LIF reservoir + BSC₆ + PCA-64):
+
+- **Dirichlet energy** (canonical over-smoothing measure) collapses **~84% by K=2**.
+- **Mean pairwise cosine similarity** rises monotonically toward uniformity.
+
+Both move fastest in the first 1–2 propagation layers — coinciding with the
+depth at which exp03 classification accuracy falls fastest. Reported as a
+**mechanistic correlate** of the regime boundary, not a causal proof.
+
+**Operators** (LIF reservoir, BSC₆, functional adjacency, GCN propagation) are
+identical to `run_chapter5_experiments.py`.
+
+**Run:**
+```
+python graph_diffusion_oversmoothing.py --pkl /path/to/shape_features_211.pkl --n 633
+```
+Requires SHAPE dataset access (`X_ds` key in the feature pickle). Output:
+`pictures/chGraphNeuralNetworks/exp03b_diffusion_overlay.pdf`.
