@@ -33,3 +33,6 @@ ParticipantInfo.csv
 
 # Temporary
 repo_update/
+
+# Animation pre-compute caches (rebuilt by animate_*.py scripts)
+chapter4Experiments/cache/
