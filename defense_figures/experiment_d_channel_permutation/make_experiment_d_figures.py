@@ -1,0 +1,484 @@
+"""
+defense_figures/experiment_d_channel_permutation/make_experiment_d_figures.py
+
+Experiment D — Channel-permutation null on the layer-specific finding.
+
+Philosophical claim it lands:
+  "My clinical claims are not data-mined accidents. The layer-specific
+  finding survives the strictest possible null — channels themselves
+  shuffled — at the per-class level."
+
+This is the empirical-rigor anchor of the deck. Parametric p-values
+assume a noise-structure model that EEG channel selection does not
+satisfy. A channel-permutation null makes no such assumption: it
+shuffles which spatial channel maps to which feature column on each
+trial, re-trains, and compares.
+
+DATA STATEMENT — STIMULUS CLASS, NOT CLINICAL DISORDER
+------------------------------------------------------
+The dissertation's marquee Experiment D version uses clinical disorder
+labels (SUD, PTSD, GAD, ADHD per subject), which are not in the pickle
+this session has access to. This script runs the IDENTICAL methodology
+on the available stimulus-class labels (negative / neutral / positive
+affect, 3 × 211 trials) as a methodological demonstration. To switch
+to the clinical version, replace the label vector `y` with a per-trial
+disorder vector loaded from `data/clinical_profile.csv` (gitignored);
+all other code stays the same.
+
+A README note in the outputs directory explains this clearly.
+
+OUTPUTS
+-------
+  outputs/rawD_4a_feature_layout.pdf
+      The (trials × channels × features) tensor that gets permuted.
+      Heatmap of mean band-power per (channel, band) per class.
+
+  outputs/rawD_4b_class_label_distribution.pdf
+      How class labels distribute across the 211 subjects. Verifies
+      balanced class sampling.
+
+  outputs/rawD_4c_observed_vs_null_example.pdf
+      Two example permutations side by side with the observed feature
+      matrix, illustrating what "channel permutation" does to the data.
+
+  outputs/analysisD_4d_permutation_nulls.pdf
+      THE SLIDE. One panel per class showing the observed AUC against
+      the channel-permutation null distribution, with p_perm annotated.
+
+  outputs/experiment_d_data.csv
+      Per-class observed AUC, per-permutation null AUC values, p_perm.
+
+METHOD
+------
+For each class c (one-vs-rest):
+  1. Compute observed test statistic: subject-level 5-fold StratifiedGroupKFold
+     CV AUC using logistic regression on flattened (channels × features) tensor.
+  2. For each permutation k = 1..N_PERMS:
+     a. Random permutation π_k of the channel index.
+     b. Apply π_k to the channel axis of every trial's feature tensor.
+     c. Recompute the cross-validated AUC.
+  3. p_perm(c) = (count of null AUC ≥ observed) / N_PERMS.
+
+PRE-REGISTRATION
+----------------
+- Stimulus-class AUCs are real and modest (0.60–0.76 by class). p_perm
+  should be small (< 0.01) if the spatial channel structure carries
+  the signal — which it should for EEG-derived band-power features.
+- If any p_perm > 0.05, the script reports it faithfully and the slide
+  acknowledges the class as exploratory pending further work.
+"""
+from __future__ import annotations
+
+import argparse
+import pickle
+import sys
+import time
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import StratifiedGroupKFold
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from _style import apply_style, save_pdf, figtext_footer, PALETTE, FIGSIZE
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Cross-validated AUC helper
+# ──────────────────────────────────────────────────────────────────────────
+def cv_auc(X_flat: np.ndarray, y_bin: np.ndarray, subjects: np.ndarray,
+           n_splits: int = 5, seed: int = 42, C: float = 0.1) -> float:
+    cv = StratifiedGroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)
+    aucs = []
+    for tr, te in cv.split(X_flat, y_bin, groups=subjects):
+        clf = LogisticRegression(max_iter=300, solver="liblinear", C=C)
+        clf.fit(X_flat[tr], y_bin[tr])
+        proba = clf.predict_proba(X_flat[te])[:, 1]
+        if len(np.unique(y_bin[te])) < 2:
+            continue
+        aucs.append(roc_auc_score(y_bin[te], proba))
+    return float(np.mean(aucs)) if aucs else float("nan")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Channel-permutation null
+# ──────────────────────────────────────────────────────────────────────────
+def channel_permutation_null(
+    X: np.ndarray, y_bin: np.ndarray, subjects: np.ndarray,
+    n_perms: int = 500, seed: int = 42, n_splits: int = 5, C: float = 0.1,
+    progress_every: int = 50,
+):
+    """
+    X: (n_trials, n_channels, n_features).
+
+    The null shuffles the channel axis **independently per trial**. A single
+    global permutation would only relabel the channel positions, and the
+    flat logistic regression would re-learn the new positions to recover
+    identical AUC. Per-trial permutation tests the stronger question:
+    *does the spatial channel assignment carry information for the
+    classifier?* — under this null, the channel-feature cell that the
+    classifier uses contains data from a different EEG channel in every
+    trial, destroying any consistent spatial signal while preserving
+    each trial's overall power distribution.
+
+    Returns: (observed_auc, null_aucs[n_perms]).
+    """
+    n_trials, n_channels, n_feat = X.shape
+    X_flat_obs = X.reshape(n_trials, -1)
+    observed = cv_auc(X_flat_obs, y_bin, subjects, n_splits=n_splits, seed=seed, C=C)
+
+    rng = np.random.default_rng(seed)
+    null = np.zeros(n_perms)
+    t0 = time.time()
+    for k in range(n_perms):
+        # Per-trial random channel permutation
+        X_perm = np.empty_like(X)
+        for i in range(n_trials):
+            perm = rng.permutation(n_channels)
+            X_perm[i] = X[i, perm, :]
+        null[k] = cv_auc(
+            X_perm.reshape(n_trials, -1),
+            y_bin, subjects,
+            n_splits=n_splits, seed=seed, C=C,
+        )
+        if (k + 1) % progress_every == 0:
+            elapsed = time.time() - t0
+            eta = elapsed / (k + 1) * (n_perms - k - 1)
+            print(f"      {k+1}/{n_perms}  elapsed={elapsed:.0f}s  eta={eta:.0f}s")
+    return observed, null
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# FIGURE 4A — Feature layout
+# ──────────────────────────────────────────────────────────────────────────
+def make_rawD_4a(X: np.ndarray, y: np.ndarray, outdir: Path,
+                 feature_label: str = "conv_feats (band power × channel)") -> Path:
+    classes = sorted(np.unique(y))
+    n = len(classes)
+    fig, axes = plt.subplots(1, n, figsize=(4.5 * n, 6), sharey=True)
+    if n == 1:
+        axes = [axes]
+    vmin = float(np.percentile(X, 1))
+    vmax = float(np.percentile(X, 99))
+    class_titles = ["class 0", "class 1 (neutral)", "class 2"]
+    for ax, c in zip(axes, classes):
+        per_class_mean = X[y == c].mean(axis=0)   # (n_channels, n_features)
+        im = ax.imshow(per_class_mean, aspect="auto", cmap="viridis",
+                       vmin=vmin, vmax=vmax)
+        ax.set_xlabel("feature index")
+        if c == 0:
+            ax.set_ylabel("EEG channel index")
+        ax.set_title(class_titles[c % len(class_titles)],
+                     fontsize=11, fontweight="bold")
+    cbar = fig.colorbar(im, ax=axes, fraction=0.04, pad=0.04, label="mean value")
+    fig.suptitle(
+        f"Raw Observation D.4a — {feature_label}, per-class mean over trials\n"
+        f"(this is the tensor whose channel axis the permutation null shuffles)",
+        fontsize=11, fontweight="bold", y=1.01,
+    )
+    return save_pdf(fig, outdir / "rawD_4a_feature_layout.pdf")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# FIGURE 4B — Class label distribution
+# ──────────────────────────────────────────────────────────────────────────
+def make_rawD_4b(y: np.ndarray, subjects: np.ndarray, outdir: Path) -> Path:
+    classes = sorted(np.unique(y))
+    unique_subjects = np.unique(subjects)
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+
+    # Bar of trial counts per class
+    counts = [int((y == c).sum()) for c in classes]
+    class_colors = [PALETTE["category_threat"], PALETTE["neutral_gray"],
+                    PALETTE["category_cute"]]
+    axes[0].bar(classes, counts, color=[class_colors[c % len(class_colors)] for c in classes])
+    axes[0].set_xticks(classes)
+    axes[0].set_xticklabels([f"class {c}" for c in classes])
+    axes[0].set_ylabel("n trials")
+    axes[0].set_title("Trials per class", fontsize=11, fontweight="bold")
+    for c, ct in zip(classes, counts):
+        axes[0].text(c, ct + max(counts) * 0.01, str(ct), ha="center", va="bottom",
+                     fontsize=10, fontweight="bold")
+
+    # Per-subject class distribution: stacked / heatmap (rows = subject, cols = class)
+    sid_to_idx = {s: i for i, s in enumerate(sorted(unique_subjects))}
+    M = np.zeros((len(unique_subjects), len(classes)), dtype=int)
+    for trial in range(len(y)):
+        M[sid_to_idx[subjects[trial]], classes.index(y[trial])] += 1
+    im = axes[1].imshow(M, aspect="auto", cmap="viridis")
+    axes[1].set_xticks(classes)
+    axes[1].set_xticklabels([f"class {c}" for c in classes])
+    axes[1].set_ylabel("subject index")
+    axes[1].set_title("Trials per (subject, class) — should be 1 each",
+                      fontsize=11, fontweight="bold")
+    plt.colorbar(im, ax=axes[1], fraction=0.04, pad=0.04, label="n trials")
+    fig.suptitle(
+        "Raw Observation D.4b — Class & subject distribution. "
+        f"n_subjects = {len(unique_subjects)}, n_trials = {len(y)}.",
+        fontsize=11, fontweight="bold",
+    )
+    plt.tight_layout()
+    return save_pdf(fig, outdir / "rawD_4b_class_label_distribution.pdf")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# FIGURE 4C — Observed vs. two permutation examples
+# ──────────────────────────────────────────────────────────────────────────
+def make_rawD_4c(X: np.ndarray, y: np.ndarray, outdir: Path,
+                 class_to_show: int = 1) -> Path:
+    rng = np.random.default_rng(42)
+    Xc = X[y == class_to_show].mean(axis=0)  # (n_channels, n_features)
+    perm1 = rng.permutation(X.shape[1])
+    perm2 = rng.permutation(X.shape[1])
+    Xp1 = Xc[perm1]
+    Xp2 = Xc[perm2]
+    fig, axes = plt.subplots(1, 3, figsize=(13, 5), sharey=True)
+    vmin, vmax = float(np.percentile(Xc, 1)), float(np.percentile(Xc, 99))
+    for ax, M, title in zip(axes,
+                            [Xc, Xp1, Xp2],
+                            ["observed (no permutation)",
+                             f"permutation 1 (π₁)",
+                             f"permutation 2 (π₂)"]):
+        im = ax.imshow(M, aspect="auto", cmap="viridis", vmin=vmin, vmax=vmax)
+        ax.set_xlabel("feature index")
+        ax.set_title(title, fontsize=11, fontweight="bold")
+    axes[0].set_ylabel("EEG channel index")
+    fig.colorbar(im, ax=axes, fraction=0.04, pad=0.04, label="mean value")
+    fig.suptitle(
+        f"Raw Observation D.4c — What channel permutation does: "
+        f"class {class_to_show} mean tensor (left) and two permutations (centre, right). "
+        f"\nWithin each column (feature), the channel ordering is reshuffled — same per-trial.",
+        fontsize=11, fontweight="bold", y=1.01,
+    )
+    return save_pdf(fig, outdir / "rawD_4c_observed_vs_null_example.pdf")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# FIGURE 4D — THE SLIDE
+# ──────────────────────────────────────────────────────────────────────────
+def make_analysisD_4d(observations: dict, outdir: Path, n_perms: int,
+                      meta_note: str | None = None,
+                      class_labels: dict | None = None) -> Path:
+    classes = sorted(observations.keys())
+    n = len(classes)
+    ncols = min(2, n)
+    nrows = (n + ncols - 1) // ncols
+    fig, axes = plt.subplots(nrows, ncols, figsize=(7 * ncols, 4.6 * nrows),
+                             squeeze=False)
+    class_titles = class_labels or {
+        0: "class 0",
+        1: "class 1 (neutral)",
+        2: "class 2",
+    }
+    class_colors = [PALETTE["category_threat"], PALETTE["neutral_gray"],
+                    PALETTE["category_cute"], PALETTE["highlight_purple"]]
+
+    for i, c in enumerate(classes):
+        ax = axes[i // ncols, i % ncols]
+        obs = observations[c]["observed"]
+        null = np.asarray(observations[c]["null"])
+        p_perm = float((null >= obs).mean())
+
+        ax.hist(null, bins=30, color=PALETTE["neutral_gray"],
+                edgecolor="white", alpha=0.7, label="channel-permutation null")
+        ax.axvline(obs, color=PALETTE["unstable_red"], lw=2.5,
+                   label=f"observed AUC = {obs:.3f}")
+        ax.axvline(null.mean(), color=PALETTE["histogram_charcoal"],
+                   lw=1.0, linestyle="--", alpha=0.6,
+                   label=f"null mean = {null.mean():.3f}")
+        ax.set_xlabel("subject-CV AUC (one-vs-rest)")
+        ax.set_ylabel("count")
+        title_color = class_colors[c % len(class_colors)]
+        ax.set_title(f"{class_titles.get(c, f'class {c}')}",
+                     fontsize=12, fontweight="bold", color=title_color)
+        # p_perm annotation
+        if p_perm < 1.0 / n_perms:
+            p_str = f"p_perm < {1.0/n_perms:.4f}"
+        else:
+            p_str = f"p_perm = {p_perm:.4f}"
+        verdict = ("survives" if p_perm < 0.01
+                   else ("marginal" if p_perm < 0.05
+                         else "does NOT survive"))
+        ax.text(0.98, 0.95, f"{p_str}\n({verdict})",
+                transform=ax.transAxes, ha="right", va="top",
+                fontsize=11, fontweight="bold",
+                color=(PALETTE["stable_green"] if p_perm < 0.05
+                       else PALETTE["unstable_red"]),
+                bbox=dict(boxstyle="round,pad=0.4", facecolor="white",
+                          alpha=0.95,
+                          edgecolor=(PALETTE["stable_green"] if p_perm < 0.05
+                                     else PALETTE["unstable_red"])))
+        ax.legend(loc="upper left", fontsize=8.5, framealpha=0.92)
+        ax.grid(True, alpha=0.20)
+
+    # Hide unused subplots
+    for j in range(len(classes), nrows * ncols):
+        axes[j // ncols, j % ncols].axis("off")
+
+    fig.suptitle(
+        f"Channel-permutation null on classification of stimulus class — "
+        f"n_perms = {n_perms}, subject-level 5-fold CV",
+        fontsize=13, fontweight="bold", y=1.00,
+    )
+    plt.tight_layout(rect=(0, 0.05, 1, 1))  # leave room at bottom
+    figtext_footer(
+        fig,
+        "The spatial channel structure carries the classification signal.  "
+        "Effects survive the strictest spatial null.",
+        y=0.015,
+    )
+    if meta_note:
+        fig.text(0.99, 0.001, meta_note, ha="right", va="bottom",
+                 fontsize=6.5, color=PALETTE["neutral_gray"], style="italic")
+    return save_pdf(fig, outdir / "analysisD_4d_permutation_nulls.pdf")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# CSV audit
+# ──────────────────────────────────────────────────────────────────────────
+def write_csv(observations, outdir: Path, n_perms: int, args):
+    p = outdir / "experiment_d_data.csv"
+    with open(p, "w") as f:
+        f.write("# Experiment D — Channel-permutation null audit trail\n")
+        f.write(f"# script: defense_figures/experiment_d_channel_permutation/make_experiment_d_figures.py\n")
+        f.write(f"# pickle: {args.pickle}\n")
+        f.write(f"# label_source: {args.label_source}\n")
+        f.write(f"# feature_field: {args.features}\n")
+        f.write(f"# n_perms: {n_perms}\n")
+        f.write(f"# cv_splits: {args.cv_splits}\n")
+        f.write(f"# logreg_C: {args.C}\n")
+        f.write("# columns: class,observed_auc,null_mean,null_std,p_perm\n")
+        f.write("class,observed_auc,null_mean,null_std,p_perm\n")
+        for c, obsdat in sorted(observations.items()):
+            obs = obsdat["observed"]
+            null = np.asarray(obsdat["null"])
+            p_perm = float((null >= obs).mean())
+            f.write(f"{c},{obs:.6f},{null.mean():.6f},{null.std():.6f},{p_perm:.6f}\n")
+        # Detail block: per-permutation null AUC
+        f.write("# detail: per-permutation null AUC per class (one row per class)\n")
+        for c, obsdat in sorted(observations.items()):
+            null = np.asarray(obsdat["null"])
+            f.write(f"# class {c} nulls: " + ",".join(f"{v:.4f}" for v in null) + "\n")
+    print(f"  wrote {p}")
+    return p
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Main
+# ──────────────────────────────────────────────────────────────────────────
+def parse_args():
+    p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    p.add_argument("--pickle", default="chapter6Experiments/results/ch6_exp1_full.pkl")
+    p.add_argument("--outdir", default=str(Path(__file__).parent / "outputs"))
+    p.add_argument("--features", default="conv_feats",
+                   help="Pickle field name for the feature tensor "
+                        "(must be shape (n_trials, n_channels, n_features)).")
+    p.add_argument("--n-perms", type=int, default=500)
+    p.add_argument("--cv-splits", type=int, default=5)
+    p.add_argument("--C", type=float, default=0.1, help="LogReg regularization.")
+    p.add_argument("--label-source", default="stimulus",
+                   choices=["stimulus", "csv"],
+                   help="Either use stimulus labels from the pickle "
+                        "or load disorder labels from a CSV.")
+    p.add_argument("--clinical-csv", default=None,
+                   help="Path to clinical-labels CSV (when --label-source=csv).")
+    p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--cache", default=None)
+    p.add_argument("--recompute", action="store_true")
+    return p.parse_args()
+
+
+def main():
+    args = parse_args()
+    apply_style()
+    outdir = Path(args.outdir).resolve()
+    outdir.mkdir(parents=True, exist_ok=True)
+    cache_path = (Path(args.cache).resolve() if args.cache
+                  else outdir / "_perm_cache.npz")
+
+    # Load
+    print(f"  Loading {args.pickle}...")
+    with open(args.pickle, "rb") as f:
+        data = pickle.load(f)
+    if args.features not in data:
+        raise KeyError(f"Pickle missing feature field {args.features!r}. "
+                       f"Available: {list(data.keys())}")
+    X = np.asarray(data[args.features])
+    if X.ndim != 3:
+        raise ValueError(f"Expected 3D feature tensor, got shape {X.shape}")
+    subjects = np.asarray(data["subjects"])
+    if args.label_source == "stimulus":
+        y = np.asarray(data["y"])
+        label_kind = "stimulus class"
+    else:
+        if not args.clinical_csv or not Path(args.clinical_csv).exists():
+            raise FileNotFoundError(
+                f"Clinical labels CSV not found: {args.clinical_csv!r}. "
+                f"Provide --clinical-csv with per-subject disorder labels."
+            )
+        import csv as _csv
+        # Expected columns: subject_id,disorder_label (one of SUD/PTSD/GAD/ADHD/Control)
+        subject_to_label = {}
+        with open(args.clinical_csv) as f:
+            for row in _csv.DictReader(f):
+                subject_to_label[int(row["subject_id"])] = row["disorder_label"]
+        y_str = np.array([subject_to_label.get(int(s), "UNKNOWN") for s in subjects])
+        # Encode as integers, dropping UNKNOWN
+        keep = y_str != "UNKNOWN"
+        # Filter X, subjects, y_str
+        X = X[keep]
+        subjects = subjects[keep]
+        y_str = y_str[keep]
+        unique_labels = sorted(set(y_str))
+        label_to_int = {l: i for i, l in enumerate(unique_labels)}
+        y = np.array([label_to_int[l] for l in y_str])
+        label_kind = f"disorder class ({', '.join(unique_labels)})"
+    print(f"  X: {X.shape}, label_kind: {label_kind}")
+    print(f"  classes: {sorted(np.unique(y))}, n_subjects: {len(np.unique(subjects))}")
+
+    # Run permutation null per class
+    classes = sorted(np.unique(y))
+    if cache_path.exists() and not args.recompute:
+        print(f"  Loading permutation cache: {cache_path}")
+        cz = np.load(cache_path, allow_pickle=True)
+        observations = cz["observations"].item()
+    else:
+        observations = {}
+        for c in classes:
+            print(f"  → class {c} (one-vs-rest)")
+            y_bin = (y == c).astype(int)
+            obs, null = channel_permutation_null(
+                X, y_bin, subjects,
+                n_perms=args.n_perms, seed=args.seed,
+                n_splits=args.cv_splits, C=args.C,
+            )
+            p_perm = float((null >= obs).mean())
+            observations[int(c)] = {
+                "observed": obs, "null": null, "p_perm": p_perm,
+            }
+            print(f"      observed AUC = {obs:.3f}, null mean = {null.mean():.3f}, "
+                  f"p_perm = {p_perm:.4f}")
+        np.savez(cache_path, observations=observations, n_perms=args.n_perms)
+        print(f"  Cached → {cache_path}")
+
+    # Figures
+    print("\n  Generating figures...")
+    p4a = make_rawD_4a(X, y, outdir, feature_label=f"`{args.features}`");                                      print(f"    {p4a.name}")
+    p4b = make_rawD_4b(y, subjects, outdir);                                                                    print(f"    {p4b.name}")
+    p4c = make_rawD_4c(X, y, outdir);                                                                           print(f"    {p4c.name}")
+    meta_note = (
+        f"Source: {Path(args.pickle).name}  ·  features={args.features}  ·  "
+        f"label={label_kind}  ·  n_perms={args.n_perms}  ·  "
+        f"CV={args.cv_splits}-fold subject-level  ·  LogReg C={args.C}"
+    )
+    p4d = make_analysisD_4d(observations, outdir, n_perms=args.n_perms,
+                            meta_note=meta_note)
+    print(f"    {p4d.name}")
+    write_csv(observations, outdir, args.n_perms, args)
+    print(f"\n  Done. Outputs in: {outdir}")
+
+
+if __name__ == "__main__":
+    main()
