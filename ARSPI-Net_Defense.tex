@@ -301,15 +301,37 @@
       \includegraphics[width=\textwidth]{pictures/defense_audit/analysisA_1e_autonomous_vs_driven.pdf}
     \end{column}
     \begin{column}{0.38\textwidth}\small
-      Autonomous spectral radius $\rho(W) = 0.265$ predicts \emph{nothing}
-      about driven behavior. Stability is a measured property of the
+      Autonomous spectral radius $\rho(W) = 0.265$ is an undriven
+      property of $W$; it does not determine reservoir behavior under
+      real ERP drive. Stability is a measured property of the
       reservoir \alert{in operation}, not a cited property of $W$ in
       isolation.
       \vspace{0.4em}
       \begin{itemize}\small
         \item Driven $\lambda_1$ via Benettin on $3{,}165$ real ERP
               trajectories.
+        \item Audit cohort ($N{=}3{,}165$) is the strict clean-ERP
+              subset of the $N{=}4{,}220$ Lyapunov pool from
+              chDynamics; both populations $100\%$ stable.
         \item Field-default ESN criterion replaced by a measurement.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+\begin{frame}{Defense audit: memory-capacity regime for leak $\beta$}
+  \begin{columns}[T]
+    \begin{column}{0.62\textwidth}
+      \includegraphics[width=\textwidth]{pictures/defense_audit/analysisC_3d_memory_capacity_peak.pdf}
+    \end{column}
+    \begin{column}{0.38\textwidth}\small
+      A measured operating characteristic for the leak. $\beta = 0.05$
+      sits inside the MC plateau but \alert{not} at the measured peak
+      ($\beta^{*} \approx 0.012$).
+      \vspace{0.4em}
+      \begin{itemize}\small
+        \item $\beta = 0.05 \to \mathrm{MC} \approx 0.763$ ($91\%$ of peak).
+        \item Plateau $\beta \in [0.010, 0.118]$, $\mathrm{MC} \geq 0.75$.
+        \item Defended by time-constant argument vs.\ the $256$-step ERP.
       \end{itemize}
     \end{column}
   \end{columns}
@@ -582,24 +604,6 @@
     Repeated $\tilde{\mathbf{A}}^k$ = diffusion on the graph Laplacian.\\
     Oversmoothing on dense graphs.
   \end{center}
-\end{frame}
-\begin{frame}{Defense audit: memory-capacity regime for leak $\beta$}
-  \begin{columns}[T]
-    \begin{column}{0.62\textwidth}
-      \includegraphics[width=\textwidth]{pictures/defense_audit/analysisC_3d_memory_capacity_peak.pdf}
-    \end{column}
-    \begin{column}{0.38\textwidth}\small
-      A measured operating characteristic for the leak. $\beta = 0.05$
-      sits inside the MC plateau but \alert{not} at the measured peak
-      ($\beta^{*} \approx 0.012$).
-      \vspace{0.4em}
-      \begin{itemize}\small
-        \item $\beta = 0.05 \to \mathrm{MC} \approx 0.763$ ($91\%$ of peak).
-        \item Plateau $\beta \in [0.010, 0.118]$, $\mathrm{MC} \geq 0.75$.
-        \item Defended by time-constant argument vs.\ the $256$-step ERP.
-      \end{itemize}
-    \end{column}
-  \end{columns}
 \end{frame}
 
 \begin{frame}{The Propagation Operating Characteristic (Contribution 1)}
