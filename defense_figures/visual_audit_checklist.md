@@ -188,10 +188,10 @@ Three categories of check per slide:
 
 - [ ] Projector test: at least one full pass of the deck on the actual
       defense projector at least 24 hours before; specifically inspect
-      audit pages 18, 19, 23, 40, 50, 51, 60, 61 (the eight above) plus
-      page 66 (the placeholder appendix slide — confirm the author has
-      replaced placeholders with licensed assets if used, or skipped
-      that slide in the Q&A budget).
+      audit pages 18, 19, 23, 40, 50, 51, 60, 61 (the eight above).
+      The former "Conventional vs.\ spiking computation" appendix
+      slide has been removed; appendix page numbers after that point
+      now shift by ${-}1$ from the PR #25/#26 layout.
 - [ ] Font fallback: search for any `\textsubset` / `\ll` / `\to` /
       `\rightarrow` / `\approx` glyph rendered as a missing-box `□`.
 - [ ] Page numbers: verify the bottom-right counter advances monotonically
