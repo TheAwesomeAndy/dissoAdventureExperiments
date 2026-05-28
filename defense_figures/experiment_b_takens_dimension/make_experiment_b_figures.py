@@ -3,16 +3,21 @@ defense_figures/experiment_b_takens_dimension/make_experiment_b_figures.py
 
 Experiment B — Takens embedding dimension for SHAPE ERPs.
 
-Philosophical claim it lands:
-  "I did not use a reservoir because spiking networks are fashionable. I
-  used a reservoir because Takens' theorem mathematically guarantees that
-  a sufficiently rich driven dynamical system can reconstruct the latent
-  attractor — and I MEASURED that the attractor's embedding dimension fits
-  inside the reservoir's state space."
+Claim it lands (precisely worded — Takens is the motivation, FNN is the
+measurement; the figure does NOT claim Takens "guarantees" reconstruction
+of the affective attractor):
 
-This is the "theorem-grounded, not citation-grounded" requirement. A
-citation to Takens (1981) is decoration; a measured embedding dimension
-that confirms Takens-sufficiency for this specific dataset is doctoral.
+  "The Kennel-Brown FNN estimate provides an empirical bound on the
+  embedding dimension needed to reconstruct the SHAPE-ERP trajectories
+  via delay coordinates. The measured m* sits well below the reservoir's
+  post-PCA state dimension (64) and far below the raw reservoir state
+  (256). The trajectories occupy a low-dimensional reconstruction regime
+  relative to the reservoir's capacity — Takens-motivated, FNN-measured."
+
+This is the "theorem-motivated, FNN-measured" framing. Takens (1981) is
+the existence theorem that justifies asking the FNN question; FNN
+estimates a measured lower bound on embedding dimension for THIS data.
+The figure must not be read as a guarantee of attractor reconstruction.
 
 OUTPUTS
 -------
@@ -59,10 +64,11 @@ PRE-REGISTRATION
 Expected m* for ERP data is in the range [3, 12]. The post-PCA reservoir
 state dimension is 64, which exceeds this range by a factor of 5–20×.
 The raw reservoir state dimension is 256, which exceeds it by 20–80×.
-Either reference comfortably satisfies Takens-sufficiency. If m* lands
-> 64, the figure presents the result faithfully and the slide title
-acknowledges that the reservoir's RAW state (N=256) is the relevant
-comparison rather than the post-PCA projection.
+Both reference dimensions sit comfortably above the expected FNN-
+estimated bound. If m* lands > 64, the figure presents the result
+faithfully and the slide title acknowledges that the reservoir's RAW
+state (N=256) is the relevant comparison rather than the post-PCA
+projection.
 """
 from __future__ import annotations
 
@@ -83,7 +89,7 @@ from _style import apply_style, save_pdf, figtext_footer, PALETTE, FIGSIZE
 
 N_RES = 256
 N_PCA = 64
-FNN_THRESHOLD = 0.01  # fraction below which we declare "Takens-sufficient"
+FNN_THRESHOLD = 0.01  # noise-floor threshold on the false-neighbor fraction
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -467,14 +473,15 @@ def make_analysisB_2e(records: list, outdir: Path, tau: int,
     ax.legend(loc="upper right", fontsize=10, framealpha=0.94)
 
     title = (
-        f"The reservoir's capacity exceeds the latent attractor's Takens dimension  "
+        f"FNN-estimated embedding dimension is small relative to the reservoir's state space  "
         f"(m* = {m_star},  N_eff = {N_PCA},  N = {N_RES})"
     )
-    fig.suptitle(title, fontsize=13, fontweight="bold", y=0.98)
+    fig.suptitle(title, fontsize=12.5, fontweight="bold", y=0.98)
 
     figtext_footer(
         fig,
-        "Takens-sufficient.  The reservoir's state space comfortably accommodates the latent attractor.",
+        "Kennel-Brown FNN provides an empirical bound on delay-embedding dimension. "
+        "Takens-motivated question; FNN-measured answer. Reservoir capacity exceeds the measured bound.",
         y=0.03,
     )
 

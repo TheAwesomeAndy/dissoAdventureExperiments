@@ -10,18 +10,69 @@
 > have done differently — in enough detail that the next agent can act
 > without re-deriving the context.
 
+## 0. The PhD argument (use this framing, not the one I wrote first)
+
+The dissertation's argument is **not** "I pursued truth." It is, in the
+author's own words after auditing this work:
+
+> *"The dissertation repeatedly replaced default assumptions with
+> measured operators: autonomous stability with driven Lyapunov
+> contraction (Exp A), architectural fashion with FNN-measured
+> embedding-dimension sufficiency relative to reservoir capacity
+> (Exp B), nominal parameter choice with memory-capacity regime
+> analysis (Exp C), and performance claims with spatial null testing
+> (Exp D)."*
+
+That sentence is the deck. Every figure must serve it. Slides that read
+as therapy, manifesto, or AI-generated self-justification do not serve
+the argument and should be deleted.
+
+The committee standard for "complete" is **not** "I have a PDF for each
+idea." It is a chain:
+
+1. a question,
+2. a mathematical observable,
+3. a null or baseline,
+4. a measured result,
+5. a failure or constraint,
+6. a revised experimental decision,
+7. a bounded contribution.
+
+**Artifact coverage is not argument closure.** The previous agent
+(me) blurred those two and called the deck "8 of 9 pillars covered."
+That phrasing should be retired.
+
+## 0.1 Branch state — operational defect (priority 0)
+
+All defense-figure artifacts live on `claude/magical-volta-82g4t`. The
+`main` branch does not carry them. A committee-facing workflow cannot
+depend on hidden / non-default commit state.
+
+**Action required (user-authorized):** merge `claude/magical-volta-82g4t`
+into `main` (or clearly publish which ref the artifacts live on, and
+update all dissertation documentation to reference that ref).
+
+This is destructive enough (changes the default branch's contents) that
+the previous agent did not perform it without explicit user
+authorization. The next agent should request that authorization before
+merging, but should treat the unmerged state as a defect, not a
+neutrality.
+
 ---
 
 ## 1. What was built
 
 ### 1.1 Experiments (data + figures + companion-notes skeletons)
 
-| Exp | Claim | Script | Outputs |
+Claims here are stated **precisely** (after audit correction — earlier
+versions overclaimed about Takens and clinical labels).
+
+| Exp | Defensible claim | Script | Outputs |
 |---|---|---|---|
-| **A** | Autonomous ρ(W) underestimates contraction; driven λ₁ is the right number | `defense_figures/experiment_a_autonomous_vs_driven/make_experiment_a_figures.py` | `outputs/rawA_1{a..d}_*.pdf`, `analysisA_1e_autonomous_vs_driven.pdf`, `experiment_a_data.csv`, `_benettin_cache.npz` |
-| **B** | Reservoir state space ≥ data Takens dimension (16–64× margin) | `defense_figures/experiment_b_takens_dimension/make_experiment_b_figures.py` | `outputs/rawB_2{a..d}_*.pdf`, `analysisB_2e_takens_dimension.pdf`, `experiment_b_data.csv`, `_fnn_cache.npz` |
-| **C** | β = 0.05 is inside the measured MC plateau; biological time-constant anchored | `defense_figures/experiment_c_memory_capacity/make_experiment_c_figures.py` | `outputs/rawC_3{a..c}_*.pdf`, `analysisC_3d_memory_capacity_peak.pdf`, `experiment_c_data.csv`, `_mc_cache.npz` |
-| **D** | Classification claim survives strictest per-trial channel-permutation null | `defense_figures/experiment_d_channel_permutation/make_experiment_d_figures.py` | `outputs/rawD_4{a..c}_*.pdf`, `analysisD_4d_permutation_nulls.pdf`, `experiment_d_data.csv`, `_perm_cache.npz` |
+| **A** | Autonomous spectral-radius criteria are insufficient unless paired with a measurement under input drive. ρ(W) = 0.2647549015; driven λ₁ measured on 3,165 trajectories. | `defense_figures/experiment_a_autonomous_vs_driven/make_experiment_a_figures.py` | `outputs/rawA_1{a..d}_*.pdf`, `analysisA_1e_autonomous_vs_driven.pdf`, `experiment_a_data.csv`, `_benettin_cache.npz` |
+| **B** | FNN provides an empirical bound on embedding dimension needed to reconstruct measured ERP trajectories via delay coordinates; m* ≪ 64 (post-PCA) ≪ 256 (raw). **Takens-motivated question, FNN-measured answer.** Does NOT claim Takens "guarantees" attractor reconstruction. | `defense_figures/experiment_b_takens_dimension/make_experiment_b_figures.py` | `outputs/rawB_2{a..d}_*.pdf`, `analysisB_2e_takens_dimension.pdf`, `experiment_b_data.csv`, `_fnn_cache.npz` |
+| **C** | β = 0.05 (MC ≈ 0.763) sits inside the measured MC plateau but is **not** at the measured peak (β* ≈ 0.012, MC ≈ 0.835). Operating-regime mismatch is real and defended by biological time-constant argument. | `defense_figures/experiment_c_memory_capacity/make_experiment_c_figures.py` | `outputs/rawC_3{a..c}_*.pdf`, `analysisC_3d_memory_capacity_peak.pdf`, `experiment_c_data.csv`, `_mc_cache.npz` |
+| **D** | **Stimulus-class** classification survives per-trial channel-permutation null (500 perms × 5 CV folds). **Not** a clinical-disorder validation. CLI flag swaps to disorder labels when CSV is provided. | `defense_figures/experiment_d_channel_permutation/make_experiment_d_figures.py` | `outputs/rawD_4{a..c}_*.pdf`, `analysisD_4d_permutation_nulls.pdf`, `experiment_d_data.csv`, `_perm_cache.npz` |
 
 Each experiment ships with a `companion_notes.md` that contains the
 pre-registration block, motivation, derivation, Q&A backup, and
@@ -80,7 +131,15 @@ usage) is a defense-integrity question I never flagged.
 
 ## 3. Critical gaps — concrete tasks for the next agent
 
-### 3.1 Build Figure G — Failure Gallery (HIGHEST PRIORITY)
+### 3.0 Merge to main (priority 0 — operational defect)
+
+See §0.1. All defense-figure work is on `claude/magical-volta-82g4t`;
+`main` does not carry it. Request user authorization, then either merge
+or open a PR. Until this is done, anyone inspecting `main` will see
+only Experiment A as planned and B/C/D/G/J as TBD — which is the
+opposite of the true state.
+
+### 3.1 Build Figure G — Failure Gallery (HIGHEST PRIORITY among slides)
 
 **Why it matters.** The author's stated goal explicitly says: *"I deep
 dove down to failed results that motivated me to change my experimental
@@ -210,7 +269,42 @@ This protects the author. The next agent should treat any blanket
 
 ## 4. Self-reflection — where the prior agent (me) fell short
 
-### 4.1 I treated "needs author input" as a stop sign instead of a draft request
+### 4.0 I confused artifact coverage with argument closure
+
+I declared "8 of 9 pillars covered" based on the existence of PDFs. A
+PhD defense is not a folder of PDFs. The argument chain (question →
+observable → null → result → failure → revised decision → bounded
+contribution) is the standard. The artifacts have pieces of that chain
+but it is not assembled into a tested defense argument. The phrasing
+"strong coverage on N of M pillars" should not be used again.
+
+### 4.1 I overclaimed in Exp B and Exp D and had to roll it back
+
+- **Exp B docstring originally said** "Takens' theorem mathematically
+  guarantees that a sufficiently rich driven dynamical system can
+  reconstruct the latent attractor." This is false — Takens provides
+  conditions under which a generic delay-embedding observation is
+  topologically equivalent to the underlying attractor, but does not
+  guarantee that any specific reservoir reconstructs the affective
+  attractor. Corrected to "Takens-motivated question, FNN-measured
+  answer."
+- **Exp B figure title originally said** "The reservoir's capacity
+  exceeds the latent attractor's Takens dimension." Wrong — the FNN
+  estimate is an empirical bound, not the Takens dimension itself.
+  Corrected to "FNN-estimated embedding dimension is small relative
+  to the reservoir's state space."
+- **Exp D docstring originally said** "My clinical claims are not
+  data-mined accidents." The analysis is on stimulus class, not
+  clinical disorder. Corrected to make the stimulus-class scope
+  explicit.
+
+**Lesson for the next agent.** When writing figure titles and
+docstrings, be paranoid about the difference between (a) the theorem
+that motivated the question and (b) the measurement that was actually
+performed. Use the most technically restrained wording the data
+supports. The committee will notice the difference.
+
+### 4.2 I treated "needs author input" as a stop sign instead of a draft request
 
 The original plan named G as required and said it needed author input
 because "only the author knows which attempts truly failed." I took
@@ -227,7 +321,7 @@ If the dissertation already documents a pivot, draft it; mark the
 draft `[author confirm]`; commit. The author refines what's there
 faster than they write from scratch.
 
-### 4.2 I never named the AI-usage tension
+### 4.3 I never named the AI-usage tension
 
 The author's goal includes "AI was not used." The deck was built with
 AI. I should have flagged this in plan mode and offered options
@@ -239,7 +333,7 @@ AI" — that's a defense-integrity defect.
 the work being requested, surface the tension in `AskUserQuestion`
 before doing the work, not after.
 
-### 4.3 I produced figures without producing a defense rehearsal harness
+### 4.4 I produced figures without producing a defense rehearsal harness
 
 A defense deck is not the same as a folder of PDFs. The deck is the
 PDFs **in order, timed, with the speaker watching for narrative
@@ -250,7 +344,7 @@ the timing, or the read-through. Half-built.
 (§3.5) early. Re-run it after every figure addition. Read the
 assembled draft aloud at least once.
 
-### 4.4 I produced no dissertation anchor map
+### 4.5 I produced no dissertation anchor map
 
 The committee asks "where in the dissertation is this?" within the
 first three slides. A single page with figure → chapter/section/page
@@ -260,7 +354,7 @@ addresses this. I never proposed it.
 more figures. It will surface inconsistencies in the figure-to-chapter
 mapping that other figures may need to absorb.
 
-### 4.5 I left the companion notes as skeletons
+### 4.6 I left the companion notes as skeletons
 
 The figures alone are insufficient. The spoken claim is in the
 companion notes. Those are templates. Without author-voice content
@@ -273,7 +367,7 @@ the defense is figures-only. I should have:
   figure was claimed complete, because that section is what
   carries the philosophical commitment.
 
-### 4.6 I did not verify slide ordering by assembly and read-through
+### 4.7 I did not verify slide ordering by assembly and read-through
 
 I planned the slide order in the addendum. I never assembled the
 PDFs in that order and read them. The narrative may flow; it may
@@ -338,14 +432,27 @@ verify each of these:
 
 ## 7. Final note from the previous agent
 
-The deck as-of-this-handoff is **strong on theory, strong on
-measurement, strong on rigor**, but **silent on the journey through
-failure** and **silent on the AI-assistance disclosure**. Both are
-addressable; neither is addressed.
+The deck as-of-this-handoff has artifact coverage for the
+measurement-driven experiments (A, B, C, D), the philosophical
+scaffold (K, F, J), the round-2 figures (TB, MR, IP, OQ), and the RC
+animation. It has **not** assembled those artifacts into a tested
+defense argument.
 
-If the author is reading this and has 30 minutes: the highest-leverage
-single move is to write 3–5 honest paragraphs about pivots in the
-dissertation — what was tried, what failed, what was learned — and
-hand those paragraphs to the next agent as the seed for Figure G.
+The single highest-leverage next move is operational, not creative:
+**merge this work to `main` so the repo's default state matches reality**
+(§3.0). Until that is done, every other claim in this handoff is
+contingent on inspecting a non-default branch.
 
-A PhD is a beginning, not an end. So is this deck.
+After that, the highest-leverage **creative** move is for the author to
+write 3–5 honest paragraphs about specific pivots in the dissertation
+(what was tried, what failed, what was learned, what changed as a
+result) and hand them to the next agent as the seed for Figure G. The
+candidates listed in §3.1 are reasonable starting points but only the
+author knows which ones are real.
+
+Slides whose only function is to perform humility or commitment without
+carrying a measurement should be cut. The deck is at its strongest when
+it stays close to the measured operators (A's driven Lyapunov, B's
+FNN-measured embedding-dim sufficiency, C's MC regime, D's spatial
+null) and weakest when it ventures into manifesto. The committee will
+read it the same way.
