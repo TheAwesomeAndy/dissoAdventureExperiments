@@ -9,13 +9,10 @@ Questions are grouped by topic. Within each topic, the **landing
 slide** is the main-deck slide to put up while answering; the
 **deeper appendix slides** are listed for follow-ups.
 
-Approximate appendix page numbers are given to 1--2 pages because
-the metropolis section dividers can shift counts by ±1 between
-revisions; verify exact pages on the live PDF before defense.
-Appendix page numbers in this file were authored against the
-105-page build; after the page-66 placeholder slide was removed,
-every appendix page after that point shifts by ${-}1$. Run the
-final visual audit to lock exact pages before defense.
+Appendix page numbers below were swept against the 104-page
+`ARSPI-Net_Defense.pdf` after PR #27 and are exact, not approximate.
+If the deck is rebuilt with a different frame count, re-run the
+sweep before defense.
 
 ---
 
@@ -29,8 +26,8 @@ The driven Lyapunov exponent λ₁ is uniformly negative across
 N = 3,165 ERP trajectories, so the reservoir is in the contraction
 regime under real drive. On this data the operational stability
 test is the driven measurement, not the value of ρ(W).
-**Deeper.** PDF ≈ 95 (eigenspectrum of W); PDF ≈ 96 (Benettin sample
-trajectories); PDF ≈ 97 (per-trial λ₁ scatter).
+**Deeper.** PDF 93 (eigenspectrum of W); PDF 94 (Benettin sample
+trajectories); PDF 95 (per-trial λ₁ scatter).
 
 ### Q. "Why is N = 3,165 different from N = 4,220 on the previous slide?"
 
@@ -67,7 +64,7 @@ PDF 56.)
 dimension m\* is well under the 64-dim PCA projection, so the
 embedding capacity exceeds the requirement on this data. Takens is
 the motivation, not the guarantee.
-**Deeper.** PDF ≈ 98 (delay embedding); PDF ≈ 99 (per-trial FNN
+**Deeper.** PDF 96 (delay embedding); PDF 97 (per-trial FNN
 distribution).
 
 ### Q. "Why 64 PCA components? Why not 32 or 128?"
@@ -79,7 +76,7 @@ needs. Variance retained at 64 is reported in the chapter.
 
 ### Q. "Could the FNN measurement be biased by the BSC₆ binning?"
 
-**Land.** PDF 23 → App "Why six temporal bins" (PDF ≈ 64).
+**Land.** PDF 23 → App "Why six temporal bins" (PDF 64).
 **Answer.** BSC₆ is six bins aligned to ERP windows (N1/P200/P300/LPP);
 m\* is measured **after** BSC₆ in the pipeline, so any binning bias
 is folded into the measurement. The FNN result is what the
@@ -96,8 +93,8 @@ downstream embedding actually sees.
 not at the peak. It was selected by matching the LIF time constant
 to the 256-step ERP window, then confirmed post-hoc by the MC sweep.
 β\* would over-integrate relative to the ERP window.
-**Deeper.** PDF ≈ 100 (input drive); PDF ≈ 101 (state response per
-β); PDF ≈ 102 (MC vs. τ).
+**Deeper.** PDF 98 (input drive); PDF 99 (state response per β);
+PDF 100 (MC vs. τ).
 
 ### Q. "How sensitive is the downstream accuracy to β within the plateau?"
 
@@ -281,19 +278,18 @@ dissertation chapter.
 
 | Topic                                   | Land at PDF | Appendix range  |
 |----------------------------------------|-------------|-----------------|
-| Reservoir stability (Exp A)            | 18          | 95--97          |
-| Embedding dimension (Exp B)            | 23          | 98--99          |
-| Memory capacity (Exp C)                | 19          | 100--102        |
-| Graph POC                              | 37, 38      | 70--72 (existing) |
-| Bounds vs. measurement (TB)            | 40          | 94 (overview)   |
-| Null methodology (Exp D)               | 49, 50      | 103--105        |
+| Reservoir stability (Exp A)            | 18          | 93--95          |
+| Embedding dimension (Exp B)            | 23          | 96--97          |
+| Memory capacity (Exp C)                | 19          | 98--100         |
+| Graph POC                              | 37, 38      | 70--72          |
+| Bounds vs. measurement (TB)            | 40          | 92 (overview)   |
+| Null methodology (Exp D)               | 49, 50      | 101--103        |
 | Failure pivots                         | 51          | (4 audit slides) |
 | Three-layer / ablation                 | 52, 53      | 78--82          |
 | Scope / future                         | 56, 57      | --              |
-| Anchor map (AM)                        | 60          | 106             |
+| Anchor map (AM)                        | 60          | 104             |
 | Provenance (AC)                        | 61          | --              |
 
-**Page numbers ±1**: the appendix range is approximate; the section
-divider for "Appendix --- Defense Audit Diagnostics" shifts the raw
-diagnostics by ±1 page depending on metropolis revision. Confirm
-exact pages on the live PDF the week of defense.
+Page numbers above are exact for the 104-page `ARSPI-Net_Defense.pdf`
+build that landed in PR #27. If the deck is rebuilt with a different
+frame count, re-sweep before defense.

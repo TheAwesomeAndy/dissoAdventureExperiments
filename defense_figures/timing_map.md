@@ -1,17 +1,19 @@
 # Timing Map
 
 Per-frame speaking-time allocation for the canonical defense
-`ARSPI-Net_Defense.tex` (53 main frames + 42 appendix frames = 95 content
-frames; 105 PDF pages including title and section dividers).
+`ARSPI-Net_Defense.tex` (54 main frames + 41 appendix frames = 95
+content frames; 104 PDF pages including title and 7 section dividers,
+counter shows X/93 because the metropolis [plain] frame at PDF 9 and
+the [standout] close at PDF 62 are excluded from the content count).
 
 **Budget**: 45 minutes presenting + 15--20 minutes Q&A.
 
-**Strategy**: the original 45-frame deck was authored to ~40 minutes
-(roughly 53 s/frame average with key-result frames taking 90--120 s and
-restated-claim frames taking 25--35 s). The eight inserted audit slides
-add ~9 minutes of rigor injection. Net presentation runs to ~49 minutes
-**at the unforgiving end**; trim by ~4 minutes via the **cut-line lane**
-below to land at 45 even.
+**Strategy**: the deck is sized to land at **45 min 25 s** with all
+allocations as given below, including the architecture diagram on
+PDF 9 at 45 s and the default cut on PDF 47. The cumulative column is
+authoritative; verify against the live PDF page numbers, which were
+swept against `ARSPI-Net_Defense.pdf` after PR #27 (104 pages, 93
+content slides).
 
 ---
 
@@ -20,16 +22,21 @@ below to land at 45 even.
 | Part | Theme                                       | Frames | Budget    |
 |------|---------------------------------------------|--------|-----------|
 | 1    | The Engineering Problem and the Inquiry     | 5      | 3 min 30 s |
-| 2    | Architecture and Contributions              | 3      | 2 min 30 s |
-| 3    | The Neuromorphic Operator                   | 12     | 12 min     |
-| 4    | The Three Operationally Distinct Layers     | 7      | 6 min      |
-| 5    | The Graph Propagation Regime                | 9      | 8 min      |
-| 6    | Intrinsic Interpretability                  | 10     | 8 min      |
-| 7    | Scope, Future, and Close                    | 7      | 5 min      |
-|      | **Total**                                   | **53** | **45 min** |
+| 2    | Architecture and Contributions              | 4      | 3 min 15 s |
+| 3    | The Neuromorphic Operator                   | 12     | 11 min 30 s |
+| 4    | The Three Operationally Distinct Layers     | 7      | 6 min 10 s |
+| 5    | The Graph Propagation Regime                | 9      | 8 min 10 s |
+| 6    | Intrinsic Interpretability                  | 10     | 8 min 55 s |
+| 7    | Scope, Future, and Close                    | 7      | 3 min 55 s |
+|      | **Total**                                   | **54** | **45 min 25 s** |
 
 Part-divider pages (`Part 1 ---`, `Part 2 ---`, …) are **0 s** speaking
-time; advance through them without comment.
+time; advance through them without comment. The Part 2 budget grew from
+2 min 30 s to 3 min 15 s after the page-number sweep identified the
+ARSPI-Net four-stage architecture diagram (PDF page 9) as a substantive
+content slide rather than a transition. That +45 s is recovered by
+cutting "What interpretability enables" (PDF 47) by default; see the
+cut-lane below.
 
 ---
 
@@ -53,61 +60,66 @@ audit slides are marked **AUDIT**.
 
 | PDF | Frame                                | Sec | Cum.  | Note |
 |-----|--------------------------------------|-----|-------|------|
-|   8 | (Part 2 plain title page)            |   0 | 3:30  | Click through. |
-|   9 | Positioning                          |  45 | 4:15  | One sentence per row. |
-|  10 | Five engineering contributions       |  60 | 5:15  | Read them out. |
-|  11 | The unifying empirical finding       |  45 | 6:00  | Single claim. |
+|   8 | (Part 2 section divider)             |   0 | 3:30  | Click through. |
+|   9 | ARSPI-Net four-stage architecture    |  45 | 4:15  | Name the four stages + four interpretability levels; do not read every box. |
+|  10 | Positioning                          |  45 | 5:00  | One sentence per row. |
+|  11 | Five engineering contributions       |  60 | 6:00  | Read them out. |
+|  12 | The unifying empirical finding       |  45 | 6:45  | Single claim. |
 
 ### Part 3 --- The Neuromorphic Operator
 
 | PDF | Frame                                                          | Sec | Cum.  | Note |
 |-----|----------------------------------------------------------------|-----|-------|------|
-|  13 | The neuromorphic operator                                      |  45 | 6:45  | Reframe LIF as F. |
-|  14 | The leaky integrate-and-fire neuron                            |  50 | 7:35  | β introduced here. |
-|  15 | Driven contraction                                             |  45 | 8:20  | Theory only. |
-|  17 | The contraction measurement, visualized                        |  50 | 9:10  | Caption: N=4,220. |
-|  18 | **AUDIT** Defense audit: autonomous ρ(W) vs. driven λ₁         |  90 | 10:40 | Read the N=3,165/N=4,220 reconciliation bullet. |
-|  19 | **AUDIT** Defense audit: memory-capacity regime for leak β     |  90 | 12:10 | Defend β = 0.05 as MC plateau. |
-|  20 | Temporal coding by design: BSC₆                                |  60 | 13:10 | Cut to 45 s if behind. |
-|  21 | The spike-to-embedding pipeline (Contribution 2)               |  50 | 14:00 | Pipeline diagram. |
-|  22 | The measurement-instrument paradigm                            |  35 | 14:35 | Three principles. |
-|  23 | **AUDIT** Defense audit: FNN-measured embedding dimension      |  75 | 15:50 | Kennel--Brown FNN, not Takens. |
-|  24 | The path to silicon                                            |  45 | 16:35 | Cut if behind. |
-|  25 | The failure of spatial deep learning                           |  55 | 17:30 | Sets up Part 4. |
+|  13 | (Part 3 section divider)                                       |   0 | 6:45  | Click through. |
+|  14 | The neuromorphic operator                                      |  45 | 7:30  | Reframe LIF as F. |
+|  15 | The leaky integrate-and-fire neuron                            |  50 | 8:20  | β introduced here. |
+|  16 | Driven contraction                                             |  45 | 9:05  | Theory only. |
+|  17 | The contraction measurement, visualized                        |  50 | 9:55  | Caption: N=4,220. |
+|  18 | **AUDIT** Defense audit: autonomous ρ(W) vs. driven λ₁         |  90 | 11:25 | Read the N=3,165/N=4,220 reconciliation bullet. |
+|  19 | **AUDIT** Defense audit: memory-capacity regime for leak β     |  90 | 12:55 | Defend β = 0.05 as MC plateau. |
+|  20 | Temporal coding by design: BSC₆                                |  60 | 13:55 | Cut to 45 s if behind. |
+|  21 | The spike-to-embedding pipeline (Contribution 2)               |  50 | 14:45 | Pipeline diagram. |
+|  22 | The measurement-instrument paradigm                            |  35 | 15:20 | Three principles. |
+|  23 | **AUDIT** Defense audit: FNN-measured embedding dimension      |  75 | 16:35 | Kennel--Brown FNN, not Takens. |
+|  24 | The path to silicon                                            |  45 | 17:20 | Cut if behind. |
+|  25 | The failure of spatial deep learning                           |  55 | 18:15 | Sets up Part 4. |
 
 ### Part 4 --- The Three Operationally Distinct Layers
 
 | PDF | Frame                                                          | Sec | Cum.  | Note |
 |-----|----------------------------------------------------------------|-----|-------|------|
-|  27 | The three-layer structure                                      |  50 | 18:20 | Layer A/B/C named. |
-|  28 | Layer A --- the subject-covariance hinge                       |  55 | 19:15 | Centering preview. |
-|  29 | Layer A --- centering is the dominant intervention (Contrib 5) |  60 | 20:15 | Key result; do not cut. |
-|  30 | Layer B --- seven named observables                            |  45 | 21:00 | Read 3 of 7. |
-|  31 | Layer B --- descriptors are condition-sensitive                |  50 | 21:50 | One example. |
-|  32 | Layer B --- the temporal family dominates                      |  50 | 22:40 | One contrast. |
-|  33 | Layer B --- the excitability--persistence axis                 |  60 | 23:40 | PC1 result. |
+|  26 | (Part 4 section divider)                                       |   0 | 18:15 | Click through. |
+|  27 | The three-layer structure                                      |  50 | 19:05 | Layer A/B/C named. |
+|  28 | Layer A --- the subject-covariance hinge                       |  55 | 20:00 | Centering preview. |
+|  29 | Layer A --- centering is the dominant intervention (Contrib 5) |  60 | 21:00 | Key result; do not cut. |
+|  30 | Layer B --- seven named observables                            |  45 | 21:45 | Read 3 of 7. |
+|  31 | Layer B --- descriptors are condition-sensitive                |  50 | 22:35 | One example. |
+|  32 | Layer B --- the temporal family dominates                      |  50 | 23:25 | One contrast. |
+|  33 | Layer B --- the excitability--persistence axis                 |  60 | 24:25 | PC1 result. |
 
 ### Part 5 --- The Graph Propagation Regime
 
 | PDF | Frame                                                          | Sec | Cum.  | Note |
 |-----|----------------------------------------------------------------|-----|-------|------|
-|  35 | Layer C --- the graph question                                 |  45 | 24:25 | Three EEG conditions. |
-|  36 | The propagation operator                                       |  45 | 25:10 | Operator definition. |
-|  37 | The Propagation Operating Characteristic (Contribution 1)      |  90 | 26:40 | **Key result**; 90 s minimum. |
-|  38 | The result is robust across graph construction                 |  45 | 27:25 | Robustness sweep. |
-|  39 | The diffusion mechanism, measured on real reservoir features   |  60 | 28:25 | Dirichlet drop. |
-|  40 | **AUDIT** Defense audit: theoretical bounds vs. measured       |  60 | 29:25 | Closes the graph block. |
-|  41 | Reframing the graph layer                                      |  35 | 30:00 | Single line. |
-|  42 | Structure--function coupling, κ                                |  60 | 31:00 | Definition + figure. |
-|  43 | Coupling is real above the permutation null                    |  50 | 31:50 | One stat result. |
+|  34 | (Part 5 section divider)                                       |   0 | 24:25 | Click through. |
+|  35 | Layer C --- the graph question                                 |  45 | 25:10 | Three EEG conditions. |
+|  36 | The propagation operator                                       |  45 | 25:55 | Operator definition. |
+|  37 | The Propagation Operating Characteristic (Contribution 1)      |  90 | 27:25 | **Key result**; 90 s minimum. |
+|  38 | The result is robust across graph construction                 |  45 | 28:10 | Robustness sweep. |
+|  39 | The diffusion mechanism, measured on real reservoir features   |  60 | 29:10 | Dirichlet drop. |
+|  40 | **AUDIT** Defense audit: theoretical bounds vs. measured       |  60 | 30:10 | Closes the graph block. |
+|  41 | Reframing the graph layer                                      |  35 | 30:45 | Single line. |
+|  42 | Structure--function coupling, κ                                |  60 | 31:45 | Definition + figure. |
+|  43 | Coupling is real above the permutation null                    |  50 | 32:35 | One stat result. |
 
 ### Part 6 --- Intrinsic Interpretability
 
 | PDF | Frame                                                          | Sec | Cum.  | Note |
 |-----|----------------------------------------------------------------|-----|-------|------|
-|  45 | Post-hoc vs. intrinsic interpretability                        |  50 | 32:40 | One contrast. |
-|  46 | The four-level taxonomy --- measured                           |  60 | 33:40 | Levels 1--4 read out. |
-|  47 | What interpretability enables                                  |  45 | 34:25 | Cut if behind. |
+|  44 | (Part 6 section divider)                                       |   0 | 32:35 | Click through. |
+|  45 | Post-hoc vs. intrinsic interpretability                        |  50 | 33:25 | One contrast. |
+|  46 | The four-level taxonomy --- measured                           |  60 | 34:25 | Levels 1--4 read out. |
+|  47 | What interpretability enables                                  |   0 | 34:25 | **Default cut** (absorbs the +45 s added by the architecture slide). Expand to 45 s only if 5+ min ahead of pace. |
 |  48 | A theoretically predicted null                                 |  45 | 35:10 | Setup for next slide. |
 |  49 | A null result that forced the methodology                      |  60 | 36:10 | The pivot. |
 |  50 | **AUDIT** Defense audit: per-trial channel-permutation null    |  75 | 37:25 | Strictest spatial null. |
@@ -120,6 +132,7 @@ audit slides are marked **AUDIT**.
 
 | PDF | Frame                                                          | Sec | Cum.  | Note |
 |-----|----------------------------------------------------------------|-----|-------|------|
+|  55 | (Part 7 section divider)                                       |   0 | 41:30 | Click through. |
 |  56 | Scope of validation                                            |  45 | 42:15 | Honest scope. |
 |  57 | Future directions                                              |  35 | 42:50 | Two bullets max. |
 |  58 | Contributions restated                                         |  35 | 43:25 | Read the five. |
@@ -151,20 +164,24 @@ injection" estimate.
 
 ## Cut-line lane (if running behind)
 
-In priority order — drop from the bottom of this list first.
+PDF 47 "What interpretability enables" is **cut by default** to absorb
+the +45 s added by the PDF 9 architecture frame; that is reflected in
+the per-frame allocation above.
+
+Additional cuts, in priority order — drop from the bottom of this list
+first.
 
 1. PDF 41 "Reframing the graph layer" — kill it; the next slide makes
    the same point. **−35 s**.
-2. PDF 47 "What interpretability enables" — kill it. **−45 s**.
-3. PDF 24 "The path to silicon" — kill it; mention in one sentence on
+2. PDF 24 "The path to silicon" — kill it; mention in one sentence on
    slide 23 instead. **−45 s**.
-4. PDF 6 "Why conventional pipelines miss" — trim from 35 s to 20 s.
+3. PDF 6 "Why conventional pipelines miss" — trim from 35 s to 20 s.
    **−15 s**.
-5. PDF 20 BSC₆ — trim from 60 s to 45 s. **−15 s**.
+4. PDF 20 BSC₆ — trim from 60 s to 45 s. **−15 s**.
 
-**Cut-lane recoverable**: ~2 min 35 s. Combined with natural pacing
-contraction over a 45-minute talk (~1--2 min), the deck lands at 45
-even.
+**Additional cut-lane recoverable**: ~1 min 50 s. Combined with natural
+pacing contraction over a 45-minute talk (~1--2 min), the deck lands
+inside 45 even with the architecture frame included.
 
 Do **not** cut from:
 
