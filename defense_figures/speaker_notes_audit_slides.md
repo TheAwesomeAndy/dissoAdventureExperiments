@@ -46,10 +46,10 @@ the reservoir is doing its job."
   of the reservoir in operation, not a cited property of W in
   isolation."
 
-**Land.** App "Exp A raw: eigenspectrum of W" (PDF ≈ 95) for the
+**Land.** App "Exp A raw: eigenspectrum of W" (PDF 93) for the
 full spectrum of W; App "Exp A raw: Benettin sample trajectories"
-(PDF ≈ 96) for individual trajectories; App "Exp A raw: per-trial
-λ₁ scatter" (PDF ≈ 97) for the full per-trial cloud.
+(PDF 94) for individual trajectories; App "Exp A raw: per-trial
+λ₁ scatter" (PDF 95) for the full per-trial cloud.
 
 **Anticipate.** "Why didn't you tune ρ(W) to the canonical edge of
 chaos near 1?" → "ρ(W) bounds the autonomous map; under real ERP
@@ -87,9 +87,9 @@ choice. Here is the operating characteristic."
   bearing on graph propagation; that's why this slide sits here,
   next to the contraction audit, and not later in the graph block."
 
-**Land.** App "Exp C raw: input drive" (PDF ≈ 100); App "Exp C raw:
-state response per β" (PDF ≈ 101); App "Exp C raw: memory capacity
-vs. τ" (PDF ≈ 102) for the full sweep.
+**Land.** App "Exp C raw: input drive" (PDF 98); App "Exp C raw:
+state response per β" (PDF 99); App "Exp C raw: memory capacity
+vs. τ" (PDF 100) for the full sweep.
 
 **Anticipate.** "Why not β\* exactly?" → "Because at β\* the
 effective time constant is too long relative to the 256-step ERP
@@ -123,8 +123,8 @@ Kennel--Brown FNN answers it."
   the weaker, useful claim that the embedding capacity comfortably
   exceeds the measured intrinsic dimension."
 
-**Land.** App "Exp B raw: delay embedding" (PDF ≈ 98); App "Exp B
-raw: per-trial FNN distribution" (PDF ≈ 99).
+**Land.** App "Exp B raw: delay embedding" (PDF 96); App "Exp B
+raw: per-trial FNN distribution" (PDF 97).
 
 **Anticipate.** "Have you proven Takens-equivalence?" → "No, and I
 explicitly do not claim it. The claim is operational: the embedding
@@ -153,7 +153,7 @@ measured operating point against the bound for each."
   some are pessimistic --- but that each measured operating
   point is consistent with the bound that applies."
 
-**Land.** App "Defense audit: raw diagnostics overview" (PDF ≈ 94)
+**Land.** App "Defense audit: raw diagnostics overview" (PDF 92)
 for the source index of which raw figures back each panel.
 
 **Anticipate.** "Are the bounds sharp on this data?" → "The
@@ -190,9 +190,9 @@ weak form. The strict spatial null is per-trial channel permutation
   swapping to disorder-label permutations when the CSV provides
   the disorder column."
 
-**Land.** App "Exp D raw: feature layout" (PDF ≈ 103); App "Exp D
-raw: class-label distribution" (PDF ≈ 104); App "Exp D raw:
-observed vs. null example" (PDF ≈ 105).
+**Land.** App "Exp D raw: feature layout" (PDF 101); App "Exp D
+raw: class-label distribution" (PDF 102); App "Exp D raw:
+observed vs. null example" (PDF 103).
 
 **Anticipate.** "Did you do per-class or per-subject permutation?"
 → "Per-trial within stimulus class; subject-level CV. The strictest
@@ -258,7 +258,7 @@ slide to anchor each defense claim back to a dissertation chapter."
 - "I do not read the table. Anyone wanting depth on a claim can
   find it via the column."
 
-**Land.** App "AM: figure-to-source backup index" (PDF ≈ 106) for
+**Land.** App "AM: figure-to-source backup index" (PDF 104) for
 the figure-level provenance.
 
 **Anticipate.** "Is claim X actually in chapter Y?" → "Yes, the

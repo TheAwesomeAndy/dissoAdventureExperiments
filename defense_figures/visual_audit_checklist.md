@@ -26,7 +26,7 @@ Three categories of check per slide:
 | | |
 |---|---|
 | PDF page | 18 |
-| Frame counter | 14 / 94 |
+| Frame counter | 14 / 93 |
 | Figure source | `pictures/defense_audit/analysisA_1e_autonomous_vs_driven.pdf` |
 | Region | Reservoir / LIF |
 
@@ -51,7 +51,7 @@ Three categories of check per slide:
 | | |
 |---|---|
 | PDF page | 19 |
-| Frame counter | 15 / 94 |
+| Frame counter | 15 / 93 |
 | Figure source | `pictures/defense_audit/analysisC_3d_memory_capacity_peak.pdf` |
 | Region | Reservoir / LIF (moved here from graph block per PR #25 audit) |
 
@@ -72,7 +72,7 @@ Three categories of check per slide:
 | | |
 |---|---|
 | PDF page | 23 |
-| Frame counter | 19 / 94 |
+| Frame counter | 19 / 93 |
 | Figure source | `pictures/defense_audit/analysisB_2e_takens_dimension.pdf` |
 | Region | Spike-to-embedding |
 
@@ -91,7 +91,7 @@ Three categories of check per slide:
 | | |
 |---|---|
 | PDF page | 40 |
-| Frame counter | 33 / 94 |
+| Frame counter | 34 / 93 |
 | Figure source | `pictures/defense_audit/analysisTB_5a_bounds_vs_measurement.pdf` |
 | Region | Graph propagation |
 
@@ -111,7 +111,7 @@ Three categories of check per slide:
 | | |
 |---|---|
 | PDF page | 50 |
-| Frame counter | 43 / 94 |
+| Frame counter | 43 / 93 |
 | Figure source | `pictures/defense_audit/analysisD_4d_observed_vs_null_panel.pdf` |
 | Region | Null / methodology pivot |
 
@@ -119,7 +119,7 @@ Three categories of check per slide:
       Verify the four-subplot panel does not get scaled into illegibility;
       if so, reduce to two panels (observed vs. one null example) and
       defer the remaining two to appendix `Exp D raw: observed vs. null
-      example` (PDF page ≈ 100).
+      example` (PDF page 103).
 - [ ] **Figure** — the gap between observed-statistic distribution and
       permutation-null distribution must be the visual punchline; if
       the gap is < ~10% of axis range, increase axis zoom in the source.
@@ -131,7 +131,7 @@ Three categories of check per slide:
 | | |
 |---|---|
 | PDF page | 51 |
-| Frame counter | 44 / 94 |
+| Frame counter | 44 / 93 |
 | Figure source | `pictures/defense_audit/figureG_failure_gallery.pdf` |
 | Region | Failure-driven rigor |
 
@@ -148,7 +148,7 @@ Three categories of check per slide:
 | | |
 |---|---|
 | PDF page | 60 |
-| Frame counter | 51 / 94 |
+| Frame counter | 52 / 93 |
 | Figure source | `pictures/defense_audit/figureAM_anchor_map.pdf` |
 | Region | Contributions / closure |
 
@@ -169,7 +169,7 @@ Three categories of check per slide:
 | | |
 |---|---|
 | PDF page | 61 |
-| Frame counter | 52 / 94 |
+| Frame counter | 53 / 93 |
 | Figure source | `pictures/defense_audit/figureAC_provenance.pdf` |
 | Region | Final disclosure (before standout close) |
 
@@ -189,9 +189,7 @@ Three categories of check per slide:
 - [ ] Projector test: at least one full pass of the deck on the actual
       defense projector at least 24 hours before; specifically inspect
       audit pages 18, 19, 23, 40, 50, 51, 60, 61 (the eight above).
-      The former "Conventional vs.\ spiking computation" appendix
-      slide has been removed; appendix page numbers after that point
-      now shift by ${-}1$ from the PR #25/#26 layout.
+      Total deck is 104 PDF pages, 93 content slides.
 - [ ] Font fallback: search for any `\textsubset` / `\ll` / `\to` /
       `\rightarrow` / `\approx` glyph rendered as a missing-box `□`.
 - [ ] Page numbers: verify the bottom-right counter advances monotonically
