@@ -157,7 +157,7 @@ def make_figure_AC(outdir: Path) -> Path:
         lw=1.0, zorder=2,
     ))
     ax.text(left + 0.013, box_top - 0.025,
-            "Spoken statement",
+            "Provenance statement",
             ha="left", va="top",
             fontsize=9, fontweight="bold", style="italic",
             color=PALETTE["neutral_gray"], zorder=3)

@@ -125,7 +125,7 @@ def _draw_main(outdir: Path) -> Path:
     ax.text(
         0.5, 0.08,
         "Page-level anchors are intentionally omitted; they are brittle during LaTeX edits.  "
-        "Per-figure section and page references live in the backup index.",
+        "Per-figure source paths and chapter-level anchors live in the backup index.",
         ha="center", va="center",
         fontsize=9, style="italic",
         color=PALETTE["neutral_gray"],
