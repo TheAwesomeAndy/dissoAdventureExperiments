@@ -43,7 +43,7 @@ cut-lane below.
 ## Per-frame allocation
 
 Times are wall-clock seconds; cumulative time shown in **m:ss**. PDF page
-numbers refer to `ARSPI-Net_Defense.pdf` (105 pages). The 8 inserted
+numbers refer to `ARSPI-Net_Defense.pdf` (104 pages). The 8 inserted
 audit slides are marked **AUDIT**.
 
 ### Part 1 --- The Engineering Problem and the Inquiry
