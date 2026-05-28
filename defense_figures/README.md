@@ -12,11 +12,11 @@ All scripts import from the shared `_style.py` module — the **single
 source of truth** for fonts, palette, figure sizes, and PDF save
 conventions.
 
-> **Branch state.** All defense-figure work in this README lives on the
-> branch `claude/magical-volta-82g4t`. As of this writing, `main` does
-> **not** carry these artifacts. A committee-facing workflow must
-> either merge this branch to `main` or be told explicitly which ref
-> to inspect. See `HANDOFF_TO_NEXT_AGENT.md` for details.
+> **Branch state.** Defense-figure artifacts (Experiments A–D, scaffold
+> K/F/J, round-2 TB/MR/IP/OQ/RC, Failure Gallery G, Dissertation Anchor
+> Map AM, Research Provenance AC, the Q&A closing slide, and the
+> assembled deck `build_deck.py`) are on `main`. The committee can
+> inspect the default branch directly.
 
 > **PhD argument framing** (per author audit). The dissertation's
 > argument is **not** "I pursued truth." It is:
@@ -50,7 +50,10 @@ conventions.
 | **K** — Opening Questions | built | `figure_K_opening_questions/` |
 | **F** — Theorem Scaffold | built | `figure_F_theorem_scaffold/` |
 | **J** — Five Named Contributions | built | `figure_J_contributions/` |
-| **G** — Failure Gallery | **NOT BUILT** — see HANDOFF §3.1 | — |
+| **G** — Failure Gallery | built | `figure_G_failure_gallery/` |
+| **AM** — Dissertation Anchor Map (+ backup source index) | built | `figure_AM_anchor_map/` |
+| **AC** — Research Provenance and Assistance | built | `figure_AC_research_provenance/` |
+| **QA** — Questions (closing slide) | built | `figure_QA/` |
 
 ### Round-2 figures (deepen the doctoral signal)
 
@@ -62,15 +65,29 @@ conventions.
 | **OQ** — Open Questions (closing) | built | `figure_OQ_open_questions/` |
 | **RC** — Reservoir contraction animation (ESP made visceral) | built (MP4 + GIF + PDF) | `experiment_a_autonomous_vs_driven/make_animation.py` → `outputs/rawA_1f_contraction_animation.{mp4,gif,pdf}` |
 
-### What is not yet built (priority order)
+### Assembled deck
 
-1. **Figure G — Failure Gallery** (highest priority — the core "embraced failed results" claim has no visual carrier).
-2. **Acknowledgments / AI-assistance disclosure slide** (integrity protection — see HANDOFF §3.2).
-3. **Dissertation anchor map** (figure → chapter/section/page).
-4. **Assembled deck PDF** (`build_deck.py` to concatenate in slide order).
-5. **Author-voiced companion notes** (currently skeletons with `AUTHOR WRITES HERE` markers).
+`defense_figures/build_deck.py` concatenates the rendered defense
+figures into two artifacts:
 
-See `HANDOFF_TO_NEXT_AGENT.md` for detail on each.
+- `defense_figures/outputs/ARSPI_Net_Defense_Main.pdf` — the 15-slide
+  spoken deck in the encoded order (K, MR, IP, F, Exp A, Exp B,
+  Exp C, TB, Exp D, G, J, AM, OQ, AC, QA).
+- `defense_figures/outputs/ARSPI_Net_Defense_Appendix.pdf` —
+  raw diagnostic PDFs for Exp A–D plus the AM source-index, for
+  committee due-diligence.
+- `defense_figures/outputs/deck_manifest.json` — slide-by-slide
+  source-path manifest.
+
+The script aborts loudly if any main-deck PDF is missing and never
+regenerates figures or modifies sources.
+
+### What is not yet built
+
+1. **Author-voiced companion notes** (currently skeletons with
+   `AUTHOR WRITES HERE` markers).
+
+See `HANDOFF_TO_NEXT_AGENT.md` for detail.
 
 ## Running a figure script
 
@@ -109,6 +126,7 @@ Use `--help` on any script for options.
 ## Calibration on claims
 
 The deck claims **artifact existence** for the figures in the tables
-above. It does **not** claim **argument closure** — that requires
-Figure G, the assembled deck, the author-voiced companion notes, and an
-end-to-end read-through. See `HANDOFF_TO_NEXT_AGENT.md`.
+above and an **assembled deck** in the encoded order. It does **not**
+claim **argument closure** — that additionally requires
+author-voiced companion notes and an end-to-end read-through. See
+`HANDOFF_TO_NEXT_AGENT.md`.
