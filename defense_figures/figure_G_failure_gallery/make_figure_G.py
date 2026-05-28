@@ -79,9 +79,10 @@ PIVOTS = [
             "plateau (0.010 ≤ β ≤ 0.118 all give MC ≥ 0.75) under a JOINT\n"
             "constraint: MC ≥ 90% of peak AND the time constant 1/β is\n"
             "matched to within-trial ERP dynamics — β* = 0.012 gives\n"
-            "1/β ≈ 83 steps, an integration window that washes out\n"
-            "stimulus-locked features; β = 0.05 gives 1/β ≈ 20 steps,\n"
-            "which does not.  β is not chosen by validation accuracy."
+            "1/β ≈ 83 steps, a longer effective integration horizon\n"
+            "within the 256-step ERP; β = 0.05 gives 1/β ≈ 20 steps,\n"
+            "preserving a shorter temporal horizon.  β is not chosen\n"
+            "by validation accuracy."
         ),
         "evidence": "β = 0.05 → MC ≈ 0.763 (91% of measured peak). Plateau: β ∈ [0.010, 0.118].",
     },
@@ -89,9 +90,8 @@ PIVOTS = [
         "tag": "Exp D · Ch. 5",
         "title": "Single global channel permutation → per-trial channel permutation",
         "tried": (
-            "Test the spatial-feature claim with a SINGLE global channel\n"
-            "permutation π applied to every trial — the natural first\n"
-            "attempt and what 'channel permutation' meant in early drafts."
+            "Test the spatial-feature claim with a single global channel\n"
+            "permutation π applied identically to every trial."
         ),
         "failed": (
             "A flat linear classifier compensates for a single π by learning\n"
@@ -110,7 +110,7 @@ PIVOTS = [
     },
     {
         "tag": "Exp D · Ch. 5",
-        "title": "Fake clinical labels → stimulus-class demonstration with CLI flag",
+        "title": "Unavailable clinical labels → stimulus-class methodological demonstration",
         "tried": (
             "Demonstrate the channel-permutation methodology on the\n"
             "dissertation's marquee per-disorder labels (SUD / PTSD /\n"
