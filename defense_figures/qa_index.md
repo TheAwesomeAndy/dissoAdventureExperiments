@@ -13,6 +13,15 @@ Approximate appendix page numbers are given to 1--2 pages because
 the metropolis section dividers can shift counts by ±1 between
 revisions; verify exact pages on the live PDF before defense.
 
+> **Final-build warning.** The appendix slide on PDF page 66
+> ("Conventional vs.\ spiking computation") currently shows three
+> placeholder cards in place of three external citation figures
+> (Wikimedia neuron diagram; Pfeiffer & Pfeil 2018 propagation
+> figures × 2). Before the live defense, either replace the three
+> files in `pictures/external/` with licensed source assets and
+> recompile, **or** remove the slide from the appendix. Do not
+> land on PDF 66 during Q&A until the placeholders are resolved.
+
 ---
 
 ## 1. Reservoir stability and contraction (Exp A)
@@ -20,10 +29,11 @@ revisions; verify exact pages on the live PDF before defense.
 ### Q. "Your spectral radius ρ(W) = 0.265 is well below 1. Isn't that under-tuned for echo-state behaviour?"
 
 **Land.** PDF 18 (audit slide).
-**Answer.** ρ(W) is the wrong number. The driven Lyapunov exponent λ₁
-is uniformly negative across N = 3,165 ERP trajectories; the
-reservoir is in the contraction regime under real drive. Echo-state
-behaviour is measured, not tuned.
+**Answer.** ρ(W) bounds the autonomous map, not the driven dynamics.
+The driven Lyapunov exponent λ₁ is uniformly negative across
+N = 3,165 ERP trajectories, so the reservoir is in the contraction
+regime under real drive. On this data the operational stability
+test is the driven measurement, not the value of ρ(W).
 **Deeper.** PDF ≈ 95 (eigenspectrum of W); PDF ≈ 96 (Benettin sample
 trajectories); PDF ≈ 97 (per-trial λ₁ scatter).
 
@@ -97,11 +107,12 @@ to the 256-step ERP window, then confirmed post-hoc by the MC sweep.
 ### Q. "How sensitive is the downstream accuracy to β within the plateau?"
 
 **Land.** PDF 19.
-**Answer.** The reservoir initialisation robustness (mentioned on
-PDF 21: "<2% accuracy variance across reservoir seeds") generalises
-to small β perturbations within the plateau. Exact accuracy-vs-β
-curves are not on the main deck; the MC plateau is the
-methodologically defensible answer.
+**Answer.** Accuracy-vs-β curves are not on the main deck. The
+methodological defence here is the MC plateau itself: any β in
+[0.010, 0.118] sits in the same memory-capacity operating regime
+by direct measurement. Reservoir-seed robustness (<2%, PDF 21) is
+reported separately for the chosen β and is not a substitute for
+an accuracy-vs-β sweep.
 
 ### Q. "Why is MC on this slide and not in the graph block?"
 
@@ -135,9 +146,12 @@ ones for clinical-scale data.
 ### Q. "How tight are the theoretical bounds on the graph claim?"
 
 **Land.** PDF 40 (TB audit).
-**Answer.** Lyapunov: loose (operating point far from boundary).
-Takens: ~50% loose. Memory capacity: tighter, ~91% of peak. All
-three operating points sit inside the safe envelope.
+**Answer.** Lyapunov: loose (driven λ₁ sits well inside the
+predicted-stable region). Takens: loose by roughly half (m\* well
+below the embedding ceiling). Memory capacity: tighter (β = 0.05
+at 91% of peak). Each measured operating point is consistent
+with the bound that applies; I do not claim the bounds are
+tight.
 
 ### Q. "Is the Dirichlet-energy drop a sufficient mechanistic explanation?"
 
@@ -211,10 +225,13 @@ be quantified and the interpretability gained is named.
 
 **Land.** PDF 52 (different disorders, different layers) → PDF 53
 (Layer ablation).
-**Answer.** A black box could fit the four-disorder mapping by
-chance under enough hyperparameter search, but it cannot **attribute**
-disorders to layers because it has no layers to ablate. Layer
-ablation is what makes the mapping a finding rather than a fit.
+**Answer.** A black box may well classify across the four
+disorders to comparable accuracy. What it cannot do is **attribute**
+a disorder to a specific computational layer, because it has no
+operationally distinct layers to ablate. The layer-ablation
+methodology is what turns a classifier output into a structured
+attribution; that attribution is the contribution, not the
+accuracy.
 
 ---
 
@@ -244,27 +261,24 @@ figures to the same repo for traceability.
 
 ## 9. Provenance and AI assistance
 
-### Q. "What AI tools did you use?"
+### Q. "What AI tools or assistance did you use?"
 
 **Land.** PDF 61 (AC slide).
-**Answer.** Read the AC slide verbatim. Code assistants for
-software, figure-generation scaffolding, document drafting.
-Every output author-reviewed; nothing accepted unverified.
+**Answer.** Refer the questioner to the bullets as printed on the
+AC slide. Decline to elaborate beyond what the slide states.
 
-### Q. "How was assisted code verified?"
+### Q. "How was assisted work verified?"
 
 **Land.** PDF 61.
-**Answer.** All assisted code was executed, all assisted claims
-re-derived or ground-truth-matched, all assisted figures inspected
-and accepted, retained, or discarded.
+**Answer.** Refer to the Verification column of the AC slide.
+Decline to elaborate beyond what the slide states.
 
 ### Q. "Are the scientific claims yours?"
 
 **Land.** PDF 61 → PDF 60 (anchor map).
-**Answer.** Yes. The AC slide names "research questions, scientific
-decisions, mathematical interpretation, experimental and scientific
-decisions, final scientific claims" as author-owned. The anchor
-map shows each claim is in a dissertation chapter.
+**Answer.** Yes. The Author-owned column of the AC slide enumerates
+this. The anchor map (PDF 60) shows each claim maps to a
+dissertation chapter.
 
 ---
 

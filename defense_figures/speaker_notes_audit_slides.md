@@ -4,6 +4,16 @@ Speaker notes for the **8 inserted audit slides only**. The existing 45
 dissertation slides retain whatever notes the author has elsewhere; this
 file is scoped strictly to the new material added in PR #25.
 
+> **Final-build warning.** The appendix slide on PDF page 66
+> ("Conventional vs.\ spiking computation") currently shows three
+> placeholder cards in place of three external citation figures
+> (Wikimedia neuron diagram; Pfeiffer & Pfeil 2018 propagation
+> figures × 2). Before the live defense, either replace the three
+> files in `pictures/external/` with licensed source assets and
+> recompile, **or** remove the slide from the appendix. Presenting
+> the placeholders as-is would be a visible defect on a slide that
+> may be referenced during Q&A.
+
 Each slide entry has the same structure:
 
 - **Open** --- the one or two sentences spoken while clicking onto the
@@ -52,10 +62,10 @@ full spectrum of W; App "Exp A raw: Benettin sample trajectories"
 λ₁ scatter" (PDF ≈ 97) for the full per-trial cloud.
 
 **Anticipate.** "Why didn't you tune ρ(W) to the canonical edge of
-chaos near 1?" → "Because the driven Lyapunov exponent is what
-matters operationally, and on this data the driven measurement
-shows we're well inside the contraction regime without needing to
-push ρ(W) up. Tuning ρ(W) is tuning the wrong number."
+chaos near 1?" → "ρ(W) bounds the autonomous map; under real ERP
+drive the operational stability test is the driven Lyapunov
+exponent, which on this data is uniformly negative. Pushing ρ(W)
+up would not change the result of that operational test."
 
 **Cut line.** "Autonomous ρ(W) is 0.265; driven λ₁ is uniformly
 negative across N = 3,165 trials. Stability is measured, not
@@ -81,7 +91,8 @@ choice. Here is the operating characteristic."
 - "The plateau β ∈ [0.010, 0.118] holds MC ≥ 0.75. β = 0.05 was
   not selected by sweeping MC; it was selected by the time-constant
   argument vs. the 256-step ERP window. The MC sweep, post-hoc,
-  confirms the time-constant choice lands in the safe range."
+  shows the time-constant choice lands inside this measured
+  plateau."
 - "MC is a reservoir-side property of the LIF dynamics. It has no
   bearing on graph propagation; that's why this slide sits here,
   next to the contraction audit, and not later in the graph block."
@@ -146,23 +157,25 @@ measured operating point against the bound for each."
 
 - "Three panels: Lyapunov stability bound, Takens embedding
   bound, and memory-capacity bound."
-- "In each panel, the theoretical envelope is drawn, and the
+- "In each panel, the theoretical bound is drawn, and the
   measured operating point on this reservoir is marked."
-- "The point is not that the bounds are tight --- they aren't,
-  some are pessimistic --- but that the design choices all sit
-  inside the safe region of every bound that applies."
+- "The point is not that the bounds are tight --- they are not;
+  some are pessimistic --- but that each measured operating
+  point is consistent with the bound that applies."
 
 **Land.** App "Defense audit: raw diagnostics overview" (PDF ≈ 94)
 for the source index of which raw figures back each panel.
 
 **Anticipate.** "Are the bounds sharp on this data?" → "The
-Lyapunov bound is loose --- λ₁ is far inside stable. The Takens
-bound is loose by ~50% --- m\* well below ceiling. The MC bound is
-tighter --- β = 0.05 is at 91% of peak. All three are inside the
-safe envelope."
+Lyapunov bound is loose --- driven λ₁ sits well inside the
+predicted-stable region. The Takens bound is loose by roughly
+half --- m\* is well below the embedding ceiling. The MC bound is
+tighter --- β = 0.05 is at 91% of peak. Each measurement is
+consistent with the bound that applies; I do not claim the bounds
+are tight."
 
-**Cut line.** "Three bounds, three measured operating points, all
-inside the safe region."
+**Cut line.** "Three bounds, three measured operating points;
+each measurement is consistent with the bound that applies."
 
 ---
 
@@ -210,11 +223,15 @@ those four pivots together, not buried in chapters."
 
 **Argument.**
 
-- "Pivot 1 (Exp A): autonomous ρ(W) → driven λ₁. The standard
-  citation said the wrong thing; the measurement said the right
-  thing."
+- "Pivot 1 (Exp A): autonomous ρ(W) → driven λ₁. The default
+  ESN stability citation bounds the autonomous map; for our
+  driven-ERP regime the operationally relevant test is the
+  driven Lyapunov measurement, which is what we now report."
 - "Pivot 2 (Exp C): MC-peak optimisation → time-constant matching.
-  The peak was at the wrong β for our ERP window."
+  The MC-peak β corresponds to an effective time constant that
+  over-integrates relative to the 256-step ERP window, so we
+  selected β by time-constant matching and confirmed post-hoc
+  that the choice lands inside the MC plateau."
 - "Pivot 3 (Exp D, weak null): channel-averaged → per-trial
   permutation. The channel-averaged null was uninformative."
 - "Pivot 4 (Exp D, applied): channel-averaged null → per-channel
@@ -271,24 +288,16 @@ exhaustive."
 provenance and assistance --- what was author-owned, what was
 AI-assisted, and how that assistance was verified."
 
-**Argument.**
+**Argument.** Read the three column headers and the bullets under
+each as printed on the slide. Do not paraphrase or expand beyond
+what the slide states; the AC slide is the canonical disclosure
+and should be read from, not summarised from notes.
 
-- "Left column: author-owned. Research questions, scientific
-  decisions, mathematical interpretation, experimental and
-  scientific decisions, final scientific claims."
-- "Centre column: AI-assisted. Software engineering, scaffolding,
-  refactoring, figure draft generation, document drafting."
-- "Right column: verification. All assisted code was executed,
-  all assisted claims were either re-derived or matched against
-  ground-truth data, all assisted figures were inspected and
-  accepted, retained, or discarded."
+**Land.** None --- this is a self-contained statement.
 
-**Land.** None --- this is a self-contained statement. Read it.
-
-**Anticipate.** "What AI tools specifically?" → "Code assistants
-for software, figure-generation scaffolding, document drafting.
-Every output was author-reviewed; nothing was accepted
-unverified."
+**Anticipate.** "What AI tools or assistance specifically?" →
+Refer the questioner to the bullets as printed on the AC slide.
+Decline to elaborate beyond what the slide itself states.
 
 **Cut line.** Do not cut this slide. If absolutely behind: read
-the three column headers, omit the body. ~20 s minimum.
+the three column headers, omit the bullets. ~20 s minimum.
