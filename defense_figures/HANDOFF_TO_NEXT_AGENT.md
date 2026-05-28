@@ -107,25 +107,41 @@ as finished author-voiced prose.**
 
 ---
 
-## 2. Coverage map: the author's stated pillars
+## 2. Argument-closure status (not coverage)
 
-The author stated nine pillars for what the committee must walk out
-understanding. The coverage as of this handoff:
+The committee standard (§0) is the chain *question → observable →
+null/baseline → measured result → failure or constraint → revised
+experimental decision → bounded contribution*. **Artifact existence**
+means a PDF was generated. **Argument closure** means the chain is
+complete for the claim that artifact carries.
 
-| # | Pillar | Carried by | Status |
+The two columns are not the same.
+
+| Item | Artifact exists? | Argument closure status | Blocker to closure |
 |---|---|---|---|
-| 1 | Rigorous research / dissertation | Exp A/B/C/D + MR + F + TB | **Covered.** Numbers, methods, refusals, theorems all visualized. |
-| 2 | "AI was not used" | — | **INTEGRITY TENSION** (see §4). |
-| 3 | Deep, influential, research-motivated questions | K (4 questions) + IP (6 traditions) | **Covered**, contingent on author refining wording. |
-| 4 | Not just innovation for its own sake | MR (5 refusals) + J (contributions as gifts, not features) | **Covered.** |
-| 5 | Not random / superficial; scientifically motivated | IP (each question traced to a scholarly tradition) + F (theorem-grounded) | **Covered.** |
-| 6 | PhD: pursued philosophy, theory, novel work, truth | K + MR + IP + OQ (philosophy); F + TB (theory); MR (truth); J (novelty) | **Covered.** |
-| 7 | Failed results embraced as engine of rigor | Figure G (NOT BUILT) — only Exp C companion-notes addresses one specific case (β = 0.05 vs β* = 0.012) | **MISSING.** |
-| 8 | New truth, new innovation, new theory | J (5 named contributions) + TB (each measurement reads against a theorem) | **Covered.** |
-| 9 | Deserving of Doctorate of Philosophy | Cumulative; OQ closes with "asking better questions than I can answer" | **Covered**, contingent on G existing. |
+| **Exp A** — autonomous ρ(W) → driven λ₁ | yes | per-experiment closed (post-rollback) | companion notes still skeleton |
+| **Exp B** — FNN-measured m\* relative to reservoir capacity | yes | per-experiment closed (post-rollback) | companion notes still skeleton |
+| **Exp C** — measured MC regime vs a-priori β | yes | per-experiment closed | companion notes still skeleton |
+| **Exp D** — per-trial channel-permutation null (stimulus class) | yes | per-experiment closed (post-rollback); clinical-label version pending CSV | companion notes still skeleton; not a clinical-disorder result |
+| **Failure narrative across the deck** (Figure G) | **no** | **not closed** | G not built — see §3.1 |
+| **AI-assistance disclosure** | **no** | **not closed** | AC slide not built — see §3.2 |
+| **Dissertation anchor map** (figure → chapter / section / page) | **no** | **not closed** | not built — see §3.4 |
+| **Assembled deck PDF in slide order** | **no** | **not closed** | build_deck.py not built — see §3.5 |
+| **Companion-notes spoken claim (A/B/C/D)** | skeletons exist | **not closed** | author-voice content missing — see §3.3 |
+| **K** opening questions / **IP** lineage / **MR** refusals / **OQ** open questions / **J** contributions | yes | author-confirmation pending | drafted, not author-voiced |
+| **F** theorem scaffold / **TB** theoretical bounds | yes | closed (theorems are documentary; TB reads bounds against measurements) | — |
+| **RC** ESP-as-motion animation | yes (MP4 + GIF + PDF poster) | closed (visualization is concrete) | — |
 
-**Net.** 7 of 9 strongly covered. 1 (Failure Gallery) missing. 1 (AI
-usage) is a defense-integrity question I never flagged.
+The framing "strong coverage on N of M pillars" — used by the previous
+agent earlier in this session — is retired (see §4.0). It conflated
+artifact existence with argument closure and produced an
+over-confident summary. The table above replaces it.
+
+**Operational summary.** The measurement-driven core (A, B, C, D) is
+per-experiment closed after the audit rollback. The deck-level
+argument is **not** closed: no failure narrative is visualized, no
+disclosure slide exists, the deck is not assembled, companion notes
+are skeletons, and the work lives on a non-default branch. See §3.
 
 ---
 
