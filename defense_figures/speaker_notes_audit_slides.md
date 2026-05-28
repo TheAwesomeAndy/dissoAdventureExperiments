@@ -4,16 +4,6 @@ Speaker notes for the **8 inserted audit slides only**. The existing 45
 dissertation slides retain whatever notes the author has elsewhere; this
 file is scoped strictly to the new material added in PR #25.
 
-> **Final-build warning.** The appendix slide on PDF page 66
-> ("Conventional vs.\ spiking computation") currently shows three
-> placeholder cards in place of three external citation figures
-> (Wikimedia neuron diagram; Pfeiffer & Pfeil 2018 propagation
-> figures × 2). Before the live defense, either replace the three
-> files in `pictures/external/` with licensed source assets and
-> recompile, **or** remove the slide from the appendix. Presenting
-> the placeholders as-is would be a visible defect on a slide that
-> may be referenced during Q&A.
-
 Each slide entry has the same structure:
 
 - **Open** --- the one or two sentences spoken while clicking onto the

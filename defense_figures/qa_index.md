@@ -12,15 +12,10 @@ slide** is the main-deck slide to put up while answering; the
 Approximate appendix page numbers are given to 1--2 pages because
 the metropolis section dividers can shift counts by ±1 between
 revisions; verify exact pages on the live PDF before defense.
-
-> **Final-build warning.** The appendix slide on PDF page 66
-> ("Conventional vs.\ spiking computation") currently shows three
-> placeholder cards in place of three external citation figures
-> (Wikimedia neuron diagram; Pfeiffer & Pfeil 2018 propagation
-> figures × 2). Before the live defense, either replace the three
-> files in `pictures/external/` with licensed source assets and
-> recompile, **or** remove the slide from the appendix. Do not
-> land on PDF 66 during Q&A until the placeholders are resolved.
+Appendix page numbers in this file were authored against the
+105-page build; after the page-66 placeholder slide was removed,
+every appendix page after that point shifts by ${-}1$. Run the
+final visual audit to lock exact pages before defense.
 
 ---
 
