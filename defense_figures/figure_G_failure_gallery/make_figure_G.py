@@ -10,9 +10,17 @@ changed and why.
 
 CONTENT
 -------
-Drafted from the dissertation's documented record (companion notes,
-commits, script docstrings). Each panel is marked [author confirm]
-where the precise wording or attribution should be reviewed.
+Anchored in the dissertation's documented record (companion notes,
+commits, script docstrings) and confirmed by the author against
+those sources. The four panels are:
+
+  1. Exp A — autonomous ρ(W) → driven Lyapunov λ₁.
+  2. Exp C — a-priori β = 0.05 → measured MC operating regime.
+  3. Exp D — single global channel permutation → per-trial channel
+     permutation.
+  4. Exp D — fake clinical labels → stimulus-class demonstration
+     with a CLI flag that swaps to disorder labels when a clinical
+     CSV is supplied.
 
 The figure carries the deck's strongest PhD claim: that the
 dissertation repeatedly REPLACED default assumptions with measured
@@ -69,8 +77,11 @@ PIVOTS = [
             "Build the Propagation Operating Characteristic — a measured\n"
             "MC curve over β. Re-anchor β = 0.05 inside the measured\n"
             "plateau (0.010 ≤ β ≤ 0.118 all give MC ≥ 0.75) under a JOINT\n"
-            "constraint: MC ≥ 90% of peak AND 1/β matches the α-band period.\n"
-            "β is not chosen by validation accuracy."
+            "constraint: MC ≥ 90% of peak AND the time constant 1/β is\n"
+            "matched to within-trial ERP dynamics — β* = 0.012 gives\n"
+            "1/β ≈ 83 steps, an integration window that washes out\n"
+            "stimulus-locked features; β = 0.05 gives 1/β ≈ 20 steps,\n"
+            "which does not.  β is not chosen by validation accuracy."
         ),
         "evidence": "β = 0.05 → MC ≈ 0.763 (91% of measured peak). Plateau: β ∈ [0.010, 0.118].",
     },
@@ -78,9 +89,9 @@ PIVOTS = [
         "tag": "Exp D · Ch. 5",
         "title": "Single global channel permutation → per-trial channel permutation",
         "tried": (
-            "Test the spatial-feature claim with a single global channel\n"
-            "permutation π applied to every trial (or with parametric\n"
-            "p-values that assume EEG-noise structure).  [author confirm]"
+            "Test the spatial-feature claim with a SINGLE global channel\n"
+            "permutation π applied to every trial — the natural first\n"
+            "attempt and what 'channel permutation' meant in early drafts."
         ),
         "failed": (
             "A flat linear classifier compensates for a single π by learning\n"
@@ -98,27 +109,28 @@ PIVOTS = [
         "evidence": "500 perms × 5 CV folds. Observed AUC sits well outside the null distribution per class.",
     },
     {
-        "tag": "Cross-cutting · Ch. 4–5",
-        "title": "Trial-level cross-validation → subject-level StratifiedGroupKFold",
+        "tag": "Exp D · Ch. 5",
+        "title": "Fake clinical labels → stimulus-class demonstration with CLI flag",
         "tried": (
-            "Score classifiers with trial-level k-fold cross-validation —\n"
-            "the default in many clinical-EEG papers.  [author confirm: was\n"
-            "this an earlier audited choice in the dissertation, or always\n"
-            "subject-level?]"
+            "Demonstrate the channel-permutation methodology on the\n"
+            "dissertation's marquee per-disorder labels (SUD / PTSD /\n"
+            "GAD / ADHD) as if the labels were already in hand."
         ),
         "failed": (
-            "Trial-level CV in clinical EEG inflates accuracy by 10–15\n"
-            "percentage points by leaking same-subject correlation across\n"
-            "train and test folds. The inflated number does not generalize\n"
-            "to unseen subjects."
+            "The session-level pickle that ships with the codebase does\n"
+            "NOT carry per-subject disorder assignments. Fabricating,\n"
+            "approximating, or proxy-labelling them would have invented\n"
+            "a clinical effect rather than measured one."
         ),
         "changed": (
-            "Subject-level StratifiedGroupKFold across every classification\n"
-            "claim in the dissertation. Each subject's trials live entirely\n"
-            "in train OR test, never both. Trial-level numbers were never\n"
-            "the headline."
+            "Refuse to fake labels. Demonstrate the methodology on\n"
+            "stimulus class (negative / neutral / positive affect) —\n"
+            "explicitly framed as stimulus-class, NOT a clinical-disorder\n"
+            "claim. CLI flag (--label-source csv --clinical-csv ...)\n"
+            "swaps to disorder labels the instant the CSV is provided.\n"
+            "Methodology is the deliverable; the data swap is one flag."
         ),
-        "evidence": "Documented in Exp D companion notes §3.3 as the place to disclose the audit.",
+        "evidence": "Flag wired at make_experiment_d_figures.py:389–394; documented in Exp D §1 'The data caveat'.",
     },
 ]
 
