@@ -1,0 +1,168 @@
+{
+  "deck": "ARSPI_Net_Defense",
+  "main": {
+    "output": "defense_figures/outputs/ARSPI_Net_Defense_Main.pdf",
+    "slides": [
+      {
+        "id": "K",
+        "label": "Opening Questions",
+        "path": "defense_figures/figure_K_opening_questions/outputs/figK_opening_questions.pdf"
+      },
+      {
+        "id": "MR",
+        "label": "Methodological Refusals",
+        "path": "defense_figures/figure_MR_methodological_refusals/outputs/figMR_methodological_refusals.pdf"
+      },
+      {
+        "id": "IP",
+        "label": "Intellectual Provenance",
+        "path": "defense_figures/figure_IP_intellectual_provenance/outputs/figIP_intellectual_provenance.pdf"
+      },
+      {
+        "id": "F",
+        "label": "Theorem Scaffold",
+        "path": "defense_figures/figure_F_theorem_scaffold/outputs/figF_theorem_scaffold.pdf"
+      },
+      {
+        "id": "A",
+        "label": "Exp A — Driven Lyapunov",
+        "path": "defense_figures/experiment_a_autonomous_vs_driven/outputs/analysisA_1e_autonomous_vs_driven.pdf"
+      },
+      {
+        "id": "B",
+        "label": "Exp B — FNN Embedding Dimension",
+        "path": "defense_figures/experiment_b_takens_dimension/outputs/analysisB_2e_takens_dimension.pdf"
+      },
+      {
+        "id": "C",
+        "label": "Exp C — Memory-Capacity Regime",
+        "path": "defense_figures/experiment_c_memory_capacity/outputs/analysisC_3d_memory_capacity_peak.pdf"
+      },
+      {
+        "id": "TB",
+        "label": "Bounds vs Measurement",
+        "path": "defense_figures/figure_TB_theoretical_bounds/outputs/analysisTB_5a_bounds_vs_measurement.pdf"
+      },
+      {
+        "id": "D",
+        "label": "Exp D — Channel-Permutation Null",
+        "path": "defense_figures/experiment_d_channel_permutation/outputs/analysisD_4d_permutation_nulls.pdf"
+      },
+      {
+        "id": "G",
+        "label": "Failure Gallery",
+        "path": "defense_figures/figure_G_failure_gallery/outputs/figG_failure_gallery.pdf"
+      },
+      {
+        "id": "J",
+        "label": "Contributions",
+        "path": "defense_figures/figure_J_contributions/outputs/figJ_contributions.pdf"
+      },
+      {
+        "id": "AM",
+        "label": "Dissertation Anchor Map",
+        "path": "defense_figures/figure_AM_anchor_map/outputs/figAM_anchor_map.pdf"
+      },
+      {
+        "id": "OQ",
+        "label": "Open Questions",
+        "path": "defense_figures/figure_OQ_open_questions/outputs/figOQ_open_questions.pdf"
+      },
+      {
+        "id": "AC",
+        "label": "Research Provenance and Assistance",
+        "path": "defense_figures/figure_AC_research_provenance/outputs/figAC_research_provenance.pdf"
+      },
+      {
+        "id": "QA",
+        "label": "Questions",
+        "path": "defense_figures/figure_QA/outputs/figQA_questions.pdf"
+      }
+    ]
+  },
+  "appendix": {
+    "output": "defense_figures/outputs/ARSPI_Net_Defense_Appendix.pdf",
+    "slides": [
+      {
+        "id": "A_raw_1a",
+        "label": "Exp A raw — weight matrix",
+        "path": "defense_figures/experiment_a_autonomous_vs_driven/outputs/rawA_1a_weight_matrix.pdf"
+      },
+      {
+        "id": "A_raw_1b",
+        "label": "Exp A raw — eigenspectrum",
+        "path": "defense_figures/experiment_a_autonomous_vs_driven/outputs/rawA_1b_eigenspectrum.pdf"
+      },
+      {
+        "id": "A_raw_1c",
+        "label": "Exp A raw — Benettin sample trajectories",
+        "path": "defense_figures/experiment_a_autonomous_vs_driven/outputs/rawA_1c_benettin_sample_trajectories.pdf"
+      },
+      {
+        "id": "A_raw_1d",
+        "label": "Exp A raw — per-trial λ scatter",
+        "path": "defense_figures/experiment_a_autonomous_vs_driven/outputs/rawA_1d_per_trial_lambda_scatter.pdf"
+      },
+      {
+        "id": "A_raw_1f",
+        "label": "Exp A raw — contraction-animation poster",
+        "path": "defense_figures/experiment_a_autonomous_vs_driven/outputs/rawA_1f_contraction_animation.pdf"
+      },
+      {
+        "id": "B_raw_2a",
+        "label": "Exp B raw — ERP samples",
+        "path": "defense_figures/experiment_b_takens_dimension/outputs/rawB_2a_erp_samples.pdf"
+      },
+      {
+        "id": "B_raw_2b",
+        "label": "Exp B raw — delay embedding",
+        "path": "defense_figures/experiment_b_takens_dimension/outputs/rawB_2b_delay_embedding.pdf"
+      },
+      {
+        "id": "B_raw_2c",
+        "label": "Exp B raw — τ sweep",
+        "path": "defense_figures/experiment_b_takens_dimension/outputs/rawB_2c_tau_sweep.pdf"
+      },
+      {
+        "id": "B_raw_2d",
+        "label": "Exp B raw — per-trial FNN",
+        "path": "defense_figures/experiment_b_takens_dimension/outputs/rawB_2d_per_trial_fnn.pdf"
+      },
+      {
+        "id": "C_raw_3a",
+        "label": "Exp C raw — input drive",
+        "path": "defense_figures/experiment_c_memory_capacity/outputs/rawC_3a_input_drive.pdf"
+      },
+      {
+        "id": "C_raw_3b",
+        "label": "Exp C raw — state response per β",
+        "path": "defense_figures/experiment_c_memory_capacity/outputs/rawC_3b_state_response_per_beta.pdf"
+      },
+      {
+        "id": "C_raw_3c",
+        "label": "Exp C raw — MC vs τ",
+        "path": "defense_figures/experiment_c_memory_capacity/outputs/rawC_3c_mc_vs_tau.pdf"
+      },
+      {
+        "id": "D_raw_4a",
+        "label": "Exp D raw — feature layout",
+        "path": "defense_figures/experiment_d_channel_permutation/outputs/rawD_4a_feature_layout.pdf"
+      },
+      {
+        "id": "D_raw_4b",
+        "label": "Exp D raw — class-label distribution",
+        "path": "defense_figures/experiment_d_channel_permutation/outputs/rawD_4b_class_label_distribution.pdf"
+      },
+      {
+        "id": "D_raw_4c",
+        "label": "Exp D raw — observed vs null example",
+        "path": "defense_figures/experiment_d_channel_permutation/outputs/rawD_4c_observed_vs_null_example.pdf"
+      },
+      {
+        "id": "AM_idx",
+        "label": "AM — Figure-to-Source Index (backup)",
+        "path": "defense_figures/figure_AM_anchor_map/outputs/figAM_source_index.pdf"
+      }
+    ]
+  }
+}

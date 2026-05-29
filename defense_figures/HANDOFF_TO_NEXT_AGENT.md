@@ -42,21 +42,12 @@ idea." It is a chain:
 (me) blurred those two and called the deck "8 of 9 pillars covered."
 That phrasing should be retired.
 
-## 0.1 Branch state — operational defect (priority 0)
+## 0.1 Branch state
 
-All defense-figure artifacts live on `claude/magical-volta-82g4t`. The
-`main` branch does not carry them. A committee-facing workflow cannot
-depend on hidden / non-default commit state.
-
-**Action required (user-authorized):** merge `claude/magical-volta-82g4t`
-into `main` (or clearly publish which ref the artifacts live on, and
-update all dissertation documentation to reference that ref).
-
-This is destructive enough (changes the default branch's contents) that
-the previous agent did not perform it without explicit user
-authorization. The next agent should request that authorization before
-merging, but should treat the unmerged state as a defect, not a
-neutrality.
+**Done.** Defense-figure artifacts (Experiments A–D, scaffold K/F/J,
+round-2 TB/MR/IP/OQ/RC, Figure G, AM, AC, the Q&A closing slide, and
+the assembled deck via `build_deck.py`) are on `main`. The committee
+can inspect the default branch directly.
 
 ---
 
@@ -86,7 +77,10 @@ as finished author-voiced prose.**
 | **K** | Opening questions / philosophical frame | `defense_figures/figure_K_opening_questions/make_figure_K.py` | `outputs/figK_opening_questions.pdf` |
 | **F** | Theorem scaffold | `defense_figures/figure_F_theorem_scaffold/make_figure_F.py` | `outputs/figF_theorem_scaffold.pdf` |
 | **J** | Five named contributions (POC, MIP, Spike-to-Embedding Pipeline, Layer Ablation Methodology, Centered Baseline Comparison) | `defense_figures/figure_J_contributions/make_figure_J.py` | `outputs/figJ_contributions.pdf` |
-| **G** | Failure gallery | **NOT BUILT** | **NOT BUILT** |
+| **G** | Failure gallery | `defense_figures/figure_G_failure_gallery/make_figure_G.py` | `outputs/figG_failure_gallery.pdf` |
+| **AM** | Dissertation anchor map (+ backup source index) | `defense_figures/figure_AM_anchor_map/make_figure_AM.py` | `outputs/figAM_anchor_map.pdf`, `outputs/figAM_source_index.pdf` |
+| **AC** | Research provenance and assistance | `defense_figures/figure_AC_research_provenance/make_figure_AC.py` | `outputs/figAC_research_provenance.pdf` |
+| **QA** | Closing slide ("Questions") | `defense_figures/figure_QA/make_figure_QA.py` | `outputs/figQA_questions.pdf` |
 
 ### 1.3 Round-2 figures (philosophical depth)
 
@@ -123,10 +117,10 @@ The two columns are not the same.
 | **Exp B** — FNN-measured m\* relative to reservoir capacity | yes | per-experiment closed (post-rollback) | companion notes still skeleton |
 | **Exp C** — measured MC regime vs a-priori β | yes | per-experiment closed | companion notes still skeleton |
 | **Exp D** — per-trial channel-permutation null (stimulus class) | yes | per-experiment closed (post-rollback); clinical-label version pending CSV | companion notes still skeleton; not a clinical-disorder result |
-| **Failure narrative across the deck** (Figure G) | **no** | **not closed** | G not built — see §3.1 |
-| **AI-assistance disclosure** | **no** | **not closed** | AC slide not built — see §3.2 |
-| **Dissertation anchor map** (figure → chapter / section / page) | **no** | **not closed** | not built — see §3.4 |
-| **Assembled deck PDF in slide order** | **no** | **not closed** | build_deck.py not built — see §3.5 |
+| **Failure narrative across the deck** (Figure G) | yes | closed (four documented pivots) | — |
+| **AI-assistance disclosure** (Figure AC) | yes | closed (one global provenance slide, author-authorized wording) | — |
+| **Dissertation anchor map** (Figure AM + backup index) | yes | closed (chapter-level granularity per author direction) | — |
+| **Assembled deck PDF in slide order** | yes | closed (15-slide main + 16-page appendix; `build_deck.py`) | — |
 | **Companion-notes spoken claim (A/B/C/D)** | skeletons exist | **not closed** | author-voice content missing — see §3.3 |
 | **K** opening questions / **IP** lineage / **MR** refusals / **OQ** open questions / **J** contributions | yes | author-confirmation pending | drafted, not author-voiced |
 | **F** theorem scaffold / **TB** theoretical bounds | yes | closed (theorems are documentary; TB reads bounds against measurements) | — |
@@ -138,95 +132,37 @@ artifact existence with argument closure and produced an
 over-confident summary. The table above replaces it.
 
 **Operational summary.** The measurement-driven core (A, B, C, D) is
-per-experiment closed after the audit rollback. The deck-level
-argument is **not** closed: no failure narrative is visualized, no
-disclosure slide exists, the deck is not assembled, companion notes
-are skeletons, and the work lives on a non-default branch. See §3.
+per-experiment closed after the audit rollback. The deck is assembled
+(`ARSPI_Net_Defense_Main.pdf`, 15 slides; `ARSPI_Net_Defense_Appendix.pdf`,
+16 pages of backup material). The remaining argument-closure gap is
+the author-voiced companion notes — currently skeletons. See §3.
 
 ---
 
 ## 3. Critical gaps — concrete tasks for the next agent
 
-### 3.0 Merge to main (priority 0 — operational defect)
+### 3.0 Merge to main
 
-See §0.1. All defense-figure work is on `claude/magical-volta-82g4t`;
-`main` does not carry it. Request user authorization, then either merge
-or open a PR. Until this is done, anyone inspecting `main` will see
-only Experiment A as planned and B/C/D/G/J as TBD — which is the
-opposite of the true state.
+**Done.** See §0.1.
 
-### 3.1 Build Figure G — Failure Gallery (HIGHEST PRIORITY among slides)
+### 3.1 Figure G — Failure Gallery
 
-**Why it matters.** The author's stated goal explicitly says: *"I deep
-dove down to failed results that motivated me to change my experimental
-rigor throughout. I embraced the failed results as motivations as to
-what to try next and to learn from them."* The deck currently has no
-visualization of this. Without G, the deck has questions, theory,
-measurements, lineage, refusals, contributions, open questions — but
-**no failure narrative.**
+**Done.** Four panels drawn from documented pivots: Exp A
+(autonomous ρ(W) → driven Lyapunov), Exp C (a-priori β = 0.05 →
+measured MC regime), Exp D (single global channel permutation →
+per-trial channel permutation), Exp D (unavailable clinical labels
+→ stimulus-class methodological demonstration). Wording was
+author-confirmed and polished before merge. See
+`defense_figures/figure_G_failure_gallery/`.
 
-**What G should contain** (3–5 case panels, each with: *what I tried* →
-*what failed and how I saw it* → *what I changed and why*). Candidate
-cases drawn from the dissertation that the next agent can draft from:
+### 3.2 AI-assistance disclosure — Figure AC
 
-1. **β-selection pivot (Exp C / Chapter 6).** Initial expectation:
-   the β = 0.05 choice was theoretically derived. Actual: the
-   *measured* MC peak is at β* = 0.012, not 0.05. Pivot: rather than
-   silently re-tuning, the author kept β = 0.05 anchored in a
-   biological time-constant argument and built the Propagation
-   Operating Characteristic to defend the choice. Failure → diagnosis
-   → reframing.
-
-2. **Channel-permutation null (Exp D / Chapter 5).** Initial null
-   (parametric or per-experiment permutation) was too lenient and
-   wouldn't have caught spatial-feature leakage. The author switched
-   to per-trial channel permutation — strictest spatial null — and
-   the classification claim survived. Pivot toward stricter rigor.
-
-3. **Reservoir-architecture pivot (Chapter 3 vs Chapter 5).** If the
-   dissertation supersedes an earlier reservoir choice (LIFReservoir
-   architecture, BSC₆ encoding parameters, PCA dimension) in favor
-   of the chapter-6 reservoir — that's a documented pivot. Show it.
-
-4. **Disorder-label provenance (Exp D caveat).** The session's pickle
-   did not contain per-disorder labels. The author held the
-   methodology demonstration on stimulus class and refused to fake
-   or approximate disorder labels. A small failure (data
-   incompleteness) with a rigor-preserving response.
-
-5. **Subject-level vs trial-level CV.** Author refused trial-level
-   CV (inflated by 10–15 pp) for subject-level StratifiedGroupKFold.
-   This is partly in MR, but if there was a moment in the
-   dissertation where trial-level numbers were tried and rejected,
-   that *moment* belongs in G.
-
-**Recommended implementation.** Treat this like the MR/IP/OQ figures:
-fully draft from the dissertation context, mark each row with `[author
-confirm]` where the agent is uncertain about specifics, and let the
-author refine. Same `_style.py` template, two- or three-column layout.
-Target file: `defense_figures/figure_G_failure_gallery/make_figure_G.py`
-and `outputs/figG_failure_gallery.pdf`. Add it to the slide order
-between Dive 3 and J.
-
-### 3.2 Build an Acknowledgments / Assistance disclosure slide
-
-**Why it matters.** The author's goal includes "AI was not used." This
-is true of the **dissertation research, chapters, and analyses** —
-those are the author's. It is **not** true of the **defense slide
-typesetting**, which was AI-assisted on numbers and content the author
-produced. Without disclosure, the claim is risky. A one-slide
-acknowledgments page that says, in the author's own voice:
-
-> *"The research, derivations, analyses, and chapter prose of this
-> dissertation are mine. The defense-figure typesetting was assisted by
-> [tool name] working from numbers, claims, and concepts I produced and
-> verified. Every figure was reviewed and approved by me before this
-> defense."*
-
-…protects the author, satisfies committee due diligence, and removes
-the integrity tension. Target file:
-`defense_figures/figure_AC_acknowledgments/make_figure_AC.py`. The
-author should write the exact wording.
+**Done.** One global slide titled "Research Provenance and
+Assistance" (NOT "AI Disclosure"). Three blocks (Author-owned /
+AI-assisted / Verification) above an author-authorized
+provenance-statement paragraph. No per-figure AI labels elsewhere
+in the deck. Placed at deck position 14 (after OQ, before Q&A).
+See `defense_figures/figure_AC_research_provenance/`.
 
 ### 3.3 Help the author finish the companion notes
 
@@ -241,32 +177,22 @@ markers. The next agent can:
 - Verify the pre-registration sections, derivation steps, and Q&A
   backups are consistent with what the figures actually show.
 
-### 3.4 Build a dissertation anchor map
+### 3.4 Dissertation anchor map — Figure AM
 
-A single page mapping each defense figure to its chapter, section, and
-page range in the dissertation. The committee will ask. Target:
-`defense_figures/figure_AM_anchor_map/make_figure_AM.py`. Requires the
-author to provide page numbers; the agent assembles.
+**Done.** Main-deck slide is the 7-row chapter-level table; backup
+appendix is the 14-row Figure-to-Source Index. Section and page
+columns intentionally omitted (LaTeX-edit brittleness). See
+`defense_figures/figure_AM_anchor_map/`.
 
-### 3.5 Assemble the deck and verify the narrative
+### 3.5 Assemble the deck — `build_deck.py`
 
-The slide order is planned but never assembled and read through.
-
-```
-defense_figures/build_deck.py   # NEW — proposed
-```
-
-This script would:
-1. Concatenate the PDFs in the proposed order (using `pypdf` or
-   `pdfunite`).
-2. Produce a single `defense_deck_draft.pdf`.
-3. Print a contents page with figure → slide-number mapping.
-4. Optionally, generate a "rehearsal mode" PDF with companion-notes
-   text on facing pages.
-
-Then read the assembled deck end-to-end. Check: does the narrative
-flow? Does K motivate F? Does F motivate the experiments? Does TB
-close the theoretical loop? Does G land before J? Does OQ close.
+**Done.** `defense_figures/build_deck.py` concatenates the 15
+main-deck PDFs into `outputs/ARSPI_Net_Defense_Main.pdf` and the
+16 backup PDFs into `outputs/ARSPI_Net_Defense_Appendix.pdf`. The
+script aborts loudly on any missing main-deck PDF and writes
+`outputs/deck_manifest.json` recording the exact slide order and
+source paths. End-to-end read-through is still pending — the
+committee-facing rehearsal pass is an author task.
 
 ### 3.6 Verify the "AI was not used" claim is precisely stated everywhere
 
