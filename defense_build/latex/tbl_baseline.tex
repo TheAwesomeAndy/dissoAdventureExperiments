@@ -1,0 +1,34 @@
+
+\documentclass[border=10pt]{standalone}
+\usepackage[table]{xcolor}
+\usepackage{amsmath,amssymb,amsfonts,mathtools,bm}
+\usepackage{booktabs,array}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,backgrounds,fit,shapes.geometric,decorations.pathreplacing}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\definecolor{sbnavy}{HTML}{1A2A4F}
+\definecolor{sbteal}{HTML}{1C7293}
+\definecolor{sbaccent}{HTML}{B5651D}
+\definecolor{sbgrey}{HTML}{8A94A6}
+\definecolor{sblight}{HTML}{EAF1F5}
+\newcommand{\cmark}{\textcolor{sbteal}{\ensuremath{\boldsymbol{\checkmark}}}}
+\newcommand{\xmark}{\textcolor{sbgrey}{\ensuremath{\boldsymbol{\times}}}}
+\newcommand{\eqcol}{\color{sbnavy}}
+\begin{document}
+{\sffamily\fontsize{20}{26}\selectfont
+\setlength{\arrayrulewidth}{1pt}\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{l c c c}
+\toprule
+\rowcolor{sbnavy}\textbf{\textcolor{white}{Model}} & \textbf{\textcolor{white}{Uncentered}} & \textbf{\textcolor{white}{Centered}} & \textbf{\textcolor{white}{$\Delta$}}\\
+\midrule
+EEGNet              & 72.0 & 89.1 & $+17.1$\\
+Raw EEG $+$ linear  & 70.5 & 88.4 & $+17.9$\\
+PCA-200             & 64.9 & 86.4 & $+21.5$\\
+GRU                 & 59.9 & 78.4 & $+18.5$\\
+\rowcolor{sbaccent!22}\textbf{ARSPI-Net} & \textbf{59.4} & \textbf{78.8} & $\mathbf{+19.4}$\\
+LSTM                & 58.0 & 71.1 & $+13.1$\\
+Band power $+$ SVM  & 47.7 & 61.0 & $+13.3$\\
+\bottomrule
+\end{tabular}}
+\end{document}

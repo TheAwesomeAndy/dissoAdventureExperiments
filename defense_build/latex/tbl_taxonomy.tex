@@ -1,0 +1,31 @@
+
+\documentclass[border=10pt]{standalone}
+\usepackage[table]{xcolor}
+\usepackage{amsmath,amssymb,amsfonts,mathtools,bm}
+\usepackage{booktabs,array}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,backgrounds,fit,shapes.geometric,decorations.pathreplacing}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\definecolor{sbnavy}{HTML}{1A2A4F}
+\definecolor{sbteal}{HTML}{1C7293}
+\definecolor{sbaccent}{HTML}{B5651D}
+\definecolor{sbgrey}{HTML}{8A94A6}
+\definecolor{sblight}{HTML}{EAF1F5}
+\newcommand{\cmark}{\textcolor{sbteal}{\ensuremath{\boldsymbol{\checkmark}}}}
+\newcommand{\xmark}{\textcolor{sbgrey}{\ensuremath{\boldsymbol{\times}}}}
+\newcommand{\eqcol}{\color{sbnavy}}
+\begin{document}
+{\sffamily\fontsize{20}{26}\selectfont
+\setlength{\arrayrulewidth}{1pt}\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{l l l}
+\toprule
+\rowcolor{sbnavy}\textbf{\textcolor{white}{Level}} & \textbf{\textcolor{white}{Observable}} & \textbf{\textcolor{white}{Measured}}\\
+\midrule
+L1\;Temporal  & bin vs.\ ERP scalar             & $|r| = 0.82$ \;(LPP)\\
+\rowcolor{sblight}L2\;Geometric & subject vs.\ condition variance & $\rho = 7.2$;\ \ $+13$--$21$\,pp\\
+L3\;Dynamical & descriptor vs.\ ERP scalar      & $|r|$ up to $0.84$\\
+\rowcolor{sblight}L4\;Coupling  & $\kappa$ vs.\ permutation null  & $0.273$,\ \ $p<0.001$\\
+\bottomrule
+\end{tabular}}
+\end{document}

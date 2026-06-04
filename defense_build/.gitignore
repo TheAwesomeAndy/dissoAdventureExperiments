@@ -1,0 +1,4 @@
+# Regenerable build artifacts (recreated by latexgen.py / build_deck.py / preview.py)
+figpng/
+preview/
+latex/_build/
