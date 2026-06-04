@@ -395,15 +395,9 @@ SLIDES = [
             "No labels used — this is geometry, not a classifier"],
    say="The fix is almost embarrassingly simple. For each patient, I compute their own mean in the embedding space and subtract it — I move their origin to the center. That erases the identity offset while leaving the direction of the emotional response completely intact. It uses no labels. It's pure geometry. And seeing it was only possible because the space was transparent enough to look at."),
 
- dict(kind="eqfig", title="Centering is the dominant move — for everyone",
-   img="pictures/chGraphNeuralNetworks/fig_baseline_comparison.pdf", eq=None,
-   headline="+13 to +21 points across every model. EEGNet jumps 72 → 89. ARSPI-Net 59 → 79.",
-   caption="Centered vs. uncentered, all baselines",
-   say="And here's the part that still gets me. The fix — re-centering each subject on their own mean — doesn't just help my model. It lifts every single model in the comparison by thirteen to twenty-one points. The black-box EEGNet jumps from seventy-two to eighty-nine. Mine goes from fifty-nine to seventy-nine. Read that carefully: the emotional signal was in the data the whole time, in every representation, just buried under subject geometry. A transparent model is what let me see that geometry and name the problem — and naming it raised the ceiling for the entire field, black boxes included. That's the case for interpretability in a single number."),
-
- dict(kind="table", title="The whole field, re-measured", img="tbl_baseline",
-   headline="Architecture choice is secondary. The geometric correction is the headline.",
-   say="Here's the full table. Read down the centered column and the story is obvious: the gap between architectures is small next to the gap that centering opens for all of them. After centering, my training-free reservoir matches a trained GRU with zero trainable recurrent parameters. The lesson I'd want a committee to take away is that the geometric correction matters more than the architecture race."),
+ dict(kind="table", title="Centering is the dominant move — for everyone", img="tbl_baseline",
+   headline="+13 to +21 points for every model. EEGNet 72 → 89. ARSPI-Net 59 → 79.",
+   say="And here's the part that still gets me. The fix — re-centering each subject on their own mean — doesn't just help my model. Read down the centered column: every single model jumps by thirteen to twenty-one points. EEGNet goes from seventy-two to eighty-nine; mine from fifty-nine to seventy-nine. The emotional signal was in the data the whole time, in every representation, just buried under subject geometry. After centering, my training-free reservoir even ties a trained GRU with zero trainable recurrent parameters. A transparent model is what let me see that geometry and name the problem — and naming it raised the ceiling for the entire field, black boxes included. The geometric correction matters more than the architecture race — and that's the case for interpretability in a single number."),
 
  dict(kind="figure", title="Why it works", img="pictures/chGraphNeuralNetworks/obs14_within_between_geometry.pdf",
    headline="Before centering, same-condition trials sit farther apart than same-subject trials. Centering inverts it.",

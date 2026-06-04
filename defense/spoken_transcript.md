@@ -129,45 +129,41 @@ The fix is almost embarrassingly simple. For each patient, I compute their own m
 
 ### Slide 25 — Centering is the dominant move — for everyone
 
-And here's the part that still gets me. The fix — re-centering each subject on their own mean — doesn't just help my model. It lifts every single model in the comparison by thirteen to twenty-one points. The black-box EEGNet jumps from seventy-two to eighty-nine. Mine goes from fifty-nine to seventy-nine. Read that carefully: the emotional signal was in the data the whole time, in every representation, just buried under subject geometry. A transparent model is what let me see that geometry and name the problem — and naming it raised the ceiling for the entire field, black boxes included. That's the case for interpretability in a single number.
+And here's the part that still gets me. The fix — re-centering each subject on their own mean — doesn't just help my model. Read down the centered column: every single model jumps by thirteen to twenty-one points. EEGNet goes from seventy-two to eighty-nine; mine from fifty-nine to seventy-nine. The emotional signal was in the data the whole time, in every representation, just buried under subject geometry. After centering, my training-free reservoir even ties a trained GRU with zero trainable recurrent parameters. A transparent model is what let me see that geometry and name the problem — and naming it raised the ceiling for the entire field, black boxes included. The geometric correction matters more than the architecture race — and that's the case for interpretability in a single number.
 
-### Slide 26 — The whole field, re-measured
-
-Here's the full table. Read down the centered column and the story is obvious: the gap between architectures is small next to the gap that centering opens for all of them. After centering, my training-free reservoir matches a trained GRU with zero trainable recurrent parameters. The lesson I'd want a committee to take away is that the geometric correction matters more than the architecture race.
-
-### Slide 27 — Why it works
+### Slide 26 — Why it works
 
 Mechanically: before centering, two trials from the same person under different emotions are closer together than two trials of the same emotion from different people. The ratio is above one — identity wins. Subtract each subject's mean and it flips below one — now the conditions separate. Three-class accuracy moves from sixty-three to seventy-nine on that one geometric move.
 
-### Slide 28 — A boundary that tells you something
+### Slide 27 — A boundary that tells you something
 
 One more finding I didn't expect. When I push from three classes to four, the ranking flips — the reservoir's advantage of twelve and a half points becomes a six-point deficit. That's not a bug; it's the memory-versus-nonlinearity trade-off showing me exactly where this representation pays off: when the structure lives in timing, not in amplitude. The boundary itself is information.
 
-### Slide 29 — Level 3 — seven named observables
+### Slide 28 — Level 3 — seven named observables
 
 Level three reads the reservoir's dynamics directly, through seven named descriptors — firing rate, temporal sparsity, a memory timescale, and so on. These are physical quantities, not learned features, and that distinction matters: each one is something a physiologist can actually argue with. All seven separate emotional from neutral input at the subject level. And one of them, the autocorrelation timescale, has a direct clinical reading — an abnormally slow decay is the network failing to downregulate after a stressor, which is exactly the dynamics you'd expect from rumination. So the descriptor isn't just predictive; it's a hypothesis about mechanism.
 
-### Slide 30 — Timing carries the signal
+### Slide 29 — Timing carries the signal
 
 And when I group those descriptors, the temporal-structure family carries about two and a half times the signal of the amplitude family — independent confirmation that timing is where the information is. Better still, the seven collapse onto a single axis, from excitable to persistent. So the model doesn't just stamp a label on a patient; it locates them on a continuous, interpretable axis. That's the instrument, made concrete.
 
-### Slide 31 — Level 4 — message passing fails here, and the theory said it would
+### Slide 30 — Level 4 — message passing fails here, and the theory said it would
 
 Level four is the graph across electrodes — and I expected message passing, the field's default, to help. But that operator is mathematically a low-pass filter, and over-smoothing theory makes a sharp prediction for a small, dense montage like ours: the contrast between channels should collapse within a couple of steps. So I swept every operator I could — plain smoothing, residual connections, attention — and every one of them loses to doing no propagation at all. I went looking for a tool and found a wall. But the wall is the theory being confirmed, and it turns into a design rule the EEG-graph literature didn't actually have.
 
-### Slide 32 — The mechanism, measured
+### Slide 31 — The mechanism, measured
 
 And I can show the mechanism on the real features: as you stack graph layers, the Dirichlet energy — the contrast between channels — drops eighty-four percent by depth two, and the channels become nearly identical. That's the same depth where accuracy falls off a cliff. The diagnosis and the symptom line up.
 
-### Slide 33 — So is the system actually one coherent thing?
+### Slide 32 — So is the system actually one coherent thing?
 
 So instead of forcing the graph to classify, I use it to ask a deeper question: are the local dynamics and the global topology two views of one system, or two unrelated things? I measure their coupling — kappa — against a null where I shuffle the electrode labels. The answer is that they're genuinely linked: a median of zero point two seven three, significant across all two hundred eleven subjects. It's a consistent system-wide effect rather than a strong local one, and I report it exactly that way — but it means the pieces of this pipeline are describing one coherent object, which is the last thing I'd otherwise be able to claim.
 
-### Slide 34 — Four levels, all measured
+### Slide 33 — Four levels, all measured
 
 So there are the four levels, each one a number, not an adjective. Temporal traceability correlates with the ERP at point eight two. Geometric transparency is the seven-point-two ratio and the centering lift. The dynamical descriptors track the ERP up to point eight four. And the systems coupling clears its null at high significance. To my knowledge this is the first neuromorphic EEG model to put a measurement on all four in a single pipeline.
 
-### Slide 35 — Different disorders live in different layers
+### Slide 34 — Different disorders live in different layers
 
 And because the model decomposes into named layers, I can ask which layer is most sensitive to which condition. Substance use separates most strongly in the dynamical descriptors, at p equals zero point zero zero zero four, and it survives correction — that's the solid clinical result. The others point in suggestive directions we're now testing with our clinical collaborators. The point isn't any single p-value; it's that a black-box score can't even pose this question. This model can.
 
@@ -176,20 +172,20 @@ And because the model decomposes into named layers, I can ask which layer is mos
 
 *Let me pull all of this together and say plainly what it adds up to — and what it doesn't.*
 
-### Slide 36 — 78.8% with a full decomposition,
+### Slide 35 — 78.8% with a full decomposition,
 or 89.1% from a box you can't open.
 
 Let me be direct about the trade at the center of this, because it's the obvious line of attack. My model gets seventy-nine percent with a complete, four-level account of why. The black box gets eighty-nine with nothing you can open. And I'll defend the seventy-nine — because in a clinic, an eighty-nine that can't justify itself is exactly the liability we opened with, while a seventy-nine you can trace end to end is an instrument a doctor can stand behind. It isn't even a large gap, and my training-free reservoir ties a fully trained recurrent network with no trained recurrence at all. Those points are the price of a glass box, and for this problem it's a price worth paying.
 
-### Slide 37 — The biological prism
+### Slide 36 — The biological prism
 
 This is what I mean by a biological prism. Instead of one verdict, the model separates a patient's signal into where the abnormality lives — is it local timing, global network routing, or the coupling between them? That's a profile a clinician can reason about and act on. It's the difference between a number and an explanation.
 
-### Slide 38 — What's next
+### Slide 37 — What's next
 
 Where this goes next — and I'll be honest about what's still open. I worked with trial-averaged data, so single-trial decoding is the natural step. The energy argument has been exactly that, an argument, so the real test is on-chip, on neuromorphic hardware like Loihi, where I can finally measure it instead of motivating it. And the layer-specific clinical findings move into proper replication with the SHAPE lab. None of these is an afterthought — the architecture was built so each one is a direct extension rather than a redesign.
 
-### Slide 39 — The question, answered
+### Slide 38 — The question, answered
 
 So, back to the question I opened with. Can we recover hidden dynamics from a noisy trace and keep the explanation? The reservoir is stable — I measured it. The signal is compressible — six bins and sixty-four dimensions. The system is coherent — the coupling is real. And it's interpretable at four levels at once. With this design, the architecture isn't wrapped in an explanation. The architecture is the explanation.
 
@@ -200,63 +196,63 @@ I'll close where I started — with that doctor and that patient. An instrument 
 
 ## ◆ Backup — for discussion
 
-### Slide 40 — Why a fixed reservoir, not a trained deep SNN
+### Slide 39 — Why a fixed reservoir, not a trained deep SNN
 
 If you ask why I didn't train the reservoir: training a deep spiking network over hundreds of time steps needs backpropagation-through-time with surrogate gradients, and the forward and backward passes diverge over long horizons — it's brittle. A fixed reservoir sidesteps that entirely. More importantly, universality already guarantees a fixed pool plus a linear readout is enough, so I'm not giving anything up — and training the recurrence would destroy the very transparency that is the whole point.
 
-### Slide 41 — Spectral radius vs. measured stability
+### Slide 40 — Spectral radius vs. measured stability
 
 If you press on stability: the autonomous spectral radius is zero point two six five, but that's the weights in isolation. What governs behavior is the driven exponent under the real input, and that's what I measured at minus zero point zero five four. I'm reporting the system in operation, not a textbook proxy.
 
-### Slide 42 — Memory-capacity regime and the choice of leak
+### Slide 41 — Memory-capacity regime and the choice of leak
 
 On why this leak and why six bins: the leak of zero point zero five sits on the memory-capacity plateau, at ninety-one percent of the peak, and it's set by matching the membrane timescale to the length of the ERP. Finer binning doesn't buy accuracy. It's a principled operating point, and a formal bin-count study is the defined next step.
 
-### Slide 43 — Embedding dimension, measured
+### Slide 42 — Embedding dimension, measured
 
 Takens motivates the geometry, but I don't lean on it as a guarantee — I measured the embedding dimension with false-nearest-neighbors, and it sits well below the sixty-four I project into. The reservoir has comfortable margin.
 
-### Slide 44 — Full model comparison (N = 211)
+### Slide 43 — Full model comparison (N = 211)
 
 Here's the complete two-hundred-eleven-subject comparison under one protocol. The reservoir matches the trained recurrent models with no trainable recurrence, and the ordering is exactly what the data-processing inequality predicts.
 
-### Slide 45 — Confusion structure
+### Slide 44 — Confusion structure
 
 On where the errors fall: the confusions cluster between the two high-arousal classes, which points to arousal — not the sign of valence — carrying the separable axis. That's consistent with the pairwise analysis.
 
-### Slide 46 — Per-trial permutation null
+### Slide 45 — Per-trial permutation null
 
 The strictest spatial control I ran: an independent channel permutation per trial, not one global shuffle. The classification still clears it. A flat classifier can't compensate for that.
 
-### Slide 47 — Four documented pivots
+### Slide 46 — Four documented pivots
 
 And since methodology came up — these are the points where a result went against my hypothesis and I let it redirect the design rather than forcing the model through. The graph result is the clearest: I expected message passing to help, the theory said otherwise here, the data agreed, and that's what produced the design rule.
 
-### Slide 48 — Coupling detail
+### Slide 47 — Coupling detail
 
 The full coupling matrix behind the kappa number, if you'd like to see how the dynamical and topological families align electrode by electrode.
 
-### Slide 49 — HC vs. MDD contrast
+### Slide 48 — HC vs. MDD contrast
 
 And the descriptor-level contrast between healthy controls and the depression group, for the clinical questions.
 
-### Slide 50 — ERP-window dependence
+### Slide 49 — ERP-window dependence
 
 If you want the window analysis: this is how discriminability depends on which part of the epoch we read, and it lines up with the early components rather than the late drift the black box leaned on.
 
-### Slide 51 — Layers are complementary, not redundant
+### Slide 50 — Layers are complementary, not redundant
 
 On whether the layers are just redundant: combining the temporal and spatial families never beats the better one alone, yet different disorders load on different families. That's the definition of complementary information, and it's why the decomposition is worth keeping.
 
-### Slide 52 — Coupling by affective category
+### Slide 51 — Coupling by affective category
 
 The coupling broken out by affective subcategory, if you want to see how the structure-function relationship shifts with the stimulus.
 
-### Slide 53 — Layer-specific clinical sensitivity
+### Slide 52 — Layer-specific clinical sensitivity
 
 And the full heatmap behind the disorder-layer table — which descriptor moves for which diagnosis, with substance use standing out, as the earlier slide showed.
 
-### Slide 54 — Three generations of neural computation
+### Slide 53 — Three generations of neural computation
 
 If the framing comes up: first-generation units are threshold logic with no notion of time; second-generation deep nets abstract time away into firing rates; and the third generation — spiking — puts time back as the carrier. That's the family ARSPI-Net belongs to, and why it fits a signal whose information is in its timing.
 
