@@ -36,13 +36,13 @@ Recovering a hidden system from a thin signal is not a fantasy — physics does 
 
 An EEG signal is born when thousands of cortical pyramidal cells fire together and act like a tiny electrical dipole. What we actually record on the scalp isn't that source — it's a noisy, smeared, averaged projection of it, like these evoked waveforms. Formally: the measurement x is some mixing function g of the latent cortical response r, plus noise. The whole game is getting back to r.
 
-### Slide 6 — Volume conduction makes it an inverse problem
+### Slide 6 — The volume conduction problem
 
-The reason this is hard is volume conduction. The signal has to cross cerebrospinal fluid, the skull — which is a terrible conductor — and the scalp. Each layer smears it. One source spreads across many electrodes, and each electrode sees a blur of the whole cortex. So I'm inverting that: given the scalp trace, recover the latent state. With thirty-four channels standing in for billions of neurons, that map is massively underdetermined. It's shadows on a cave wall — and the rest of the talk is how to read them anyway.
+The reason this is hard has a name — volume conduction. A cortical source, those pyramidal cells at the bottom of the figure firing together as a dipole, doesn't reach the electrode directly. The current has to spread through brain tissue, cerebrospinal fluid, the skull, and the scalp, and every layer smears it. That is volume conduction: the head acts as a spatial low-pass filter, so a single source blurs across many electrodes and every electrode records a mixture from across the whole cortex. Recovering the source from that blurred mixture — with thirty-four channels standing in for billions of neurons — is a deeply underdetermined inverse problem. Reading those shadows is the whole challenge.
 
 ### Slide 7 — Why EEG and not fMRI
 
-People ask why not just use fMRI, with its beautiful spatial maps. Because fMRI measures blood flow — a sluggish, metabolic echo that lags the actual neural event by seconds. Emotion and threat detection happen in milliseconds. Using fMRI for that is like following a fast piano piece by measuring the temperature of the keys: you learn which were pressed, but the music is gone. EEG keeps the timing. It gives us the music — and the discriminative information lives in that timing.
+People ask why not just use fMRI, with its beautiful spatial maps. Look at where the methods sit: fMRI is over on the high-spatial side, but low on the temporal axis, because it measures blood flow — a sluggish metabolic echo that lags the actual neural event by seconds. Surface EEG is the opposite corner: modest spatial resolution, but millisecond timing. And emotion and threat detection happen in milliseconds. Using fMRI for that is like following a fast piano piece by measuring the temperature of the keys — you learn which were pressed, but the music is gone. EEG keeps the timing. It gives us the music, and the discriminative information lives in that timing.
 
 ### Slide 8 — The data: real patients, not textbook cases
 

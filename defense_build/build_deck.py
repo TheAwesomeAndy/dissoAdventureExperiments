@@ -251,8 +251,8 @@ def render(prs, sl, n):
 # =============================================================================
 SLIDES = [
  dict(kind="title", title="ARSPI-Net",
-   sub="Reading the brain's hidden dynamics from a noisy trace —\nand keeping the explanation",
-   foot="Andrew Lane    ·    Department of Electrical & Computer Engineering, Stony Brook University    ·    Doctoral Defense, 2026",
+   sub="Affective Reservoir-Spike Processing and Inference Network",
+   foot="A four-level interpretable neuromorphic framework for clinical EEG analysis\n\nAndrew Lane     ·     Electrical & Computer Engineering, Stony Brook University     ·     Dissertation Defense · 2026",
    say="Good morning, and thank you all for being here. I'm not going to open with an architecture. I'm going to open with a decision a doctor has to make, because that decision is the reason this whole project exists."),
 
  dict(kind="statement", kicker="THE DECISION",
@@ -283,14 +283,18 @@ SLIDES = [
    eq="eq_observation",
    say="An EEG signal is born when thousands of cortical pyramidal cells fire together and act like a tiny electrical dipole. What we actually record on the scalp isn't that source — it's a noisy, smeared, averaged projection of it, like these evoked waveforms. Formally: the measurement x is some mixing function g of the latent cortical response r, plus noise. The whole game is getting back to r."),
 
- dict(kind="eqfig", title="Volume conduction makes it an inverse problem", img="tikz_head",
+ dict(kind="eqfig", title="The volume conduction problem", img="volume_conduction.png",
    eq="eq_inverse",
-   headline="One source spreads across many sensors; 34 channels see billions of neurons.",
-   say="The reason this is hard is volume conduction. The signal has to cross cerebrospinal fluid, the skull — which is a terrible conductor — and the scalp. Each layer smears it. One source spreads across many electrodes, and each electrode sees a blur of the whole cortex. So I'm inverting that: given the scalp trace, recover the latent state. With thirty-four channels standing in for billions of neurons, that map is massively underdetermined. It's shadows on a cave wall — and the rest of the talk is how to read them anyway."),
+   headline="Volume conduction: tissue between source and sensor spreads each dipole across many electrodes — a spatial low-pass filter.",
+   caption="Pyramidal-cell dipoles → volume & capacitive conduction to the scalp electrode",
+   credit="Jackson & Bolger, Psychophysiology (2014)",
+   say="The reason this is hard has a name — volume conduction. A cortical source, those pyramidal cells at the bottom of the figure firing together as a dipole, doesn't reach the electrode directly. The current has to spread through brain tissue, cerebrospinal fluid, the skull, and the scalp, and every layer smears it. That is volume conduction: the head acts as a spatial low-pass filter, so a single source blurs across many electrodes and every electrode records a mixture from across the whole cortex. Recovering the source from that blurred mixture — with thirty-four channels standing in for billions of neurons — is a deeply underdetermined inverse problem. Reading those shadows is the whole challenge."),
 
- dict(kind="figure", title="Why EEG and not fMRI", img="tikz_resolution",
-   headline="Affect happens in milliseconds. EEG keeps the timing; fMRI averages it away.",
-   say="People ask why not just use fMRI, with its beautiful spatial maps. Because fMRI measures blood flow — a sluggish, metabolic echo that lags the actual neural event by seconds. Emotion and threat detection happen in milliseconds. Using fMRI for that is like following a fast piano piece by measuring the temperature of the keys: you learn which were pressed, but the music is gone. EEG keeps the timing. It gives us the music — and the discriminative information lives in that timing."),
+ dict(kind="figure", title="Why EEG and not fMRI", img="eeg_fmri_resolution.png",
+   headline="Affect happens in milliseconds. EEG keeps the timing; fMRI trades it for spatial detail.",
+   caption="Spatial vs. temporal resolution of brain-imaging methods",
+   credit="Wikimedia Commons, CC BY 4.0",
+   say="People ask why not just use fMRI, with its beautiful spatial maps. Look at where the methods sit: fMRI is over on the high-spatial side, but low on the temporal axis, because it measures blood flow — a sluggish metabolic echo that lags the actual neural event by seconds. Surface EEG is the opposite corner: modest spatial resolution, but millisecond timing. And emotion and threat detection happen in milliseconds. Using fMRI for that is like following a fast piano piece by measuring the temperature of the keys — you learn which were pressed, but the music is gone. EEG keeps the timing. It gives us the music, and the discriminative information lives in that timing."),
 
  dict(kind="figtext", title="The data: real patients, not textbook cases", img="comorbidity.jpg",
    caption="Transdiagnostic symptom overlap", credit="Figure: PMC (HiTOP), CC BY",
@@ -330,12 +334,16 @@ SLIDES = [
    headline="Event-driven neuromorphic silicon: ≈45× less energy per operation than dense CMOS.",
    say="There's a second reason to care about spikes, beyond the physics — energy. A dense multiply-accumulate on conventional hardware costs around nine hundred picojoules; on event-driven neuromorphic silicon the same operation is roughly twenty. That's about forty-five times less, and it's what could eventually take this off a server and onto a wearable at the bedside. Everything here ran in software, so I treat that number as motivation and a future on-chip measurement — not a result I'm claiming today."),
 
- dict(kind="figure", title="The reservoir: a calibrated ruler, not an oracle", img="tikz_reservoir",
+ dict(kind="figure", title="The reservoir: a calibrated ruler, not an oracle", img="pictures/ch2/LSMArchitecture.png",
    headline="Random recurrent weights, fixed forever. Train them and you turn the ruler into a black box.",
+   caption="Liquid state machine: a fixed recurrent reservoir feeding trained linear readouts",
+   credit="LSM schematic (after Maass et al.)",
    say="I wire two hundred fifty-six of these neurons into a recurrent pool — a reservoir. Here's the intuition: throw a rock into a still pond. You can't measure the rock in flight, but the ripples it leaves are a faithful record of its size and speed. The input is the rock, the reservoir is the water, and a simple readout reads the ripples. Now the decision that makes everything else in this talk possible — the recurrent weights are random, and they are fixed. I never train them. The instant you train the water, it starts bending its own physics to chase a score, and the ripples stop being an honest record of the rock. A fixed reservoir stays a calibrated instrument. And because nothing inside it is trained, its entire state is a pure, reproducible function of the input — which is exactly what lets me read it later, neuron by neuron."),
 
- dict(kind="eqfig", title="Why this is recoverable, not a hope", img="tikz_cover", eq="eq_koopman",
+ dict(kind="eqfig", title="Why this is recoverable, not a hope", img="kernel_trick.png", eq="eq_koopman",
    headline="Cover lifts the data to separability; Takens says the geometry survives; Koopman makes the readout linear.",
+   caption="Cover's theorem: a nonlinear boundary becomes linear in a higher-dimensional lift",
+   credit="Kernel machine — Wikimedia Commons, CC BY-SA",
    say="And this is provably the right move, not a lucky one — which matters, because a committee will ask why this should work at all. Cover's theorem says that if you lift tangled data into a high enough dimensional space, it almost always becomes linearly separable; those are the ripples spreading out. Takens tells me the lift preserves the geometry of the underlying dynamics — and rather than just cite it, I measured the embedding dimension and found the trajectory needs fewer than sixty-four dimensions to live in. Koopman closes the loop: in the right space of observables, even a nonlinear system evolves linearly, which is the deep reason a plain linear readout is enough. Three results, one conclusion — a training-free core isn't a compromise. It's sufficient by construction."),
 
  dict(kind="eqfig", title="ARSPI-Net, end to end", img="pictures/chGraphNeuralNetworks/fig_paper_pipeline_overview.pdf",
