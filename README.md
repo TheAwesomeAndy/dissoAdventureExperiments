@@ -1,3 +1,5 @@
+> **Current dissertation source (August 2026):** The root-level `main.tex`, chapter files, `Appendixa.tex`, and `Disso.bib` on this branch are the authoritative ProQuest-ready source. The older `Dissertation_Interprability__1_.zip` is retained only as a legacy snapshot and should not be used for submission. The final dissertation deliberately contains no repository link. Statistical and clinical claims in the final source include the corrected permutation and validation caveats; older summary language below does not supersede the dissertation text.
+
 # ARSPI-Net: A Four-Level Interpretable Neuromorphic Framework for Clinical EEG Analysis
 
 **Dissertation:** Lane, A. A. (2026). *Affective Reservoir-Spike Processing and Inference Network (ARSPI-Net): A Four-Level Interpretable Neuromorphic Framework for Clinical EEG Analysis.* PhD Dissertation, Department of Electrical and Computer Engineering, Stony Brook University.
