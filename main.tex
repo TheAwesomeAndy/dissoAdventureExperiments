@@ -1,0 +1,143 @@
+\documentclass[12pt]{report}
+
+% === Packages (deduplicated) ===
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{textcomp}
+\usepackage{float}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{pdfpages}
+
+\hypersetup{
+  hidelinks,
+  pdftitle={Affective Reservoir-Spike Processing and Inference Network (ARSPI-Net): A Four-Level Interpretable Neuromorphic Framework for Clinical EEG Analysis},
+  pdfauthor={Andrew Lane}
+}
+\pdfminorversion=7
+
+\doublespacing
+
+\begin{document}
+\pagenumbering{gobble}
+
+% === Title Page ===
+\begin{titlepage}
+\singlespacing
+\centering
+\vspace*{1cm}
+{\Large \textbf{Affective Reservoir-Spike Processing and Inference Network (ARSPI-Net):}}\\[0.5cm]
+{\Large \textbf{A Four-Level Interpretable Neuromorphic Framework}}\\[0.3cm]
+{\Large \textbf{for Clinical EEG Analysis}}\\[2cm]
+{\large A Dissertation Presented}\\[0.3cm]
+{\large by}\\[0.5cm]
+{\Large \textbf{Andrew Lane}}\\[1cm]
+{\large to}\\[0.3cm]
+{\large The Graduate School}\\[0.3cm]
+{\large in Partial Fulfillment of the Requirements}\\[0.3cm]
+{\large for the Degree of}\\[0.5cm]
+{\Large \textbf{Doctor of Philosophy}}\\[0.5cm]
+{\large in}\\[0.1cm]
+{\Large \textbf{Electrical and Computer Engineering}}\\[1.2cm]
+{\large Stony Brook University}\\[0.4cm]
+{\large August 2026}
+\end{titlepage}
+
+% === Signature Page (required page ii; unsigned dissertation page) ===
+\clearpage
+\pagenumbering{roman}
+\setcounter{page}{2}
+\thispagestyle{plain}
+\begin{center}
+{\large Stony Brook University}\\[0.15cm]
+{\large \textbf{The Graduate School}}\\[1.1cm]
+{\large Andrew Lane}\\[0.7cm]
+
+We, the dissertation committee for the above candidate for the\\
+Doctor of Philosophy degree, hereby recommend\\
+Acceptance of this dissertation.\\[0.9cm]
+
+{\large \textbf{Wendy Tang} -- Dissertation Advisor}\\
+Associate Professor, Department of Electrical and Computer Engineering\\[0.65cm]
+
+{\large \textbf{Alex Doboli} -- Chairperson of Defense}\\
+Professor, Department of Electrical and Computer Engineering\\[0.65cm]
+
+{\large \textbf{Brady Nelson} -- Third Member}\\
+Associate Professor, Department of Psychology\\[0.65cm]
+
+{\large \textbf{Sangjin Hong} -- Additional Member}\\
+Professor, Department of Electrical and Computer Engineering\\[1.0cm]
+
+This dissertation is accepted by the Graduate School\\[0.55cm]
+
+{\large \textbf{Celia Marshik}}\\
+Dean of the Graduate School
+\end{center}
+
+% === Abstract ===
+\clearpage
+\begin{center}
+{\large \textbf{Abstract of the Dissertation}}\\[0.6cm]
+{\large \textbf{Affective Reservoir-Spike Processing and Inference Network (ARSPI-Net):}}\\[0.2cm]
+{\large \textbf{A Four-Level Interpretable Neuromorphic Framework}}\\[0.2cm]
+{\large \textbf{for Clinical EEG Analysis}}\\[0.6cm]
+{\large by}\\[0.2cm]
+{\large Andrew Lane}\\[0.4cm]
+{\large Doctor of Philosophy}\\[0.1cm]
+{\large in}\\[0.1cm]
+{\large Electrical and Computer Engineering}\\[0.1cm]
+{\large Stony Brook University}\\[0.1cm]
+{\large 2026}
+\end{center}
+
+\noindent
+This dissertation introduces the Affective Reservoir-Spike Processing and Inference Network (ARSPI-Net), a staged neuromorphic framework for analyzing affective electroencephalography (EEG). It combines a fixed-weight Leaky Integrate-and-Fire reservoir, a six-bin spike-count code (BSC$_6$), and graph-organized spatial analysis. The design exposes membrane trajectories, spike counts, temporal bins, dynamical descriptors, graph metrics, and cross-scale coupling as inspectable quantities.
+
+ARSPI-Net is evaluated on the Stress, Health, and the Psychophysiology of Emotion (SHAPE) Community dataset \cite{noauthor_shape_2018}, comprising $211$ participants, $34$ EEG channels, and three affective conditions. At the temporal level, the aggregate pre-reservoir bin profile corresponds with P300 ($r = 0.65$) and Late Positive Potential amplitude ($|r| = 0.82$); post-reservoir correspondence is weaker ($|r| = 0.23$ for LPP). At the geometric level, subject-associated variance exceeds condition-associated variance by a factor of $7.2$, and per-subject centering improves balanced accuracy by $13$--$21$ percentage points across seven tested representations. EEGNet achieves the highest centered accuracy ($89.1\%$), while the centered reservoir representation reaches $78.8\%$. At the dynamical level, seven named descriptors characterize reservoir responses, although their patient-level reliability is not established. At the systems level, temporal--spatial coupling exceeds an electrode-permutation null but is primarily observation-specific and does not improve classification beyond the better individual feature family.
+
+Graph propagation does not outperform the non-propagated baseline across the tested operators, densities, depths, and adjacency constructions. Exploratory clinical analyses yield nominal associations for SUD, GAD, PTSD, and ADHD, but several are near chance, resolution-dependent, uncorrected for multiple testing, or not permutation-significant. In particular, the strongest SUD parametric comparison has $p = 0.0004$, whereas its label-permutation result is $p = 0.073$.
+
+The principal contribution is therefore an explicit measurement chain rather than a claim of clinical deployment or best-in-class prediction. ARSPI-Net provides a reproducible framework for examining how temporal, dynamical, geometric, and graph-level representations change across a neuromorphic EEG pipeline, together with clear empirical boundaries that motivate independent validation.
+
+\clearpage
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\include{ch1}
+\newpage
+\include{ch2}
+\newpage
+\include{chLSM}
+\newpage
+\include{chLSMEmbeddings}
+\newpage
+\include{chgraph}
+\newpage
+\include{chDynamics}
+\newpage
+\include{chSynthesis}
+\newpage
+\include{chConclusion}
+\newpage
+\include{Appendixa}
+
+\newpage
+\bibliographystyle{ieeetr}
+\bibliography{Disso}
+
+\end{document}
