@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
 ============================================================================
-ARSPI-Net Chapter 5: End-to-End Validation on Clinical EEG
-COMPLETE REPRODUCIBILITY PIPELINE
+ARSPI-Net Chapter 5: Archived End-to-End Analysis
 ============================================================================
 
 Publication: Lane, A. A. (2026). Affective Reservoir-Spike Processing and
 Inference Network (ARSPI-Net): A Four-Level Interpretable Neuromorphic
 Framework for Clinical EEG Analysis. PhD Dissertation, Stony Brook University.
 
-This script reproduces EVERY figure, table, and statistical result in 
-Chapter 5. It is designed for complete transparency: any reader can 
-verify every claim by running this code on the SHAPE dataset.
+AUDIT STATUS (2026-07-13): this file is retained to document the workflow
+that generated the archived Chapter 5 figures.  It fitted PCA before the
+cross-validation split and must not be used to estimate held-out accuracy.
+Use ``run_chapter5_experiments.py`` for the corrected subject-grouped,
+fold-local, common-basis PCA implementation.
 
 REQUIREMENTS:
     pip install numpy scipy scikit-learn matplotlib pandas openpyxl
@@ -553,6 +554,9 @@ def generate_experiment_figures(results, out_dir):
 ###########################################################################
 
 def main():
+    raise RuntimeError(
+        "Archived global-PCA workflow disabled after the 2026-07-13 audit. "
+        "Run chapter5Experiments/run_chapter5_experiments.py instead.")
     parser = argparse.ArgumentParser(description='Chapter 5 Reproducibility Pipeline')
     parser.add_argument('--data_dir', required=True)
     parser.add_argument('--labels', default=None)

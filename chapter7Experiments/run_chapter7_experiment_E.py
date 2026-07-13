@@ -51,7 +51,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score, balanced_accuracy_score, f1_score
-from scipy.stats import wilcoxon, mannwhitneyu
+from scipy.stats import mannwhitneyu
 import os
 import time
 # ═══════════════════════════════════════════════════════════════════
@@ -397,17 +397,14 @@ classification performance.
                   f"{res['f1'].mean():>8.4f} "
                   f"{'±':>2}{res['f1'].std():>5.3f}")
         all_results[dx] = dx_res
-        # Paired comparisons
+        # Descriptive paired-fold comparisons only. Repeated CV folds overlap
+        # in subjects and are not independent experimental units, so no
+        # Wilcoxon p-value is reported from the 50 fold differences.
         for c1, c2 in [('T+D', 'T-only'), ('T+D', 'D-only'),
                         ('T+D+kappa', 'T+D')]:
             diff = dx_res[c1]['auc'] - dx_res[c2]['auc']
-            if np.std(diff) > 0:
-                _, p = wilcoxon(diff)
-            else:
-                p = 1.0
-            d_z = np.mean(diff) / (np.std(diff) + 1e-10)
             print(f"    {c1} vs {c2}: ΔAUC = {np.mean(diff):+.4f}, "
-                  f"d_z = {d_z:.3f}, p = {p:.4e}")
+                  f"fold SD = {np.std(diff):.4f} (descriptive)")
     # ── ANALYSIS FIGURES ──
     # Figure E4: AUC comparison
     fig, axes = plt.subplots(1, len(DX_LIST), figsize=(20, 5))
@@ -447,18 +444,14 @@ classification performance.
                     edgecolor='black', density=True)
             ax.axvline(0, color='black', ls='-', lw=1.5)
             ax.axvline(np.mean(diff), color='red', ls='--', lw=2)
-            if np.std(diff) > 0:
-                _, p = wilcoxon(diff)
-            else:
-                p = 1.0
             ax.set_title(f'{dx}: {c1} vs {c2}\n'
-                         f'ΔAUC={np.mean(diff):+.4f}, p={p:.4f}',
+                         f'ΔAUC={np.mean(diff):+.4f} (descriptive)',
                          fontsize=10)
             ax.set_xlabel('ΔAUC', fontsize=9)
             if col == 0:
                 ax.set_ylabel('Density', fontsize=9)
-    plt.suptitle('Paired ΔAUC Distributions '
-                 f'({N_SPLITS * N_REPEATS} folds)',
+    plt.suptitle('Descriptive Paired ΔAUC Distributions '
+                 f'({N_SPLITS * N_REPEATS} overlapping folds)',
                  fontsize=13, y=1.02)
     plt.tight_layout()
     fig.savefig(f'{FIGURE_DIR}/fig7_E5_paired_auc_detail.pdf',

@@ -14,17 +14,18 @@
 \usepackage{tabularx}
 \usepackage[margin=1in]{geometry}
 \usepackage{setspace}
-\usepackage{hyperref}
+\usepackage{etoolbox}
 \usepackage{pdfpages}
+\usepackage[a-2b]{pdfx}
 
-\hypersetup{
-  hidelinks,
-  pdftitle={Affective Reservoir-Spike Processing and Inference Network (ARSPI-Net): A Four-Level Interpretable Neuromorphic Framework for Clinical EEG Analysis},
-  pdfauthor={Andrew Lane}
-}
-\pdfminorversion=7
-
+\hypersetup{hidelinks}
 \doublespacing
+\setlength{\emergencystretch}{3em}
+% Stony Brook permits double-spaced body text but requires captions to be
+% single-spaced. Float environments are locally grouped, so these settings do
+% not alter the surrounding body text.
+\AtBeginEnvironment{figure}{\singlespacing}
+\AtBeginEnvironment{table}{\singlespacing}
 
 \begin{document}
 \pagenumbering{gobble}
@@ -102,11 +103,11 @@ Dean of the Graduate School
 \noindent
 This dissertation introduces the Affective Reservoir-Spike Processing and Inference Network (ARSPI-Net), a staged neuromorphic framework for analyzing affective electroencephalography (EEG). It combines a fixed-weight Leaky Integrate-and-Fire reservoir, a six-bin spike-count code (BSC$_6$), and graph-organized spatial analysis. The design exposes membrane trajectories, spike counts, temporal bins, dynamical descriptors, graph metrics, and cross-scale coupling as inspectable quantities.
 
-ARSPI-Net is evaluated on the Stress, Health, and the Psychophysiology of Emotion (SHAPE) Community dataset \cite{noauthor_shape_2018}, comprising $211$ participants, $34$ EEG channels, and three affective conditions. At the temporal level, the aggregate pre-reservoir bin profile corresponds with P300 ($r = 0.65$) and Late Positive Potential amplitude ($|r| = 0.82$); post-reservoir correspondence is weaker ($|r| = 0.23$ for LPP). At the geometric level, subject-associated variance exceeds condition-associated variance by a factor of $7.2$, and per-subject centering improves balanced accuracy by $13$--$21$ percentage points across seven tested representations. EEGNet achieves the highest centered accuracy ($89.1\%$), while the centered reservoir representation reaches $78.8\%$. At the dynamical level, seven named descriptors characterize reservoir responses, although their patient-level reliability is not established. At the systems level, temporal--spatial coupling exceeds an electrode-permutation null but is primarily observation-specific and does not improve classification beyond the better individual feature family.
+ARSPI-Net is evaluated on the Stress, Health, and the Psychophysiology of Emotion (SHAPE) Community dataset \cite{noauthor_shape_2018}, comprising $211$ participants, $34$ EEG channels, and three affective conditions. Archived aggregate profiles covary with conventional P300 and Late Positive Potential summaries, but these are not subject-level recovery tests and the early BSC$_6$ bins do not cover the Late Positive Potential interval. In the archived global-PCA representation, the subject sum-of-squares fraction is larger than the condition fraction. A repeated-measures centering analysis subtracts each participant's mean across the complete condition panel; because that operation requires all of a new participant's conditions, its displayed result is a transductive panel estimate rather than single-record prospective performance.
 
-Graph propagation does not outperform the non-propagated baseline across the tested operators, densities, depths, and adjacency constructions. Exploratory clinical analyses yield nominal associations for SUD, GAD, PTSD, and ADHD, but several are near chance, resolution-dependent, uncorrected for multiple testing, or not permutation-significant. In particular, the strongest SUD parametric comparison has $p = 0.0004$, whereas its label-permutation result is $p = 0.073$.
+A post-defense reproducibility audit identified that several PCA-dependent classification and graph analyses fitted PCA before the cross-validation split, used noncommensurate channel-specific transformations, and encoded six full-epoch bins rather than the stated early window. Their numerical values are retained as descriptive results from the archived workflow, not as estimates for the corrected specification or as unbiased out-of-sample performance. In those comparisons, the tested graph-propagation operators did not improve the displayed estimate over the non-propagated representation. Clinical associations were exploratory, frequently small, uncorrected across broad search families, or not confirmed by permutation testing. The dissertation therefore does not claim clinical deployment, validated biomarkers, or best-in-class prediction.
 
-The principal contribution is therefore an explicit measurement chain rather than a claim of clinical deployment or best-in-class prediction. ARSPI-Net provides a reproducible framework for examining how temporal, dynamical, geometric, and graph-level representations change across a neuromorphic EEG pipeline, together with clear empirical boundaries that motivate independent validation.
+The principal contribution is an explicit and inspectable measurement chain linking input EEG, fixed reservoir dynamics, temporal spike codes, descriptive trajectory measures, and graph-organized summaries. The work documents both the behavior and the limitations of that chain and specifies fold-safe, independently validated evaluation as the necessary next step.
 
 \clearpage
 \tableofcontents
@@ -133,11 +134,15 @@ The principal contribution is therefore an explicit measurement chain rather tha
 \include{chSynthesis}
 \newpage
 \include{chConclusion}
-\newpage
-\include{Appendixa}
-
-\newpage
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Bibliography}
+\begingroup
+\singlespacing
 \bibliographystyle{ieeetr}
 \bibliography{Disso}
+\endgroup
+\clearpage
+\include{Appendixa}
 
 \end{document}

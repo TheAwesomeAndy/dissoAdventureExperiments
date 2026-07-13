@@ -170,7 +170,9 @@ def extract_features(spikes, method='bsc6', t_start=10, t_end=70):
 # ============================================================
 # Classification and FDR (same as before, with fixes)
 # ============================================================
-def run_classification(features, labels, classifier='logreg', n_folds=5):
+def run_classification(features, labels, classifier='logreg', n_folds=5,
+                       pca_components=None):
+    """Evaluate a readout with every learned transform fitted in-fold."""
     skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
     accs = []
     for train_idx, test_idx in skf.split(features, labels):
@@ -179,6 +181,12 @@ def run_classification(features, labels, classifier='logreg', n_folds=5):
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
+        if pca_components is not None:
+            n_comp = min(pca_components, X_train.shape[0] - 1,
+                         X_train.shape[1])
+            pca = PCA(n_components=n_comp)
+            X_train = pca.fit_transform(X_train)
+            X_test = pca.transform(X_test)
         if classifier == 'logreg':
             clf = LogisticRegression(C=0.1, solver='liblinear', random_state=42, max_iter=1000)
         elif classifier == 'svm_rbf':
@@ -241,10 +249,8 @@ def experiment_and_plot_size_ablation(X_list, y):
         print(f"  N_res = {n_res}...", end=" ", flush=True)
         spk = run_reservoir(X_list, n_res=n_res)
         feats = np.array([extract_bsc(s, 6) for s in spk])
-        n_comp = min(64, feats.shape[1], feats.shape[0] - 1)
-        pca = PCA(n_components=n_comp)
-        feats_pca = pca.fit_transform(feats)
-        mean_acc, std_acc = run_classification(feats_pca, y)
+        mean_acc, std_acc = run_classification(
+            feats, y, pca_components=64)
         results[n_res] = (mean_acc, std_acc)
         print(f"Acc = {mean_acc*100:.1f}% ± {std_acc*100:.1f}%")
     
@@ -382,9 +388,8 @@ def experiment_and_plot_pca(spikes_list, y):
     for n_comp in [5, 10, 20, 32, 64, 128, 256]:
         if n_comp > min(feats.shape):
             continue
-        pca = PCA(n_components=n_comp)
-        feats_pca = pca.fit_transform(feats)
-        mean_acc, std_acc = run_classification(feats_pca, y)
+        mean_acc, std_acc = run_classification(
+            feats, y, pca_components=n_comp)
         pca_accs[n_comp] = (mean_acc, std_acc)
         var_expl = cumvar[min(n_comp-1, len(cumvar)-1)] * 100
         print(f"  PCA-{n_comp:3d}: Acc = {mean_acc*100:.1f}% ± {std_acc*100:.1f}%, Var = {var_expl:.1f}%")
@@ -430,9 +435,10 @@ def experiment_and_plot_pca(spikes_list, y):
             continue
         comp = pca64.components_[idx]
         if len(comp) == n_neurons * n_bins:
-            reshaped = comp.reshape(n_neurons, n_bins)
-            temporal = reshaped.mean(axis=0)  # average loadings across neurons
-            temporal_abs = np.abs(reshaped).mean(axis=0)
+            # extract_bsc concatenates complete neuron vectors bin by bin.
+            reshaped = comp.reshape(n_bins, n_neurons)
+            temporal = reshaped.mean(axis=1)  # average loadings across neurons
+            temporal_abs = np.abs(reshaped).mean(axis=1)
         else:
             temporal = comp[:n_bins]
             temporal_abs = np.abs(temporal)
@@ -470,10 +476,8 @@ def experiment_and_plot_robustness(X_list, y, n_seeds=10):
         spk = run_reservoir(X_list, n_res=256, seed=seed*7+13)
         
         bsc_feats = np.array([extract_bsc(s, 6) for s in spk])
-        n_comp = min(64, bsc_feats.shape[1], bsc_feats.shape[0]-1)
-        pca = PCA(n_components=n_comp)
-        bsc_pca = pca.fit_transform(bsc_feats)
-        bsc_acc, _ = run_classification(bsc_pca, y)
+        bsc_acc, _ = run_classification(
+            bsc_feats, y, pca_components=64)
         bsc6_accs.append(bsc_acc)
         
         bsc3_feats = np.array([extract_bsc(s, 3) for s in spk])
@@ -528,10 +532,8 @@ def experiment_and_plot_sensitivity(X_list, y):
             print(f"  β={beta:.2f}, M_th={thresh:.1f}...", end=" ", flush=True)
             spk = run_reservoir(X_list, beta=beta, threshold=thresh)
             feats = np.array([extract_bsc(s, 6) for s in spk])
-            n_comp = min(64, feats.shape[1], feats.shape[0]-1)
-            pca = PCA(n_components=n_comp)
-            feats_pca = pca.fit_transform(feats)
-            mean_acc, _ = run_classification(feats_pca, y)
+            mean_acc, _ = run_classification(
+                feats, y, pca_components=64)
             acc_grid[i, j] = mean_acc * 100
             print(f"{mean_acc*100:.1f}%")
     
