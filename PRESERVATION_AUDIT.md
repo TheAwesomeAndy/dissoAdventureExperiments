@@ -7,7 +7,7 @@ It does not use the shortened 272-page manuscript as a prose base.
 
 | Item | Supplied source | Audited build |
 | --- | ---: | ---: |
-| Total PDF pages | 329 | 331 |
+| Total PDF pages | 329 | 329 |
 | Chapter 1 start | 1 | 1 |
 | Chapter 2 start | 17 | 17 |
 | Chapter 3 start | 50 | 51 |
