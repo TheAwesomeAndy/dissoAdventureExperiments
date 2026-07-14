@@ -75,11 +75,19 @@ class LIFReservoir:
         return spikes
 
 
-def extract_bsc6(spikes):
-    """Binned spike counts, 6 temporal bins."""
-    T_w, _ = spikes.shape
+def extract_bsc6(spikes, t_start=10, t_end=70):
+    """Six equal spike-count bins from the stated early window."""
+    if t_end > spikes.shape[0]:
+        raise ValueError(
+            f"BSC6 window [{t_start}, {t_end}) exceeds {spikes.shape[0]} steps")
+    window = spikes[t_start:t_end]
+    T_w, _ = window.shape
+    if T_w % 6 != 0:
+        raise ValueError("BSC6 window length must be divisible by six")
     bs = T_w // 6
-    return np.concatenate([spikes[b * bs:(b + 1) * bs].sum(axis=0) for b in range(6)])
+    return np.concatenate([
+        window[b * bs:(b + 1) * bs].sum(axis=0) for b in range(6)
+    ])
 
 
 # ----------------------------------------------------------------
@@ -138,20 +146,24 @@ def main():
 
     rng = np.random.RandomState(args.seed)
     idx = rng.choice(N, size=min(args.n, N), replace=False)
-    reservoirs = [LIFReservoir(n_res=256, seed=42 + ch * 17) for ch in range(C)]
+    # Shared weights keep node-feature coordinates aligned across channels.
+    reservoir = LIFReservoir(n_res=256, seed=42)
 
     t0 = time.time()
     bsc = np.zeros((len(idx), C, 6 * 256))
     for j, oi in enumerate(idx):
         for ch in range(C):
-            bsc[j, ch] = extract_bsc6(reservoirs[ch].forward(X_ds[oi, :, ch]))
+            bsc[j, ch] = extract_bsc6(reservoir.forward(X_ds[oi, :, ch]))
         if (j + 1) % 50 == 0:
             print(f"  reservoir {j+1}/{len(idx)} ({time.time()-t0:.0f}s)", flush=True)
 
-    n_comp = min(64, len(idx) - 1, bsc.shape[2])
-    node = np.zeros((len(idx), C, n_comp))
-    for ch in range(C):
-        node[:, ch, :] = PCA(n_components=n_comp).fit_transform(bsc[:, ch, :])
+    # Use one pooled basis so component coordinates are commensurate across
+    # channels.  This script is descriptive; it does not estimate predictive
+    # performance, so the full selected sample is used for this visualization.
+    pooled = bsc.reshape(len(idx) * C, bsc.shape[2])
+    n_comp = min(64, pooled.shape[0] - 1, pooled.shape[1])
+    node = PCA(n_components=n_comp, random_state=args.seed).fit_transform(
+        pooled).reshape(len(idx), C, n_comp)
 
     Ks = list(range(0, args.max_k + 1))
     cos_by_K = {k: [] for k in Ks}

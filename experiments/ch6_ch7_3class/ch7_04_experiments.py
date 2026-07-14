@@ -216,7 +216,7 @@ for p in range(N_PERM):
     null_kappa[p] = np.mean(kappas_perm)
 
 observed_kappa = kappa_all.mean()
-p_perm = (null_kappa >= observed_kappa).sum() / N_PERM
+p_perm = (1 + (null_kappa >= observed_kappa).sum()) / (1 + N_PERM)
 print(f"  Observed mean κ: {observed_kappa:.4f}")
 print(f"  Null distribution: mean={null_kappa.mean():.4f}, std={null_kappa.std():.4f}")
 print(f"  Permutation p = {p_perm:.4f}")

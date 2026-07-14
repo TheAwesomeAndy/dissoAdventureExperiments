@@ -352,8 +352,11 @@ def main():
     print(f"\n  BSC6 raw: shape={bsc6_raw.shape}, mean={bsc6_raw.mean():.3f}, "
           f"zeros={100*(bsc6_raw==0).mean():.1f}%")
     
-    # ─── PCA-64 reduction ─────────────────────────────────────────────
-    print(f"\nFitting PCA-{PCA_N_COMPONENTS} on pooled BSC6 features...")
+    # ─── Descriptive PCA-64 reduction ─────────────────────────────────
+    # This full-sample common basis is saved only for figures and archived
+    # analyses. Predictive evaluation must refit the pooled basis inside each
+    # training fold and transform the corresponding held-out participants.
+    print(f"\nFitting descriptive PCA-{PCA_N_COMPONENTS} on pooled BSC6 features...")
     # Pool: (N_obs × N_ch, 1536) → fit PCA
     pooled = bsc6_raw.reshape(-1, N_RES * BSC_N_BINS)  # (N_obs*34, 1536)
     n_comp = min(PCA_N_COMPONENTS, pooled.shape[0] - 1, pooled.shape[1])

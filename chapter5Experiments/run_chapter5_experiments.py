@@ -264,13 +264,22 @@ class LIFReservoir:
         return spikes
 
 
-def extract_bsc6(spikes, t_start=0, t_end=None):
-    """Binned Spike Counts with 6 bins."""
-    if t_end is None:
-        t_end = spikes.shape[0]
+def extract_bsc6(spikes, t_start=10, t_end=70):
+    """Six 10-step spike-count bins from the specified early window.
+
+    This matches the dissertation specification used in Chapter 4 and the
+    temporal-traceability analysis.  The archived Chapter 5 estimates used a
+    different full-epoch six-bin extractor and must not be mixed with reruns
+    from this corrected function.
+    """
+    if t_end > spikes.shape[0]:
+        raise ValueError(
+            f"BSC6 window [{t_start}, {t_end}) exceeds {spikes.shape[0]} steps")
     window = spikes[t_start:t_end]
     T_w, N = window.shape
     n_bins = 6
+    if T_w % n_bins != 0:
+        raise ValueError("BSC6 window length must be divisible by six")
     bin_size = T_w // n_bins
     features = []
     for b in range(n_bins):
@@ -278,10 +287,11 @@ def extract_bsc6(spikes, t_start=0, t_end=None):
     return np.concatenate(features)
 
 
-def extract_mfr(spikes, t_start=0, t_end=None):
-    """Mean Firing Rate."""
-    if t_end is None:
-        t_end = spikes.shape[0]
+def extract_mfr(spikes, t_start=10, t_end=70):
+    """Mean firing rate over the same early window used for BSC6."""
+    if t_end > spikes.shape[0]:
+        raise ValueError(
+            f"MFR window [{t_start}, {t_end}) exceeds {spikes.shape[0]} steps")
     return spikes[t_start:t_end].mean(axis=0)
 
 
@@ -295,13 +305,13 @@ def run_reservoir_pipeline(X_ds, n_res=256, seed=42, coding='bsc6'):
     """
     N, T, C = X_ds.shape
     
-    # Create one reservoir per channel (shared architecture, independent weights)
-    reservoirs = []
-    for ch in range(C):
-        reservoirs.append(LIFReservoir(n_res=n_res, seed=seed + ch * 17))
+    # Use one saved transformation for every channel. Message passing assumes
+    # equal-numbered node-feature coordinates have the same meaning; independent
+    # channel reservoirs violate that assumption even before PCA.
+    reservoir = LIFReservoir(n_res=n_res, seed=seed)
     
     # Determine feature dim
-    test_spk = reservoirs[0].forward(X_ds[0, :, 0])
+    test_spk = reservoir.forward(X_ds[0, :, 0])
     if coding == 'bsc6':
         test_feat = extract_bsc6(test_spk)
     else:
@@ -314,7 +324,7 @@ def run_reservoir_pipeline(X_ds, n_res=256, seed=42, coding='bsc6'):
         if (i + 1) % 20 == 0 or i == 0:
             print(f"  Processing sample {i+1}/{N}...", flush=True)
         for ch in range(C):
-            spk = reservoirs[ch].forward(X_ds[i, :, ch])
+            spk = reservoir.forward(X_ds[i, :, ch])
             if coding == 'bsc6':
                 features[i, ch] = extract_bsc6(spk)
             else:
@@ -323,8 +333,8 @@ def run_reservoir_pipeline(X_ds, n_res=256, seed=42, coding='bsc6'):
     return features
 
 
-def apply_pca_per_channel(features_train, features_test, n_components=64):
-    """Apply PCA independently per channel, fitted on train data only.
+def apply_pca_common_basis(features_train, features_test, n_components=64):
+    """Fit one PCA basis on training-fold channel observations.
     
     Args:
         features_train: (N_train, 34, feat_dim)
@@ -332,18 +342,24 @@ def apply_pca_per_channel(features_train, features_test, n_components=64):
     Returns:
         train_pca: (N_train, 34, n_components)
         test_pca: (N_test, 34, n_components)
+
+    A separate PCA fit for every channel produces component axes that are
+    not commensurate across nodes.  Pooling the training-fold channel rows
+    gives all channels the same coordinate system while keeping held-out
+    participants out of the fit.
     """
-    C = features_train.shape[1]
-    n_comp = min(n_components, features_train.shape[0] - 1, features_train.shape[2])
-    
-    train_pca = np.zeros((features_train.shape[0], C, n_comp))
-    test_pca = np.zeros((features_test.shape[0], C, n_comp))
-    
-    for ch in range(C):
-        pca = PCA(n_components=n_comp)
-        train_pca[:, ch, :] = pca.fit_transform(features_train[:, ch, :])
-        test_pca[:, ch, :] = pca.transform(features_test[:, ch, :])
-    
+    n_train, n_channels, feature_dim = features_train.shape
+    n_test = features_test.shape[0]
+    pooled_train = features_train.reshape(n_train * n_channels, feature_dim)
+    pooled_test = features_test.reshape(n_test * n_channels, feature_dim)
+    n_comp = min(n_components, pooled_train.shape[0] - 1, feature_dim)
+
+    scaler = StandardScaler()
+    pooled_train = scaler.fit_transform(pooled_train)
+    pooled_test = scaler.transform(pooled_test)
+    pca = PCA(n_components=n_comp, random_state=42)
+    train_pca = pca.fit_transform(pooled_train).reshape(n_train, n_channels, n_comp)
+    test_pca = pca.transform(pooled_test).reshape(n_test, n_channels, n_comp)
     return train_pca, test_pca
 
 
@@ -671,8 +687,9 @@ def run_experiment(X_node_features_train, X_node_features_test,
 
 
 def run_full_cv(X_node_features, y, subjects, A, gnn_type='gcn',
-                n_layers=2, classifier='logreg', n_folds=10):
-    """Subject-level stratified k-fold cross-validation."""
+                n_layers=2, classifier='logreg', n_folds=10,
+                pca_components=None, functional_graph=False):
+    """Subject-grouped CV with all learned preprocessing fit in-fold."""
     
     # Group k-fold: all conditions from same subject stay together
     gkf = StratifiedGroupKFold(n_splits=n_folds, shuffle=True, random_state=42)
@@ -684,8 +701,19 @@ def run_full_cv(X_node_features, y, subjects, A, gnn_type='gcn',
         X_te = X_node_features[test_idx]
         y_tr = y[train_idx]
         y_te = y[test_idx]
+
+        if pca_components is not None:
+            X_tr, X_te = apply_pca_common_basis(
+                X_tr, X_te, n_components=pca_components)
+
+        # A data-derived graph is also a fitted object.  Construct it from
+        # training participants only, then hold it fixed for the test fold.
+        A_fold = A
+        if functional_graph:
+            A_fold = build_functional_adjacency(
+                X_tr.mean(axis=0), threshold_percentile=75)
         
-        preds = run_experiment(X_tr, X_te, y_tr, y_te, A, 
+        preds = run_experiment(X_tr, X_te, y_tr, y_te, A_fold,
                                gnn_type=gnn_type, n_layers=n_layers,
                                classifier=classifier)
         all_preds[test_idx] = preds
@@ -741,14 +769,13 @@ def run_all_experiments(X_ds, y, subjects, positions):
     lsm_mfr_raw = run_reservoir_pipeline(X_ds, coding='mfr')
     print(f"  MFR shape: {lsm_mfr_raw.shape}")
     
-    # PCA will be applied per-fold (to avoid data leakage)
-    # For non-CV feature inspection, fit on all data
-    print("Fitting PCA-64 on all BSC6 features (for inspection)...")
-    lsm_bsc6_pca_all = np.zeros((N, 34, 64))
-    for ch in range(34):
-        n_comp = min(64, N - 1, lsm_bsc6_raw.shape[2])
-        pca = PCA(n_components=n_comp)
-        lsm_bsc6_pca_all[:, ch, :n_comp] = pca.fit_transform(lsm_bsc6_raw[:, ch, :])
+    # Full-sample PCA is retained only for descriptive eigenspectrum and
+    # graph inspection.  Every predictive result below fits PCA in-fold.
+    print("Fitting a pooled common PCA-64 basis for descriptive inspection...")
+    pooled_all = lsm_bsc6_raw.reshape(-1, lsm_bsc6_raw.shape[2])
+    n_comp_all = min(64, pooled_all.shape[0] - 1, pooled_all.shape[1])
+    pca_all = PCA(n_components=n_comp_all, random_state=42)
+    lsm_bsc6_pca_all = pca_all.fit_transform(pooled_all).reshape(N, 34, n_comp_all)
     print(f"  PCA-64 shape: {lsm_bsc6_pca_all.shape}")
     
     # ---- Graph construction ----
@@ -760,7 +787,8 @@ def run_all_experiments(X_ds, y, subjects, positions):
     print(f"Spatial adjacency: {A_spat.sum():.0f} edges, "
           f"density={A_spat.sum()/(34*33):.3f}")
     
-    # Functional adjacency from average embedding correlation
+    # Descriptive full-sample functional adjacency; predictive functional
+    # graphs are rebuilt inside each training fold.
     avg_feats = lsm_bsc6_pca_all.mean(axis=0)  # (34, 64)
     A_func = build_functional_adjacency(avg_feats, threshold_percentile=75)
     print(f"Functional adjacency: {A_func.sum():.0f} edges, "
@@ -772,18 +800,20 @@ def run_all_experiments(X_ds, y, subjects, positions):
     print("="*60)
     
     rows = [
-        ("Row 1: BandPower + LogReg (no graph)",     conv_feats,        None,    'none', 'logreg'),
-        ("Row 2: BandPower + MLP (no graph)",         conv_feats,        None,    'none', 'mlp'),
-        ("Row 3: LSM-BSC6-PCA64 + MLP (no graph)",   lsm_bsc6_pca_all,  None,    'none', 'mlp'),
-        ("Row 4: BandPower + GAT (spatial graph)",    conv_feats,        A_spat,  'gat',  'logreg'),
-        ("Row 5: LSM-BSC6-PCA64 + GAT (spatial)",    lsm_bsc6_pca_all,  A_spat,  'gat',  'logreg'),
-        ("Row 6: LSM-BSC6-PCA64 + GAT (functional)", lsm_bsc6_pca_all,  A_func,  'gat',  'logreg'),
-        ("Row 7: LSM-MFR + GAT (spatial)",            lsm_mfr_raw,       A_spat,  'gat',  'logreg'),
+        ("Row 1: BandPower + LogReg (no graph)",     conv_feats,     None,   'none', 'logreg', None, False),
+        ("Row 2: BandPower + MLP (no graph)",         conv_feats,     None,   'none', 'mlp',    None, False),
+        ("Row 3: LSM-BSC6-PCA64 + MLP (no graph)",   lsm_bsc6_raw,   None,   'none', 'mlp',    64,   False),
+        ("Row 4: BandPower + GAT (spatial graph)",    conv_feats,     A_spat, 'gat',  'logreg', None, False),
+        ("Row 5: LSM-BSC6-PCA64 + GAT (spatial)",    lsm_bsc6_raw,   A_spat, 'gat',  'logreg', 64,   False),
+        ("Row 6: LSM-BSC6-PCA64 + GAT (functional)", lsm_bsc6_raw,   None,   'gat',  'logreg', 64,   True),
+        ("Row 7: LSM-MFR + GAT (spatial)",            lsm_mfr_raw,    A_spat, 'gat',  'logreg', None, False),
     ]
     
-    for name, feats, A, gnn, clf in rows:
+    for name, feats, A, gnn, clf, pca_components, functional_graph in rows:
         print(f"\n{name}...")
-        res = run_full_cv(feats, y, subjects, A, gnn_type=gnn, classifier=clf)
+        res = run_full_cv(
+            feats, y, subjects, A, gnn_type=gnn, classifier=clf,
+            pca_components=pca_components, functional_graph=functional_graph)
         results[name] = res
         print(f"  Acc={res['accuracy']:.3f}, BalAcc={res['balanced_accuracy']:.3f}, "
               f"F1={res['f1_macro']:.3f}")
@@ -796,8 +826,9 @@ def run_all_experiments(X_ds, y, subjects, positions):
     for gnn_type in ['gcn', 'sage', 'gat']:
         name = f"Arch: {gnn_type.upper()} (spatial, LSM-BSC6-PCA64)"
         print(f"\n{name}...")
-        res = run_full_cv(lsm_bsc6_pca_all, y, subjects, A_spat,
-                          gnn_type=gnn_type, classifier='logreg')
+        res = run_full_cv(lsm_bsc6_raw, y, subjects, A_spat,
+                          gnn_type=gnn_type, classifier='logreg',
+                          pca_components=64)
         results[name] = res
         print(f"  Acc={res['accuracy']:.3f}, BalAcc={res['balanced_accuracy']:.3f}, "
               f"F1={res['f1_macro']:.3f}")
@@ -811,8 +842,9 @@ def run_all_experiments(X_ds, y, subjects, positions):
         A_k = build_spatial_adjacency(positions, k_neighbors=k)
         name = f"Sparsity: k={k} neighbors"
         print(f"\n{name} ({A_k.sum():.0f} edges)...")
-        res = run_full_cv(lsm_bsc6_pca_all, y, subjects, A_k,
-                          gnn_type='gcn', classifier='logreg')
+        res = run_full_cv(lsm_bsc6_raw, y, subjects, A_k,
+                          gnn_type='gcn', classifier='logreg',
+                          pca_components=64)
         results[name] = res
         print(f"  Acc={res['accuracy']:.3f}")
     
@@ -824,8 +856,9 @@ def run_all_experiments(X_ds, y, subjects, positions):
     for depth in [1, 2, 3, 4]:
         name = f"Depth: {depth} GCN layers"
         print(f"\n{name}...")
-        res = run_full_cv(lsm_bsc6_pca_all, y, subjects, A_spat,
-                          gnn_type='gcn', n_layers=depth, classifier='logreg')
+        res = run_full_cv(lsm_bsc6_raw, y, subjects, A_spat,
+                          gnn_type='gcn', n_layers=depth, classifier='logreg',
+                          pca_components=64)
         results[name] = res
         print(f"  Acc={res['accuracy']:.3f}")
     

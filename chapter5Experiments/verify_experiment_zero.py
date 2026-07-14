@@ -93,8 +93,8 @@ def main():
     check(f"BSC6 produces {expected_dim}-dim vector", len(bsc) == expected_dim)
     check("BSC6 values are non-negative", np.all(bsc >= 0))
     check("BSC6 has nonzero entries", np.sum(bsc > 0) > 0)
-    # BSC6 may exclude trailing timesteps (T % n_bins remainder), so sum <= total spikes
-    check("BSC6 sum <= total spikes (remainder excluded)",
+    # BSC6 uses only the specified early window, so its sum cannot exceed total spikes.
+    check("BSC6 sum <= total spikes (selected window)",
           bsc.sum() <= spikes.sum() + 1e-10,
           f"BSC sum={bsc.sum()}, spike sum={spikes.sum()}")
 
@@ -159,13 +159,13 @@ def main():
     s3 = res3.forward(x_test)
     check("Different seed produces different spikes", not np.array_equal(s1, s3))
 
-    # ── 9. Channel-specific seeding ──
-    print("\n── Channel-Specific Seeding ──")
-    reservoirs = {ch: LIFReservoir(n_res=64, seed=42 + ch * 17) for ch in range(5)}
-    spikes_ch = {ch: reservoirs[ch].forward(x_test) for ch in range(5)}
-    all_different = all(not np.array_equal(spikes_ch[0], spikes_ch[ch])
-                        for ch in range(1, 5))
-    check("Different channels produce different reservoir responses", all_different)
+    # ── 9. Shared channel coordinate system ──
+    print("\n── Shared Channel Coordinate System ──")
+    shared = LIFReservoir(n_res=64, seed=42)
+    s_a = shared.forward(x_test)
+    s_b = shared.forward(x_test.copy())
+    check("Shared reservoir gives aligned deterministic coordinates",
+          np.array_equal(s_a, s_b))
 
     # ── 10. End-to-end mini pipeline ──
     print("\n── End-to-End Mini Pipeline ──")
@@ -186,7 +186,7 @@ def main():
     for i in range(len(raw)):
         ch_feats = []
         for ch in range(n_ch):
-            r = LIFReservoir(n_res=32, seed=42 + ch * 17)
+            r = LIFReservoir(n_res=32, seed=42)
             sp = r.forward(raw[i, :, ch])
             ch_feats.append(bsc6_encode(sp, n_bins=6))
         embeddings.append(np.concatenate(ch_feats))
