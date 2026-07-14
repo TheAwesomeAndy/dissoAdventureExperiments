@@ -14,18 +14,12 @@
 \usepackage{tabularx}
 \usepackage[margin=1in]{geometry}
 \usepackage{setspace}
-\usepackage{etoolbox}
 \usepackage{pdfpages}
 \usepackage[a-2b]{pdfx}
 
 \hypersetup{hidelinks}
+
 \doublespacing
-\setlength{\emergencystretch}{3em}
-% Stony Brook permits double-spaced body text but requires captions to be
-% single-spaced. Float environments are locally grouped, so these settings do
-% not alter the surrounding body text.
-\AtBeginEnvironment{figure}{\singlespacing}
-\AtBeginEnvironment{table}{\singlespacing}
 
 \begin{document}
 \pagenumbering{gobble}
@@ -137,11 +131,8 @@ The principal contribution is an explicit and inspectable measurement chain link
 \clearpage
 \phantomsection
 \addcontentsline{toc}{chapter}{Bibliography}
-\begingroup
-\singlespacing
 \bibliographystyle{ieeetr}
 \bibliography{Disso}
-\endgroup
 \clearpage
 \include{Appendixa}
 

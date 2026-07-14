@@ -1,50 +1,28 @@
-# Andrew Lane Dissertation — Final ProQuest Source
+ARSPI-Net ProQuest Dissertation Source
 
-This package contains the final LaTeX source, bibliography, referenced figures,
-and compiled PDF for:
+Author: Andrew Lane
+Graduation term shown in the document: August 2026
 
-*Affective Reservoir-Spike Processing and Inference Network (ARSPI-Net): A
-Four-Level Interpretable Neuromorphic Framework for Clinical EEG Analysis*
+Build command:
+  latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
 
-## Build
+The dissertation uses root-level TeX files, Disso.bib, and the pictures directory.
+The scanned Adobe-signed committee form is intentionally excluded. The required
+unsigned committee recommendation page is typeset directly in main.tex as page ii.
 
-From the package root, run:
+Before submission, confirm the graduation term and whether ProQuest copyright
+registration has been selected. A copyright page is not included.
 
-```sh
-latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
-```
+Preservation status:
+  This package was rebuilt from the 329-page source supplied on July 14, 2026.
+  No chapter or appendix was condensed. The audited build is 331 pages; the
+  increase reflects added literature and methodological disclosure. Scientific
+  corrections were applied locally while the original chapter structure,
+  figures, tables, and extended discussion were retained.
 
-The build requires a current TeX distribution with `pdfx`, `graphicx`,
-`subcaption`, `mathtools`, `amsmath`, `float`, `booktabs`, `tabularx`,
-`geometry`, `setspace`, `etoolbox`, and `pdfpages`.
-
-`main.xmpdata` supplies archival metadata, and `main.tex` requests PDF/A-2b.
-The supplied compiled PDF is letter size, unencrypted, and contains embedded
-fonts.
-
-## Front matter
-
-The unsigned committee page is intentionally retained as page ii. Stony Brook
-University's June 2026 dissertation guidelines require that page in the
-dissertation PDF while the separately signed approval form is submitted as a
-different document. Committee names follow the signed form: Wendy Tang, Alex
-Doboli, Brady Nelson, and Sangjin Hong.
-
-## Interpretation boundary
-
-The package does not contain the raw Stress, Health, and the Psychophysiology of
-Emotion (SHAPE) inputs. The corrected fold-local real-data pipeline therefore
-could not be rerun during the post-defense audit. The dissertation identifies
-affected archived numerical results as descriptive legacy estimates and states
-the corrected specification without inventing replacement values.
-
-## Included files
-
-- `main.tex` and chapter/appendix source files
-- `Disso.bib`
-- `main.xmpdata`
-- only the figure files referenced by the manuscript
-- the compiled PDF
-- `FINAL_AUDIT_CHANGELOG.md`
-
-Temporary build files are intentionally excluded.
+Important interpretive note:
+  Several defended real-data values are retained as descriptive legacy results
+  because the raw SHAPE inputs were not included in the source package. The
+  manuscript identifies global-PCA, panel-centering, reset-implementation,
+  control-definition, and invalid information-estimator limitations rather than
+  presenting recomputed numbers that cannot be reproduced from the supplied data.

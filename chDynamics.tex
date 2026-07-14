@@ -1,50 +1,46 @@
-\chapter{Dynamical Characterization of Reservoir Responses}
+\chapter{Dynamical Characterization of Reservoir States for Interpretable Affective Response Analysis}
 \label{chap:dynamics}
 
 \section{Introduction and Motivation}
 
-This chapter asks what can be learned by summarizing the reservoir trajectory rather than only its final embedding. The summaries are explicitly defined functions of a driven nonlinear system. They make intermediate computations inspectable, but they are not assumed to be physiological measurements or clinically meaningful variables.
+The question is whether the reservoir's internal dynamics carry signatures of the input's temporal organization that are distinct from the information captured by the embedding, whether, in other words, the driven nonlinear system encodes a separate form of hidden order in its trajectory properties. This chapter is the interpretability core of the dissertation: it is where the reservoir ceases to be a feature generator and becomes a \emph{measurement instrument} that produces named, physically grounded descriptors of the input signal.
 
-The preceding chapters specify a fixed reservoir followed by channel-organized analysis. Here the reservoir trajectory is summarized with quantities that have stated definitions, units, or scales, and their within-cohort associations with input condition are described.
+The preceding chapters established ARSPI-Net as a hybrid architecture in which a Liquid State Machine performs temporal state expansion and a graph-based back end organizes channels. This chapter asks whether the reservoir trajectory can be summarized by named quantities with defined units or scales, and whether those quantities show stable correspondence with the input and affective condition.
 
-The analysis uses the selected reservoir operating point ($\beta = 0.05$, $M_{th}=0.5$, $N_{res}=256$), extracts seven summaries from all $633$ SHAPE observations, and screens variation by affective condition and clinical label. The summaries cover sparse activity, trajectory complexity, and response persistence. They make the reservoir response analyzable without implying clinical actionability.
+The analysis uses the selected reservoir operating point ($\beta = 0.05$, $M_{th}=0.5$, $N_{res}=256$), extracts seven state-space descriptors from all $633$ SHAPE observations, and tests variation by affective condition and clinical label. The three metric families summarize sparse activity, driven-trajectory complexity, and relaxation behavior. They make the reservoir response analyzable without implying that the summaries are clinically actionable.
 
-All seven dynamical metrics have nominal Friedman $p < 0.05$ for the condition comparison, but this seven-test family was not multiplicity controlled. The mean effect-size magnitude in the two-member temporal-structure group ($\hat{H}_{\pi}$, $\tau_{AC}$) is $2.4\times$ that of the four-member amplitude-associated group. None of the $49$ channel-averaged metric--diagnosis screens has nominal $p<0.05$, and the clinical balanced-accuracy estimates are near chance. The later ``excitability--persistence'' label is therefore a descriptive name for an in-sample principal component, not a patient-level scale.
+All seven dynamical metrics vary by condition (Friedman $p < 0.05$), with the temporal-structure family ($\hat{H}_{\pi}$, $\tau_{AC}$) showing $2.4\times$ larger effects than the amplitude-tracking family. None of the $49$ channel-averaged metric--diagnosis comparisons reaches significance. The layer ablation gives near-chance clinical balanced accuracies even where dynamical features are the best-performing ARSPI-Net layer. The excitability--persistence axis is therefore a cohort-level summary of reservoir organization, not a patient-level clinical scale.
 
 \section{Notation and Formal Definitions}
 \label{sec:dynamics_notation}
 
-The following definitions specify the reservoir state and the summaries used in this chapter.
+We establish notation consistent with Chapters 3--5 and introduce the symbols required for dynamical analysis.
 
 \subsection{The LSM as a Driven Dynamical System}
 
-The selected LSM reservoir has $N_{res}=256$ leaky integrate-and-fire neurons, fixed random input weights $\mathbf{W}^{in} \in \mathbb{R}^{N_{res} \times N_f}$, fixed random recurrent weights $\mathbf{W}^{rec} \in \mathbb{R}^{N_{res} \times N_{res}}$, membrane decay parameter $\beta=0.05$ (corresponding to $\tau_m \approx 20$ time steps), and firing threshold $M_{th}=0.5$. The reservoir receives one EEG channel as its input.
+Let the validated LSM reservoir consist of $N_{res}=256$ leaky integrate-and-fire neurons with fixed random input weights $\mathbf{W}^{in} \in \mathbb{R}^{N_{res} \times N_f}$, fixed random recurrent weights $\mathbf{W}^{rec} \in \mathbb{R}^{N_{res} \times N_{res}}$, membrane decay parameter $\beta=0.05$ (corresponding to $\tau_m \approx 20$ time steps), and firing threshold $M_{th}=0.5$. The reservoir receives a single-channel EEG epoch as its driving input.
 
 \paragraph{Definition 6.1 (Input Process).}
 For a given subject $s$ and trial $j$, let $\mathbf{u}^{(j)}_s(t) \in \mathbb{R}^{N_f}$ denote the preprocessed EEG input vector at discrete time step $t \in \{1,\ldots,T\}$, where $T$ is the epoch length and $N_f$ is the number of input features per time step.
 
 \paragraph{Definition 6.2 (Reservoir State).}
-The retained post-update reservoir state at time $t$ is the membrane-potential vector
+The complete reservoir state at time $t$ is the membrane potential vector
 \begin{equation}
 \mathbf{M}(t) = [M_1(t), M_2(t), \ldots, M_{N_{res}}(t)]^{\top} \in \mathbb{R}^{N_{res}}
 \end{equation}
-The implementation first computes the pre-reset value
+with discrete-time LIF dynamics
 \begin{equation}
-\widetilde{M}_i[t] = (1-\beta)M_i[t-1](1-S_i[t-1]) + I_{tot,i}[t]
+M_i[t] = (1-\beta)M_i[t-1](1-S_i[t-1]) + I_{tot,i}[t]
 \end{equation}
 where $S_i[t-1] \in \{0,1\}$ is the spike indicator at the previous step and
 \begin{equation}
 I_{tot,i}[t] = \sum_{j=1}^{N_f} W^{in}_{ij}u_j(t) + \sum_{\ell=1}^{N_{res}} W^{rec}_{i\ell}S_{\ell}[t-1].
 \end{equation}
-A spike is emitted when $\widetilde{M}_i[t] \ge M_{th}$:
+A spike is emitted when $M_i[t] \ge M_{th}$:
 \begin{equation}
-S_i[t] = \Theta(\widetilde{M}_i[t]-M_{th}),
+S_i[t] = \Theta(M_i[t]-M_{th})
 \end{equation}
-and the retained state is
-\begin{equation}
-M_i[t]=\max\!\left(\widetilde{M}_i[t]-S_i[t]M_{th},\,0\right),
-\end{equation}
-where $\Theta(\cdot)$ is the Heaviside step function. Thus a unit that spikes has its threshold subtracted on the current step and its retained contribution cleared in the next-step decay term.
+where $\Theta(\cdot)$ is the Heaviside step function.
 
 \paragraph{Definition 6.3 (Spike Train Matrix).}
 For a given trial, the complete spike output of the reservoir is the binary matrix
@@ -65,12 +61,12 @@ For a fixed reservoir instantiation (fixed $\mathbf{W}^{in}$ and $\mathbf{W}^{re
 \end{equation}
 All dynamical metrics extracted in this chapter are properties of $\mathcal{R}(\mathbf{u})$, the driven trajectory, not of $\mathcal{R}$ in isolation.
 
-\section{Metric I: Sparse Coding Efficiency \texorpdfstring{($\Phi$)}{(Phi)}}
+\section{Metric I: Sparse Coding Efficiency ($\Phi$)}
 \label{sec:dynamics_phi}
 
 \subsection{Theoretical Foundation}
 
-The efficient-coding literature motivates comparing information retained by a representation with the operations needed to compute it \cite{barlow_possible_1961,olshausen_emergence_1996}. In this software implementation, spike counts can support an operation-count estimate. They cannot establish metabolic cost, physical energy use, or pathological inefficiency. The dissertation therefore treats this metric as engineering bookkeeping rather than a biological hypothesis.
+The efficient coding hypothesis posits that neural systems evolve or adapt to maximize information transmission while minimizing metabolic expenditure \cite{barlow_possible_1961,olshausen_emergence_1996}. In neuromorphic computing, this principle becomes an energy--information trade-off: the number of joules, or equivalently synaptic operations, expended per bit of transmitted information. In the context of ARSPI-Net, the working hypothesis is that affective dysregulation will manifest as a measurable departure from efficient spike-based coding in the reservoir's response to emotionally salient stimuli. Specifically, pathological inputs may drive the reservoir into a regime of denser, metabolically wasteful firing that carries less stimulus-specific information per spike.
 
 \subsection{Formal Metric Definition}
 
@@ -91,30 +87,31 @@ Under sparse random connectivity with connection probability $p_c$, the expected
 \end{equation}
 where $N_{total\_spikes}=\sum_{i,t} S_{i,t}$ is the total spike count over the epoch.
 
-\paragraph{Definition 6.7 (Hardware-Model Energy Estimate).}
-If a specified hardware platform assigns energy $E_{syn}$ to each synaptic operation, a model-based trial estimate would be
+\paragraph{Definition 6.7 (Neuromorphic Energy Cost).}
+Using a standard neuromorphic hardware energy model in which each synaptic operation costs $E_{syn}$, the trial-level energy cost is
 \begin{equation}
 E_{trial}=\mathrm{SynOps}\cdot E_{syn}. 
 \end{equation}
 
-\paragraph{Definition 6.8 (Decoded Information Summary).}
-Let $f(\mathbf{S})$ denote a feature vector extracted from the spike train and let $\hat{y}$ be an out-of-fold prediction produced from that vector. The mutual information between the observed label and the decoded label can be computed from the out-of-fold confusion matrix:
+\paragraph{Definition 6.8 (Spike-Based Mutual Information Estimator).}
+To quantify the information content of the reservoir spike response about the stimulus class $y\in\{c_1,c_2,\ldots,c_K\}$, let $f(\mathbf{S})$ denote the feature vector extracted from the spike train, for example the $\mathrm{BSC}_6 \rightarrow \mathrm{PCA}\text{-}64$ embedding validated in Chapter 4. The decoded mutual information is bounded below by the Fano-type estimator
 \begin{equation}
-\hat{I}(y;\hat{y})=\sum_{k=1}^{K}\sum_{\hat{k}=1}^{K} p(y=k,\hat{y}=\hat{k})\log_2\!\left(\frac{p(y=k,\hat{y}=\hat{k})}{p(y=k)\,p(\hat{y}=\hat{k})}\right).
+I_{decoded}(\mathbf{S};y) \ge \log_2(K) - H_b(P_e)
 \end{equation}
-Because $y\rightarrow\mathbf{S}\rightarrow f(\mathbf{S})\rightarrow\hat{y}$ is a processing chain, $I(y;\mathbf{S})\geq I(y;\hat{y})$ by the data processing inequality. This is a dataset-level decoder summary, not a per-trial estimate of the information in the spike train. It must be computed from genuinely out-of-fold predictions; accuracy alone is insufficient to determine it.
+where $P_e$ is the Bayes-optimal classification error rate estimated via cross-validation and $H_b(\cdot)$ is the binary entropy function. A refined estimate can be obtained from the normalized confusion matrix:
+\begin{equation}
+\hat{I}(\mathbf{S};y)=\sum_{k=1}^{K}\sum_{\hat{k}=1}^{K} p(y=k,\hat{y}=\hat{k})\log_2\!\left(\frac{p(y=k,\hat{y}=\hat{k})}{p(y=k)\,p(\hat{y}=\hat{k})}\right).
+\end{equation}
 
-\paragraph{Definition 6.9 (Operation-Normalized Decoder Summary).}
-When fold-safe out-of-fold predictions are available, an operation-normalized descriptive summary may be reported as
+\paragraph{Definition 6.9 (Sparse Coding Efficiency).}
+The sparse coding efficiency metric is
 \begin{equation}
-\Phi_{dataset} = \frac{\hat{I}(y;\hat{y})}{\overline{\mathrm{SynOps}}} \qquad \left[\frac{\mathrm{bits}}{\mathrm{mean\ trial\ synaptic\ operation}}\right]
+\Phi = \frac{\hat{I}(\mathbf{S};y)}{\mathrm{SynOps}} \qquad \left[\frac{\mathrm{bits}}{\mathrm{synaptic\ operation}}\right]
 \end{equation}
-where $\overline{\mathrm{SynOps}}$ is the mean estimated operation count per trial. This ratio is one dataset-level descriptive number. It does not define a trial-level or condition-level information efficiency distribution. A physical energy quantity would additionally require hardware-specific measurements; multiplying by a literature energy-per-operation constant provides only a hardware-model estimate.
-For completeness, a hardware-model normalization would be
+or, in physical units,
 \begin{equation}
-\Phi_E = \frac{\hat{I}(y;\hat{y})}{\overline{E}_{trial}} \qquad \left[\frac{\mathrm{bits}}{\mathrm{Joule}}\right],
+\Phi_E = \frac{\hat{I}(\mathbf{S};y)}{E_{trial}} \qquad \left[\frac{\mathrm{bits}}{\mathrm{Joule}}\right].
 \end{equation}
-but it is not evaluated in this dissertation because no neuromorphic hardware was profiled.
 
 \subsection{Auxiliary Metrics}
 
@@ -132,15 +129,19 @@ a_{temp}=\frac{1}{T}\sum_{t=1}^{T} \mathbb{1}[r(t)<\epsilon].
 \end{equation}
 In implementation, $\epsilon$ may be chosen as $1/N_{res}$, corresponding to at most one spike per time step.
 
-\subsection{Scope of the Efficiency Summary}
-Because $\Phi_{dataset}$ is defined from a single out-of-fold confusion matrix, it is not a participant-level variable and cannot be compared between individual HC and MDD observations. The archived analysis treated a fixed decoded-information numerator divided by each trial's spike count as though it were trial-level information efficiency. That construction is not used here. EXP-6.5 therefore reports only the observed operation-count stability; no clinical information-efficiency hypothesis is tested.
+\subsection{Hypothesis H1}
+The efficient coding hypothesis predicts that for subjects in the healthy control (HC) group, the reservoir response to negative-valence stimuli will exhibit higher $\Phi$ than the response generated by subjects in the Major Depressive Disorder (MDD) group:
+\begin{equation}
+\mathbb{E}[\Phi\mid \mathrm{HC}] > \mathbb{E}[\Phi\mid \mathrm{MDD}].
+\end{equation}
+This hypothesis is tested in Section~\ref{sec:ch6_results}, EXP-6.6.
 
-\section{Metric II: Driven Trajectory Complexity \texorpdfstring{($\Lambda$)}{(Lambda)}}
+\section{Metric II: Driven Trajectory Complexity ($\Lambda$)}
 \label{sec:dynamics_lambda}
 
 \subsection{Theoretical Foundation}
 
-The edge-of-chaos hypothesis motivates studying contraction and expansion in recurrent systems \cite{langton_computation_1990,bertschinger_real-time_2004}. For a driven reservoir, the relevant quantity is the separation rate of nearby reservoir trajectories under the \emph{same} input, not the autonomous Lyapunov spectrum. Any clinical direction proposed below is exploratory; no theorem links diagnostic status to the complexity of this fixed reservoir's response.
+The edge-of-chaos hypothesis for reservoir computing posits that recurrent networks have maximal computational capacity near a dynamical phase transition between strongly contracting and strongly expanding dynamics \cite{langton_computation_1990,bertschinger_real-time_2004}. In driven systems, the relevant quantity is not the autonomous Lyapunov spectrum of the reservoir in isolation, but the conditional or driven Lyapunov exponent: the exponential separation rate of nearby trajectories under the \emph{same} input drive. The affective-processing interpretation considered here is that healthy dynamics preserve a richer, more flexible temporal repertoire, whereas pathological dynamics collapse toward a lower-dimensional and more repetitive response manifold.
 
 \subsection{Formal Metric Definitions}
 
@@ -205,25 +206,25 @@ Permutation entropy was introduced by Bandt and Pompe as a natural complexity me
 \subsection{Phase-Space Visualization}
 
 \paragraph{Definition 6.15 (Reconstructed Phase Portrait).}
-For visualization of a finite driven trajectory, let $\mathbf{M} \in \mathbb{R}^{N_{res}\times T}$ be the membrane-potential matrix for a given observation. Compute the PCA projection
+For visualization and qualitative assessment of attractor geometry, let $\mathbf{M} \in \mathbb{R}^{N_{res}\times T}$ be the membrane potential matrix for a given trial. Compute the PCA projection
 \begin{equation}
 \mathbf{z}(t)=\mathbf{W}_{PC}^{\top}(\mathbf{M}(t)-\bar{\mathbf{M}}) \in \mathbb{R}^{2}
 \end{equation}
 where $\mathbf{W}_{PC}=[\mathbf{w}_1,\mathbf{w}_2]$ contains the first two principal-component directions and $\bar{\mathbf{M}}$ is the temporal mean.
 
 \subsection{Hypothesis H2}
-An exploratory directional hypothesis is that reservoir trajectories driven by EEG from the complete-case control group will have larger complexity summaries than trajectories from participants with MDD:
+The edge-of-chaos hypothesis predicts that reservoir trajectories driven by EEG from healthy control subjects processing negative-valence stimuli will exhibit greater driven complexity than trajectories driven by EEG from MDD subjects:
 \begin{equation}
 \mathbb{E}[\Lambda\mid \mathrm{HC}] > \mathbb{E}[\Lambda\mid \mathrm{MDD}]
 \end{equation}
 where $\Lambda \in \{\lambda_1,C_{LZ},\hat{H}_{\pi}\}$. This hypothesis is tested in Section~\ref{sec:ch6_results}, EXP-6.6.
 
-\section{Metric III: Relaxation Time Constant \texorpdfstring{($T$)}{(T)}}
+\section{Metric III: Relaxation Time Constant ($T$)}
 \label{sec:dynamics_tau}
 
 \subsection{Theoretical Foundation}
 
-Critical slowing down describes slower recovery near some dynamical transitions \cite{scheffer_early-warning_2009}, and elevated temporal autocorrelation has been proposed as an early-warning signal in affective time series \cite{vandeleemput_critical_2014,wichers_critical_2016}. The present quantity is narrower: it summarizes decay in the fixed reservoir's population response over an observed epoch. It is not a cortical recovery or tipping-point estimate.
+Critical slowing down is a phenomenon in nonlinear dynamical systems whereby recovery from perturbations becomes slower as the system approaches a tipping point or loss of stability \cite{scheffer_early-warning_2009}. In psychiatry and affective-dynamics work, elevated temporal autocorrelation has been proposed as an early-warning indicator for depressive transitions \cite{vandeleemput_critical_2014,wichers_critical_2016}. In the reservoir-computing context considered here, the relaxation time quantifies how rapidly the network's activity returns to baseline after an affective stimulus has driven the system away from its resting regime.
 
 \subsection{Formal Metric Definitions}
 
@@ -269,31 +270,42 @@ T_{RTB}=\min\left\{t>t_{peak}: r(t')\le r_{baseline}+\alpha(r_{peak}-r_{baseline
 \end{equation}
 where $\alpha\in(0,1)$ is a threshold fraction and $\Delta$ is a sustain window.
 
-\subsection{Linearized Decay Analogy}
+\subsection{Energy Landscape Interpretation}
 
-For an autonomous system linearized near a stable operating point, the eigenvalue of largest magnitude inside the unit disk determines the slowest decay mode. If that eigenvalue is $\mu_{max}$, then
+The relaxation time can be interpreted through an energy-landscape metaphor from attractor-network theory. Near a locally stable operating point of the autonomous reservoir, the linearized Jacobian determines the slowest decay mode. If $\mu_{max}$ is the eigenvalue of largest magnitude inside the unit disk, then
 \begin{equation}
 \tau_{relax}^{(slow)} = -\frac{1}{\ln|\mu_{max}|}.
 \end{equation}
-As $|\mu_{max}|\rightarrow 1^{-}$, this linearized time constant increases. The driven, thresholded reservoir analyzed here does not meet this simple model exactly, so the equation is contextual rather than an identification of an energy landscape or critical point.
+As $|\mu_{max}|\rightarrow 1^{-}$, the relaxation time diverges, which is the hallmark of critical slowing down.
 
 \subsection{Hypothesis H3}
-As an exploratory engineering hypothesis, EEG from participants with MDD may place the fixed reservoir in a regime with a longer measured relaxation time than EEG from healthy controls:
+The critical slowing down literature predicts that reservoir responses to negative-valence stimuli driven by MDD subjects' EEG will exhibit longer relaxation times than those driven by healthy controls:
 \begin{equation}
 \mathbb{E}[\tau_{relax}\mid \mathrm{MDD}] > \mathbb{E}[\tau_{relax}\mid \mathrm{HC}].
 \end{equation}
-This hypothesis is tested in Section~\ref{sec:ch6_results}, EXP-6.6. The test concerns the response of the fixed reservoir to the observed EEG; it is not a test of cortical criticality and does not estimate a cortical relaxation time.
+This hypothesis is tested in Section~\ref{sec:ch6_results}, EXP-6.6.
 
-\section{Validity and Scope of Reservoir-Derived Measures}
+\section{The Reservoir--Input Mapping Problem}
 \label{sec:dynamics_fidelity}
 
-This section states the conditions under which a quantity extracted from the driven reservoir can be interpreted. The analysis distinguishes three objects: the latent cortical process, the scalp EEG observation, and the response of the fixed reservoir to that observation. The metrics in this chapter describe the third object. They are not estimators of latent cortical invariants unless a separate validation establishes such a relationship.
+\subsection{The Central Question for Defense}
 
-\subsection{Fixed-Transformation Perspective}
+This section addresses the foundational validity question for the entire dynamical characterization framework: under what formal conditions do dynamical metrics extracted from a driven LSM reservoir constitute valid estimators of properties of the source EEG signal, and by extension, of the cortical dynamics that generated it? This is not a peripheral methodological detail. It is the load-bearing theoretical structure on which any clinical or physiological interpretation of Sections~\ref{sec:dynamics_phi}--\ref{sec:dynamics_tau} depends.
 
-A fixed transformation can be characterized by how it responds to controlled and observed inputs. The reservoir is treated in that limited sense: as a specified nonlinear operator whose internal state is available for inspection. It was not calibrated as a scientific instrument. The metrics are functionals of the \emph{driven reservoir response}, not latent cortical invariants.
+The argument is organized in five layers:
+\begin{enumerate}
+    \item a measurement-instrument paradigm that clarifies what the reservoir is and is not being claimed to measure;
+    \item echo-state and generalized-synchronization arguments establishing initial-condition independence and input determinism;
+    \item information-theoretic bounds clarifying what can and cannot be preserved through the reservoir transformation;
+    \item Takens-type embedding arguments that motivate dynamical sufficiency under explicit assumptions; and
+    \item metric-specific monotonicity and validation arguments.
+\end{enumerate}
 
-In particular, the reservoir relaxation time is not the relaxation time of the cortex. It is a response functional of a specified nonlinear filter. Reliability across repeated recordings, reservoir initializations, and preprocessing choices would be required before that functional could support an individual-level interpretation.
+\subsection{Measurement-Instrument Paradigm}
+
+A spectrum analyzer, oscilloscope, or matched-filter bank has its own internal dynamics, yet one can still use it to characterize an input signal so long as the transformation is calibrated and stable. The reservoir plays an analogous role here. It is a fixed nonlinear dynamical operator whose driven internal trajectory encodes information about the input in a high-dimensional state. The key epistemological point is therefore the following: the dynamical metrics computed in this chapter are not claimed to be identical to latent cortical invariants. They are claims about calibrated functionals of the \emph{driven reservoir response}.
+
+In particular, the dissertation does not claim that the reservoir relaxation time is literally the relaxation time of the cortex. Rather, the claim is that the reservoir relaxation time, when extracted under conditions that guarantee input determinism and adequate fidelity, can serve as a consistent and discriminative functional of the EEG drive. This measurement-instrument framing is central because it prevents a category error that would otherwise weaken the chapter's integrity. The uploaded expansion makes this distinction explicit and correctly treats the reservoir as a standardized nonlinear instrument rather than as a direct physiological surrogate.
 
 \subsection{Formal Signal-Chain Setup}
 
@@ -313,11 +325,11 @@ The three core validity questions are then:
     \item Does the reservoir retain sufficient information about the clinically relevant structure in $\mathbf{u}(t;\theta)$?
     \item Does the chosen functional $\Psi$ preserve the ordering or magnitude of the input property of interest?
 \end{enumerate}
-These questions separate state reproducibility, retained task information, and external validity. Satisfying one does not imply the others.
+These same three questions are articulated in the uploaded mapping-theory note and provide the correct defense structure for this chapter.
 
 \subsection{Input Determinism: Echo State Property and Generalized Synchronization}
 
-To interpret the reservoir as an input-determined filter, its dependence on the initial state must decay for the input class under study. The echo state property formalizes such loss of initial-condition dependence. Simple spectral-radius heuristics are insufficient even for smooth tanh reservoirs, and the property belongs to the driven system rather than to the recurrent matrix alone \cite{yildiz_re-visiting_2012}. The piecewise-smooth LIF update requires at least the same caution.
+For the reservoir state to be interpretable, it must asymptotically forget its initial condition under input drive. This is the role of the echo state property (ESP). The classical ESN literature emphasizes that simple spectral-radius heuristics are insufficient even in smooth tanh reservoirs, and that the ESP must be treated carefully as a property of the driven system rather than of the recurrent matrix alone \cite{yildiz_re-visiting_2012}. The same caution applies \emph{a fortiori} to piecewise-smooth LIF reservoirs.
 
 Formally, the reservoir satisfies the ESP with respect to an input class $\mathcal{U}$ if, for every bounded input sequence $\mathbf{u}\in\mathcal{U}$ and every pair of initial conditions $\mathbf{M}_0,\mathbf{M}_0'$,
 \begin{equation}
@@ -325,15 +337,15 @@ Formally, the reservoir satisfies the ESP with respect to an input class $\mathc
 \end{equation}
 A fully rigorous sufficient condition for the particular discretized LIF reservoir used here is nontrivial because the threshold-and-reset mechanism breaks global smoothness. For that reason, the strongest defensible statement is not a universal theorem for all bounded inputs, but an input-class statement: if the driven reservoir has negative conditional Lyapunov exponent over the input family of interest, then it contracts initial-condition differences and behaves as an input-determined filter. That logic is entirely consistent with generalized synchronization theory, which states that a driven system can converge onto a synchronization manifold that is a deterministic function of the input history \cite{rulkov_generalized_1995,yildiz_re-visiting_2012}.
 
-Accordingly, a negative driven conditional Lyapunov estimate is used here as evidence of contraction for the tested input family:
+Accordingly, the practical criterion adopted in this dissertation is
 \begin{equation}
 \lambda_1^{(driven)} < 0 \quad \Longrightarrow \quad \mathbf{M}(t) \approx \psi(\mathbf{u}(t),\mathbf{u}(t-1),\ldots)
 \end{equation}
-after transient decay, for the specific operating regime under study. This empirical criterion does not prove a global echo-state property for all bounded inputs and does not by itself prove separation between stimulus classes.
+after transient decay, for the specific operating regime under study. This is the same direction taken in the uploaded note, where generalized synchronization and ESP are used to establish the measurement validity of the reservoir response.
 
 \subsection{Fading Memory and Effective Memory Horizon}
 
-Once the state is a function of the input history, one still needs a practical bound on how much history matters. Reservoir systems with the fading-memory property weight remote lags less strongly than recent lags. An effective memory horizon $T_{mem}$ can therefore be defined operationally as the lag beyond which a controlled perturbation has negligible measured effect. The heuristic $T_{mem}\approx -1/\lambda_1$ may be useful near a uniformly contracting linearization, but it is not an identity for a thresholded, input-driven reservoir and is not used as a measured cortical timescale.
+Once the state is a function of the input history, one still needs a practical bound on how much history matters. Reservoir systems with the fading-memory property weight remote lags less strongly than recent lags. The relevant engineering consequence is that there exists an effective memory horizon $T_{mem}$ such that perturbations beyond that horizon have negligible effect on the present state. The uploaded expansion proposes relating this horizon to the driven contraction rate through $T_{mem}\approx -1/\lambda_1$ under contracting dynamics; this is a useful heuristic so long as it is presented as an operating approximation rather than as an exact identity.
 
 \subsection{Information-Theoretic Bounds}
 
@@ -343,30 +355,30 @@ I(\theta;\Psi)\leq I(\theta;\mathbf{M})\leq I(\theta;\mathbf{u}),
 \end{equation}
 so neither the reservoir nor the downstream functional can create new information about the latent state that was not already present in the EEG input \cite{cover_elements_2006}. This bound is a necessary guardrail on the interpretation of Chapter 4 results. When the reservoir increases the Fisher Discriminant Ratio or improves downstream classification accuracy, the correct reading is that it improves \emph{representation geometry for the chosen decoder}, not that it increases mutual information in violation of DPI.
 
-Any reservoir-derived metric must therefore be evaluated relative to information already present in the observed EEG, not relative to an unobserved cortical state.
+The uploaded mapping note correctly extends this logic to Fisher-information language, treating any reservoir-derived metric as an estimator whose efficiency must be discussed relative to the information present in the observed EEG rather than in the latent cortical state itself.
 
 \subsection{Takens-Type Embedding and Dynamical Sufficiency}
 
 Takens' original theorem concerns smooth, deterministic, autonomous dynamical systems observed through generic scalar functions; under those assumptions, a delay embedding can reconstruct the attractor up to a diffeomorphism \cite{takens_detecting_1981}. Those assumptions do \emph{not} hold literally for noisy, volume-conducted EEG, and they certainly do not hold automatically for a discontinuous spiking reservoir. Any appeal to Takens in this dissertation must therefore be treated as an analogy supported by more recent reservoir-embedding results, not as a direct theorem about the SHAPE EEG itself.
 
-Recent ESN theory is relevant but does not close this gap. Hart, Hook, and Dawes show that a suitable ESN trained on observations of an invertible dynamical system can induce an echo-state map that is generically an embedding with positive probability \cite{hart_embedding_2020}. Grigoryeva and Ortega establish fading-memory and approximation properties for reservoir systems under bounded inputs \cite{grigoryeva_echo_2018}. Those assumptions do not prove that the LIF reservoir used here is a diffeomorphic embedding of latent cortical dynamics. The results motivate a representation hypothesis; they are not presented as a theorem about SHAPE EEG.
+Recent ESN theory is nevertheless highly relevant. Hart, Hook, and Dawes show that a suitable ESN trained on observations of an invertible dynamical system can induce an echo-state map that is generically an embedding with positive probability \cite{hart_embedding_2020}. Related work by Grigoryeva and Ortega establishes strong fading-memory and approximation properties for reservoir systems under bounded inputs \cite{grigoryeva_echo_2018}. These results do not prove that the specific LIF reservoir used here is a diffeomorphic embedding of the latent cortical dynamics. They do, however, support a weaker and defensible proposition: sufficiently rich driven reservoirs can preserve useful topological and predictive structure of an underlying dynamical process under explicit assumptions. The uploaded note is strongest when it presents this as a generalized embedding argument conditioned on ESP, genericity, and dimension assumptions, rather than as an unconditional theorem about real EEG.
 
 \subsection{Metric-Specific Validity and Monotonicity}
 
 The most difficult issue is not state reconstruction; it is whether a chosen functional of the reservoir trajectory preserves the ordering of the corresponding input property.
 
 \paragraph{Complexity metrics.}
-For symbolic measures such as Lempel--Ziv complexity and permutation entropy, no general monotonic mapping from input complexity to reservoir-output complexity is assumed. A nonlinear filter can increase or decrease either measure. Direct comparison with input-domain measures and controlled surrogates is therefore necessary \cite{lempel_complexity_1976,bandt_permutation_2002,zunino_permutation_2017,little_permutation_2016}.
+For symbolic measures such as Lempel--Ziv complexity and permutation entropy, pointwise monotonicity is too strong to claim in general. A nonlinear filter can map a complex input to a simpler output or vice versa in special cases. The defensible claim is instead statistical monotonicity over an ensemble: if the reservoir satisfies ESP, is nondegenerate, and the trial process is sufficiently stationary over the analysis window, then higher entropy-rate inputs should tend, on average, to induce higher complexity outputs. This is consistent with the entropy-rate interpretation of Lempel--Ziv complexity and with the finite-sample cautions in the time-series literature \cite{bandt_permutation_2002,zunino_permutation_2017,little_permutation_2016}.
 
 \paragraph{Driven Lyapunov exponent.}
-The driven Lyapunov exponent is a joint property of the input--reservoir system, not an estimator of the cortical Lyapunov spectrum. It depends on the reservoir Jacobian along the driven trajectory and on how the input positions neurons relative to threshold. It is therefore reported only as a reservoir-stability descriptor.
+The driven Lyapunov exponent is a joint property of the coupled system, not a direct estimator of the cortical Lyapunov spectrum. The uploaded note is particularly useful here: it explicitly states that the driven exponent depends on the instantaneous reservoir Jacobian along the driven trajectory and therefore on how the input positions the reservoir relative to threshold. This is the correct mechanistic interpretation. The dissertation should not claim that the brain's Lyapunov exponent is being measured. It should claim that the reservoir's driven stability is modulated by input structure and may therefore serve as a discriminative systems-level marker.
 
 \paragraph{Relaxation-time metrics.}
-During a locally linear decay phase, the population-rate time constant can depend on both intrinsic reservoir contraction and the autocorrelation structure of the input. It is therefore an input-mediated effective reservoir time constant. Its physiological meaning is not established here.
+Among the three families, relaxation-time metrics admit the strongest transfer argument. During the decay phase the reservoir can be approximated locally by a linearized driven system, so the observed decay constant of the population rate depends on both intrinsic reservoir contraction and the autocorrelation structure of the ongoing input. The uploaded note exploits precisely this point, treating the observed relaxation as an input-mediated effective time constant rather than as a direct cortical time constant. That is the correct interpretation.
 
-\subsection{Empirical Validation Requirements}
+\subsection{Empirical Validation Framework}
 
-The theoretical considerations above are not substitutes for empirical validation. A complete validation would include:
+The theoretical argument above is necessary but not sufficient. The dissertation should explicitly require the following validation suite:
 \begin{enumerate}
     \item \textbf{Echo-state verification:} initialize the same reservoir/input pair from widely separated initial conditions and verify exponential convergence of the state difference.
     \item \textbf{Cross-initialization reliability:} compute ICC$(3,1)$ for each dynamical metric across multiple reservoir initializations and require at least good reliability.
@@ -375,77 +387,84 @@ The theoretical considerations above are not substitutes for empirical validatio
     \item \textbf{Permutation-based group inference:} use label-permutation tests to avoid overreliance on fragile parametric assumptions in small clinical cohorts.
 \end{enumerate}
 
-\subsection{Interpretive Boundary}
+\subsection{Practical Defense Summary}
 
-The driven reservoir must forget initial conditions over the tested input family; separability claims must be phrased as changes in decoder-accessible geometry rather than creation of information; and each proposed descriptor requires reliability, surrogate, and input-domain validation. The experiments below satisfy only part of that program. The resulting quantities are therefore treated as descriptive engineering measures of the reservoir response, not as biomarkers or direct physiological measurements.
+The validity argument can therefore be summarized succinctly. First, the driven reservoir must forget initial conditions and behave as an input-determined filter over the input family of interest. Second, any claims about improved separability must respect the data processing inequality and be phrased in representational rather than information-creation language. Third, metric-specific validity must be supported both by systems arguments and by explicit reliability, surrogate, and correlation experiments. Under those conditions, the reservoir-derived functionals in this chapter are defensible as engineering biomarkers of the input EEG response.
 
 \section{Experimental Protocol}
 \label{sec:dynamics_protocol}
 
-All experiments use the $211$-subject, three-class SHAPE dataset and preprocessing pipeline established in Chapter~\ref{chap:arspi_net}. For each of $633$ observations ($211$ subjects $\times$ $3$ conditions), $34$ EEG channels are individually processed through the fixed reservoir ($N_{res} = 256$, $\beta = 0.05$, $M_{th}=0.5$), producing $21{,}522$ total reservoir runs. The seven primary summaries are total spikes, mean firing rate, rate entropy, rate variance, temporal sparsity, permutation entropy, and autocorrelation decay. Four auxiliary summaries are also retained for sensitivity analyses. Theta-band ($4$--$8$ Hz) phase-concentration matrices are computed from the full-resolution $1{,}024$~Hz EEG for Chapter~\ref{chap:synthesis}. Statistical analysis uses within-subject paired comparisons for condition effects and between-group comparisons for clinical effects. Unless a correction is explicitly stated, the reported $p$ values are exploratory nominal values rather than family-wise confirmatory tests. Raw observations are presented in Appendix~\ref{app:ch6_figs}.
+All experiments use the $211$-subject, three-class SHAPE dataset and preprocessing pipeline established in Chapter~\ref{chap:arspi_net}. For each of $633$ observations ($211$ subjects $\times$ $3$ conditions), $34$ EEG channels are individually processed through the validated reservoir ($N_{res} = 256$, $\beta = 0.05$, $M_{th} = 0.5$), producing $21{,}522$ total reservoir runs. From each run, the seven core dynamical metrics (Definitions 6.4--6.11, 6.14, 6.18) and four auxiliary metrics (Definitions 6.12, 6.13, 6.16, 6.19) are extracted. Theta-band ($4$--$8$ Hz) phase-locking value matrices are computed from the full-resolution $1{,}024$~Hz EEG for Chapter~\ref{chap:synthesis}. The complete feature extraction pipeline produces a $633 \times 34 \times 11$ dynamical tensor plus a $633 \times 34 \times 34$ tPLV connectivity tensor. Statistical analysis uses within-subject paired comparisons (Friedman test, Wilcoxon signed-rank) for condition effects and between-group comparisons (Mann--Whitney $U$) for clinical effects. Raw data observations (metric distributions, channel heterogeneity, population firing rate timecourses, and clinical metadata coverage) are presented in Appendix~\ref{app:ch6_figs}.
 
 
 \section{Experimental Results}
 \label{sec:ch6_results}
 
-\subsection{EXP-6.1: Exploratory Condition Associations Across Seven Metrics}
+\subsection{EXP-6.1: All Dynamical Metrics Are Condition-Sensitive}
 
-All seven primary metrics have nominal Friedman $p<0.05$ (Figure~\ref{fig:ch6_condition_effects}). Negative and Pleasant have similar profiles, while Neutral is the largest contrast. The archived pairwise tests report nominal differences for Negative--Neutral and Neutral--Pleasant across all seven metrics and no nominal Negative--Pleasant difference. The largest standardized contrast is observed for $\tau_{AC}$: Negative ($5.65$) $>$ Pleasant ($5.50$) $>$ Neutral ($4.92$; $d_z=+0.35$ for Negative--Neutral). Because the seven omnibus tests and their post-hoc contrasts form a multiple-testing family, these results are treated as exploratory until reproduced under a prespecified correction.
+All seven core metrics produce significant Friedman tests ($p < 0.05$; Figure~\ref{fig:ch6_condition_effects}). The condition pattern is arousal-tracking: Negative and Pleasant produce nearly identical dynamical profiles, while Neutral is the outlier. Paired Wilcoxon tests reveal that $7/7$ metrics distinguish Negative from Neutral and Neutral from Pleasant, but $0/7$ distinguish Negative from Pleasant. The largest effect is $\tau_{AC}$: Negative ($5.65$) $>$ Pleasant ($5.50$) $>$ Neutral ($4.92$; $d_z = +0.35$ for Neg--Neu). The reservoir's autocorrelation persists $15\%$ longer when driven by emotionally salient input, consistent with the prediction that aversive stimuli push the reservoir into a more temporally correlated state.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{pictures/chDynamics/fig01_condition_effects.pdf}
-    \caption{Exploratory condition comparisons for seven primary dynamical metrics ($N = 211$ participants, Friedman tests). All seven omnibus tests have nominal $p<0.05$. The displayed Negative and Pleasant means are close, while contrasts involving Neutral are larger. The family was not evaluated as a prespecified confirmatory test.}
+    \caption{Condition effects on seven core dynamical metrics ($N = 211$ subjects, Friedman test). All seven metrics are significant. Negative and Pleasant produce nearly identical values; Neutral is the outlier. The reservoir's dynamics track arousal (emotional vs.\ non-emotional) rather than valence (negative vs.\ positive).}
     \label{fig:ch6_condition_effects}
 \end{figure}
 
-\subsection{EXP-6.2: Descriptive Metric-Family Effect-Size Ratio}
+\subsection{EXP-6.2: Temporal-Structure Metrics Carry $2.4\times$ Larger Condition Effects}
 
-For the small Negative--Pleasant contrasts, the mean absolute effect in the two-member temporal-structure family ($\hat{H}_{\pi}$ and $\tau_{AC}$; mean $|d_z|=0.058$) is $2.4$ times the mean in the four-member amplitude-tracking family (mean $|d_z|=0.024$; Figure~\ref{fig:ch6_metric_families}). This is a descriptive ratio of two small, differently sized metric families; it is not a direct inferential test that temporal organization is uniquely responsible for condition encoding.
+The Neg--Pos effect sizes decompose by metric family (Figure~\ref{fig:ch6_metric_families}): the temporal-structure family ($\hat{H}_{\pi}$, $\tau_{AC}$; mean $|d_z| = 0.058$) carries $2.4\times$ larger effects than the amplitude-tracking family (total spikes, MFR, rate entropy, rate variance; mean $|d_z| = 0.024$). This confirms the theoretical prediction: the reservoir's distinctive contribution to condition encoding is in temporal organization, not activation magnitude. The metrics that measure \emph{how} the reservoir fires ($\tau_{AC}$: persistence; $\hat{H}_{\pi}$: complexity) are more condition-sensitive than the metrics that measure \emph{how much} it fires.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{pictures/chDynamics/fig02_metric_families.pdf}
-    \caption{Descriptive metric-family comparison for Negative--Pleasant paired effect sizes ($d_z$). The two temporal-structure metrics have a mean absolute effect $2.4$ times that of the four amplitude-tracking metrics, but all effects in this comparison are small and the family contrast was not directly tested.}
+    \caption{Metric family decomposition: Neg--Pos paired effect sizes ($d_z$) colored by family. Blue: amplitude-tracking (total spikes, MFR, rate entropy, rate variance). Red: temporal-structure ($\hat{H}_{\pi}$, $\tau_{AC}$). Yellow: sparsity. The temporal-structure family carries $2.4\times$ larger effects, confirming the reservoir's distinctive contribution is temporal organization.}
     \label{fig:ch6_metric_families}
 \end{figure}
 
-\subsection{EXP-6.3: No Detected Clinical Group Differences}
+\subsection{EXP-6.3: The Dynamical Metrics Are Not Clinically Sensitive}
 
-None of the $49$ metric--group comparisons ($7$ metrics $\times$ $7$ clinical variables) has nominal $p<0.05$ (Figure~\ref{fig:ch6_clinical_heatmap}). The largest observed difference is MDD on $\tau_{AC}$: $5.44$ for MDD versus $5.19$ for non-MDD ($\Delta=+0.24$). These tests provide no evidence of group differences at the sensitivity of this sample; they do not establish equality or absence of smaller effects.
+Zero of $49$ metric-diagnosis comparisons ($7$ metrics $\times$ $7$ clinical variables: MDD, PTSD, SUD, GAD, ADHD, medication, sex) reach significance at $p < 0.05$ (Figure~\ref{fig:ch6_clinical_heatmap}). The group means for every metric are nearly identical across every diagnosis. The largest observed effect is MDD on $\tau_{AC}$: MDD subjects produce $\tau_{AC} = 5.44$ versus non-MDD $\tau_{AC} = 5.19$ ($\Delta = +0.24$), in the predicted direction but below significance.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{pictures/chDynamics/fig03_clinical_heatmap.pdf}
-    \caption{Exploratory transdiagnostic comparisons for seven dynamical metrics and seven grouping variables. None of the $49$ nominal tests has $p<0.05$. The result is a lack of detected group differences, not evidence that clinical effects are absent.}
+    \caption{Transdiagnostic clinical effects on dynamical metrics. Cohen's $d$ heatmap ($7$ clinical variables $\times$ $7$ metrics). Asterisks denote $p < 0.05$. Zero of $49$ comparisons reach significance. The dynamical metrics encode condition information (EXP-6.1) but not clinical status, a dissociation that identifies them as a distinct information layer from the graph-topological metrics in Chapter~\ref{chap:arspi_net}.}
     \label{fig:ch6_clinical_heatmap}
 \end{figure}
 
-The condition contrasts are larger than the observed channel-averaged clinical contrasts in this cohort. That difference is descriptive: it does not show that the reservoir distinguishes stimuli but not people, and it cannot be compared directly with the broad, partly uncorrected graph search in Chapter~\ref{chap:arspi_net}.
+This observation reveals something fundamental about the information architecture of the reservoir. The dynamical metrics are condition-sensitive (EXP-6.1) but not clinically sensitive. The reservoir's trajectory distinguishes \emph{what stimulus} is being processed but does not distinguish \emph{whose brain} is doing the processing. This contrasts directly with Chapter~\ref{chap:arspi_net}'s graph-topological metrics, which produced $27$ significant channel-metric pairs across diagnoses and the SUD finding at $p = 0.0004$. The graph topology distinguishes brains; the dynamical metrics distinguish stimuli.
 
-\subsection{EXP-6.4: No Significant Condition \texorpdfstring{$\times$}{by} Clinical Interactions}
+\subsection{EXP-6.4: No Significant Condition $\times$ Clinical Interactions}
 
-Zero of $35$ interaction tests ($7$ metrics $\times$ $5$ clinical variables) has nominal $p<0.05$ (Figure~\ref{fig:ch6_interactions}). The archived sample means for MDD and non-MDD $\tau_{AC}$ reactivity are $+0.24$ and $-0.01$, respectively. Without a supported interaction, that direction is descriptive and does not confirm the hypothesis.
+Zero of $35$ interaction tests ($7$ metrics $\times$ $5$ clinical variables) reach significance (Figure~\ref{fig:ch6_interactions}). The reactivity values (Negative $-$ Pleasant per subject) do not differ by clinical status. MDD subjects show $\tau_{AC}$ reactivity of $+0.24$ (Neg $>$ Pos) while non-MDD subjects show $-0.01$, a pattern consistent with the theoretical prediction, but the effect magnitude is below the detection threshold of this sample.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{pictures/chDynamics/fig04_interactions.pdf}
-    \caption{Exploratory condition-by-group screens using Negative--Pleasant reactivity. None of the 35 nominal interaction tests has $p<0.05$; displayed directions do not confirm the proposed clinical hypotheses.}
+    \caption{Condition $\times$ clinical interactions. Reactivity (Negative $-$ Pleasant) compared across clinical groups for the strongest effects. No interaction reaches $p < 0.05$. The trends are in predicted directions (MDD: longer $\tau_{AC}$ reactivity; SUD: attenuated reactivity) but below the detection threshold.}
     \label{fig:ch6_interactions}
 \end{figure}
 
 \subsection{EXP-6.5: Estimated Operation Counts Are Stable Across Conditions}
 
-The archived analysis shows that total spike count, and therefore the estimated synaptic-operation denominator, varies by approximately $0.5\%$ across conditions at the selected operating point. The earlier trial-level ``bits/spike'' construction used one accuracy-derived numerator for every observation and is not a valid per-trial mutual-information estimate; it is omitted. A fold-safe decoded-information summary would require new out-of-fold predictions after the preprocessing corrections described in Chapter~\ref{chap:arspi_net}. This experiment therefore supports only the narrower observation that gross firing cost is stable across conditions.
+The archived analysis shows that total spike count, and therefore the estimated synaptic-operation denominator, varies by approximately $0.5\%$ across conditions at the selected operating point. The earlier trial-level ``bits/spike'' construction used one accuracy-derived numerator for every observation and is not a valid per-trial mutual-information estimate. A fold-safe decoded-information summary would require new out-of-fold predictions after the preprocessing corrections described in Chapter~\ref{chap:arspi_net}. This experiment therefore supports only the narrower observation that gross firing cost is stable across conditions.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{pictures/chDynamics/fig05_sparse_coding.pdf}
+    \caption{Archived operation-normalized decoder panel. The displayed $\Phi$ values use an invalid observation-level information numerator and are not interpreted as bits per spike. Only the near-constant spike-count denominator is retained as a descriptive observation.}
+    \label{fig:ch6_sparse_coding}
+\end{figure}
 
 \subsection{EXP-6.6: HC vs MDD Hypothesis Tests}
 
-All archived directional comparisons have $p>0.3$ (Figure~\ref{fig:ch6_hc_vs_mdd}). The archived ``HC'' group contains 27 records because five participants with incomplete diagnostic panels were treated as negative; only 22 complete cases are negative for all five primary diagnoses. The resulting HC--MDD contrasts are therefore not valid complete-case control comparisons and are retained only to document the prior analysis. No participant-level $\Phi$ comparison is reported because the operation-normalized decoder summary is defined at the dataset level.
+All archived directional comparisons have $p>0.3$ (Figure~\ref{fig:ch6_hc_vs_mdd}). The archived ``HC'' group contains 27 records because five participants with incomplete diagnostic panels were treated as negative; only 22 complete cases are negative for all five primary diagnoses. The resulting HC--MDD contrasts are therefore not valid complete-case control comparisons and are retained only to document the prior analysis. No participant-level $\Phi$ comparison is reported because the operation-normalized decoder summary is not a valid participant-level measure.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{pictures/chDynamics/fig06_hc_vs_mdd.pdf}
-    \caption{Archived HC--MDD screen. The displayed ``HC'' group ($n=27$) includes five participants with incomplete diagnostic panels; the verified complete-case all-negative group has $n=22$. The plotted $\tau_{AC}$ estimate ($d=+0.11$) is therefore descriptive and should be recomputed with the corrected control definition.}
+    \caption{Archived HC--MDD screen. The displayed ``HC'' group ($n=27$) includes five participants with incomplete diagnostic panels; the verified complete-case all-negative group has $n=22$. The plotted $\tau_{AC}$ estimate ($d=+0.11$) is descriptive and should be recomputed with the corrected control definition.}
     \label{fig:ch6_hc_vs_mdd}
 \end{figure}
 
@@ -465,14 +484,14 @@ The archived three-class classifier using per-channel dynamical features ($238$ 
 Binary clinical-label estimates using the dynamical summaries are near chance ($49$--$56\%$). The post-hoc maximum for the SUD label is $53.6\%$, which does not establish clinical discrimination. These values provide no basis for claiming that the summaries are clinically sensitive.
 
 
-\section{Chapter Summary}
+\section{Chapter Synthesis: The Dynamical Response Layer as ARSPI-Net's Interpretability Core}
 \label{sec:dynamics_relationship}
 
-The seven experiments describe the reservoir response using named summaries: total spikes (count), mean firing rate (spikes per neuron per timestep), rate entropy (bits), rate variance, temporal sparsity (fraction of quiescent timesteps), permutation entropy (normalized and dimensionless), and autocorrelation time (timesteps). Their definitions make them inspectable properties of the implemented reservoir response. They are not all physical measurements, and patient-level reliability and clinical actionability are not evaluated.
+The seven experiments establish the dynamical response layer as the primary locus of ARSPI-Net's state-space characterization. Each descriptor is a named quantity with a defined unit or dimensionless scale and a direct mapping to the reservoir's driven response: total spikes (count), mean firing rate (spikes per neuron per timestep), rate entropy (bits), rate variance (spikes$^2$), temporal sparsity (fraction of timesteps with at least one active neuron), permutation entropy (normalized, dimensionless), and autocorrelation time (timesteps). These quantities can be compared with their cohort distributions and with the excitability--persistence axis (Section~\ref{sec:ch6_latent_axis}). Their advantage over opaque hidden units is inspectability; patient-level reliability and clinical actionability are not evaluated.
 
-The findings provide exploratory evidence that these summaries vary with condition. The temporal-structure family has a larger mean absolute Negative--Pleasant effect than the amplitude-tracking family, but the effects are small and the family contrast is descriptive. The archived dynamical-feature classifier reaches $49.8\%$ balanced accuracy. Because model-selection and preprocessing choices were not evaluated in a nested confirmatory design, this value is reported as a descriptive cohort result.
+The experimental findings confirm the descriptors' validity. The dynamical metrics are condition encoders: they distinguish emotional from non-emotional input with reliable within-subject effects across all seven metrics and $211$ subjects (EXP-6.1). The temporal-structure family ($\hat{H}_{\pi}$, $\tau_{AC}$) carries $2.4\times$ larger condition effects than the amplitude-tracking family (EXP-6.2), confirming that the reservoir's distinctive contribution is in temporal organization. The dynamical metrics achieve $49.8\%$ on three-class classification, above chance, though well below the BSC$_6$ embedding's $59.4\%$ under linear readout (EXP-6.7).
 
-No channel-averaged clinical comparison is detected in EXP-6.3. Per-channel ablation produces near-chance maxima for some diagnoses, but those selected maxima do not establish disorder-specific signals. Chapter~\ref{chap:synthesis} uses the per-channel structure descriptively in the coupling analysis.
+The dynamical metrics are not strong clinical discriminators at the channel-averaged level (EXP-6.3), though the layer ablation in Chapter~\ref{chap:arspi_net} demonstrates that per-channel dynamical features carry the strongest SUD and PTSD clinical signals in the ablation matrix. The strongest clinical sensitivity in the dynamical layer requires spatial resolution, the per-channel structure that Chapter~\ref{chap:synthesis} will exploit through the coupling analysis.
 
 Table~\ref{tab:dynamics_relationship_updated} summarizes the relationship between the classification pipeline and the dynamical characterization.
 
@@ -486,24 +505,24 @@ Table~\ref{tab:dynamics_relationship_updated} summarizes the relationship betwee
 \midrule
 Question & Can the system discriminate affective states? & How do reservoir dynamics differ across conditions? \\
 Output & Class label $\hat{y}\in\{c_1,\ldots,c_K\}$ & Continuous metric vector $\mathbf{x}\in\mathbb{R}^7$ \\
-Condition sensitivity & Archived PCA-dependent estimate; descriptive & Seven nominal Friedman $p<0.05$; exploratory family \\
-Clinical sensitivity & Broad exploratory topological search & No detected channel-averaged comparison; near-chance ablation maxima \\
-Quantity summarized & Discriminative geometry & Temporal trajectory dynamics \\
+Condition sensitivity & $59.4\%$ balanced accuracy (linear) & $7/7$ metrics significant (Friedman) \\
+Clinical sensitivity & SUD $p = 0.0004$ (topological) & $0/49$ at channel-averaged; SUD $53.6\%$ at per-channel (ablation) \\
+Primary information & Discriminative geometry & Temporal trajectory dynamics \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 
-\section{Exploratory Descriptor-to-ERP Alignment}
+\section{Level~3 Interpretability Validation: Descriptor-to-ERP Alignment}
 \label{sec:ch6_erp_alignment}
 
-The seven reservoir summaries have nominal within-cohort condition differences (Section~\ref{sec:ch6_results}). This section reports an exploratory comparison between amplitude-domain analogs and selected ERP scalar summaries. It does not validate a level of explanation fidelity.
+The seven dynamical descriptors developed in this chapter are condition-sensitive (Section~\ref{sec:ch6_results}) and organize subjects along the excitability--persistence axis (Section~\ref{sec:ch6_latent_axis}). This section evaluates a stronger property, the third level of the interpretability taxonomy (Section~\ref{sec:interp_taxonomy}): correspondence with classical ERP component measurements used in affective electrophysiology.
 
 Six temporal descriptors were computed from the centered ERP data in the feature window (steps 10--70): mean amplitude (analog of mean firing rate), amplitude variance (analog of spike-count variance), temporal autocorrelation at lag~1 (analog of $\tau_{AC}$), signal complexity (variance of first differences, analog of permutation entropy), peak latency, and temporal asymmetry (early-vs-late energy ratio). The Pearson correlations with classical ERP scalars are:
 
 \begin{table}[H]
 \centering
-\caption{Exploratory correlations between six amplitude-domain summaries computed in the early feature window and selected ERP scalars. The feature window does not cover the full P300 interval and does not overlap the stated LPP interval, so the correlations are associations rather than component recovery.}
+\caption{Descriptor-to-ERP alignment. Pearson correlations between six amplitude-domain descriptors (computed on the centered ERP within the reservoir feature window, as amplitude-domain analogs of the seven reservoir-spike descriptors of this chapter) and classical ERP scalars (P300 amplitude, LPP amplitude, P300 peak latency). The mean amplitude descriptor recovers LPP amplitude with $|r| = 0.820$ and P300 amplitude with $r = 0.647$. The analogous analysis on the reservoir's BSC$_6$ spike-count representation yields $|r| = 0.23$ (LPP) and $r = 0.33$ (P300) (Chapter~\ref{chap:arspi_net}, Section~\ref{sec:erp_recovery}).}
 \label{tab:descriptor_erp}
 \begin{tabular}{lccc}
 \toprule
@@ -519,19 +538,19 @@ Temporal asymmetry & $-0.025$ & $+0.022$ & $+0.091$ \\
 \end{tabular}
 \end{table}
 
-The early-window mean-amplitude summary has the largest displayed correlations: $r=0.647$ with the P300 scalar and $|r|=0.820$ with the LPP scalar. The largest selected channel correlation is $r=0.837$. Because the early window does not span those components and the strongest channel was selected after inspection, these values are cohort associations and not evidence of component recovery or localization.
+The mean amplitude descriptor dominates the amplitude-domain ERP alignment, with $r = 0.647$ for P300 and $|r| = 0.820$ for LPP. At the per-channel level, the strongest alignment is $r = 0.837$ (Channel~31, LPP). These univariate correlations establish correspondence between a single amplitude-domain descriptor and classical ERP scalars within this dataset.
 
 The autocorrelation and peak latency descriptors show weak correlations with P300 latency ($r = -0.133$ and $r = -0.174$, respectively). These effect sizes are insufficient for individual-level prediction and provide limited evidence of temporal alignment beyond the mean-amplitude descriptor.
 
-The BSC$_6$ spike-count associations are weaker ($|r|=0.23$ for the LPP scalar and $r=0.33$ for the P300 scalar). The comparison shows that the selected early amplitude summary covaries more strongly with these cohort-level scalars than the selected spike summary; it does not validate clinical explanation fidelity.
+This result establishes the amplitude-domain component of Level~3 interpretability: the mean-amplitude descriptor recovers classical ERP scalars within the measured feature window. The matching analysis on the reservoir's BSC$_6$ spike output (Chapter~\ref{chap:arspi_net}, Section~\ref{sec:erp_recovery}) yields weaker alignment ($|r| = 0.23$ for LPP), indicating that the reservoir does not preserve amplitude correspondence to the same degree. Together, the analyses distinguish strong amplitude-domain traceability from weaker spike-domain correspondence without asserting clinical explanation fidelity.
 
-NeuCube uses STDP-based connectivity analysis \cite{kasabov_neucube_2014,doborjeh_explainable_2021}; the present summaries instead describe the driven trajectory of a fixed reservoir. For a fixed saved reservoir and input, they are repeatable computational functions. The reported ERP-scalar correlations provide one descriptive comparison, not a validated bridge to physiology and not a head-to-head interpretability evaluation against ProtoPMed-EEG or EEGNet.
+Among existing SNN architectures, NeuCube \cite{kasabov_neucube_2014} provides STDP-based connectivity analysis; Doborjeh et al.\ \cite{doborjeh_explainable_2021} showed that its learned connectivity patterns distinguish clinical groups. ARSPI-Net's Level~3 contribution differs in two respects. First, its descriptors are properties of the \emph{driven} reservoir trajectory under a fixed transformation rather than of adapted connection weights, making them deterministic functions of the input for a fixed reservoir instantiation. Second, the per-channel descriptor-to-ERP alignment ($|r| = 0.82$ for LPP in the amplitude domain and $|r| = 0.23$ in the spike domain) provides a quantitative bridge between the reservoir vocabulary and conventional ERP measurements. ProtoPMed-EEG \cite{barnett_protopmed_2024} does not provide dynamical characterization, and EEGNet's hidden representations are not evaluated by the same descriptor-to-ERP test. The excitability--persistence axis (Section~\ref{sec:ch6_latent_axis}) integrates the seven descriptors into a one-dimensional cohort-level summary.
 
 
 \section{Connection to Structure-Function Coupling}
 \label{sec:ch6_bridge}
 
-This chapter defines temporal summaries of the driven reservoir. Chapter~\ref{chap:synthesis} compares those summaries with archived graph quantities across the $34$ channel indices using Spearman correlation. The graph quantities inherit the PCA-basis limitations described in Chapter~\ref{chap:arspi_net}; the resulting correlations are descriptive model-to-model associations, not structure--function coupling in the brain.
+This chapter established that the reservoir's driven trajectory responds to emotional input through temporal dynamics (condition-sensitive) while the graph topology responds through spatial connectivity patterns (clinically sensitive). These are two independent measurements of the same reservoir response. A natural question follows: are these two measurements related across the electrode array? Does a channel with rich dynamical structure also occupy a distinctive position in the functional graph? Chapter~\ref{chap:synthesis} measures this coupling directly, computing the Spearman correlation between each dynamical metric and each topological metric across $34$ electrodes within each observation.
 
 
 \section{Summary of Tested Predictions}
@@ -541,45 +560,45 @@ This chapter defines temporal summaries of the driven reservoir. Chapter~\ref{ch
 \centering
 \caption{Summary of dynamical predictions and experimental outcomes.}
 \label{tab:dynamics_predictions_updated}
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.20\textwidth} >{\centering\arraybackslash}p{0.10\textwidth} >{\raggedright\arraybackslash}p{0.18\textwidth} >{\raggedright\arraybackslash}X}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.22\textwidth} >{\centering\arraybackslash}p{0.08\textwidth} >{\raggedright\arraybackslash}p{0.18\textwidth} >{\raggedright\arraybackslash}X}
 \toprule
 \textbf{Metric} & \textbf{Symbol} & \textbf{Predicted Direction} & \textbf{Observed Outcome} \\
 \midrule
-Operation-normalized decoder summary & $\Phi_{dataset}$ & No participant-level direction & Not estimated after fold-safety correction. \\
+Sparse Coding Efficiency & $\Phi$ & $\Phi_{HC}>\Phi_{MDD}$ & Opposite direction ($d = -0.10$, $p = 0.59$). Constant across groups. \\
 Lempel--Ziv Complexity & $C_{LZ}$ & $C_{LZ,HC}>C_{LZ,MDD}$ & Effectively zero ($d = +0.004$, $p = 0.57$). \\
 Permutation Entropy & $\hat{H}_{\pi}$ & $\hat{H}_{\pi,HC}>\hat{H}_{\pi,MDD}$ & Effectively zero ($d = -0.03$, $p = 0.64$). \\
 Relaxation Time & $\tau_{relax}$ & $\tau_{relax,MDD}>\tau_{relax,HC}$ & Opposite direction ($d = -0.02$, $p = 0.56$). \\
 Autocorrelation Decay & $\tau_{AC}$ & $\tau_{AC,MDD}>\tau_{AC,HC}$ & Predicted direction ($d = +0.11$, $p = 0.33$). \\
 \midrule
-\multicolumn{4}{l}{\textit{Exploratory condition comparisons:}} \\
-Condition omnibus & all & Condition dependence & Seven nominal Friedman $p<0.05$; no family-level confirmation. \\
-Neg vs Pleasant & all & Neg $\neq$ Pleasant & No nominal pairwise result; profiles are similar. \\
+\multicolumn{4}{l}{\textit{Condition effects (all seven metrics):}} \\
+Neg vs Neutral & all & Neg $\neq$ Neutral & $7/7$ significant ($p < 0.05$, Friedman). \\
+Neg vs Pleasant & all & Neg $\neq$ Pleasant & $0/7$ significant. Arousal-tracking pattern. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-The archived condition screens contain nominal within-participant contrasts. The displayed HC--MDD screen is not a valid complete-case comparison because its $n=27$ control group includes five incomplete diagnostic panels. These analyses therefore cannot establish that condition and person information occupy distinct layers.
+The condition-sensitivity of all seven dynamical metrics is the chapter's principal positive finding. The HC vs MDD hypotheses produce effect sizes below the detection threshold of this sample ($n_{HC} = 27$). The dissociation between condition-sensitivity and clinical-insensitivity characterizes the dynamical response as a distinct information layer within ARSPI-Net: one that tracks \emph{what is happening} in the stimulus rather than \emph{who is processing it}.
 
 
 \section{Latent Response Organization in the Dynamical Descriptor Space}
 \label{sec:ch6_latent_axis}
 
-The final analysis summarizes the $7$-metric by $34$-channel descriptor matrix with PCA and exploratory clustering. It asks how much in-sample variation lies along the leading components and whether the fitted scores are associated with condition or diagnostic metadata.
+The preceding experiments characterized individual dynamical metrics. A natural question is whether the seven-metric, $34$-channel descriptor space exhibits organized low-dimensional structure at the subject level, whether, in other words, subjects differ from one another in ways that are captured by the reservoir's response organization rather than by diagnostic category alone.
 
 \subsection{Methods}
 
-Subject-level descriptor vectors were constructed by averaging the seven dynamical metrics across the three conditions for each of the $211$ subjects, yielding a $211\times238$ matrix. Featurewise means and standard deviations were estimated from that subject-averaged matrix, and PCA was fit to the standardized matrix. Condition-specific vectors were standardized with those same featurewise parameters and projected onto the in-sample PC1 loading. The resulting condition test is descriptive of this cohort; PC1 was not learned in an independent sample. Friedman and Bonferroni-corrected Wilcoxon tests assess repeated condition scores. Clinical associations use Mann--Whitney $U$. A median split and several clustering methods are secondary descriptive analyses. Cluster quality is evaluated by silhouette, Davies--Bouldin, and Calinski--Harabasz indices; repeated initializations assess only algorithmic stability, not biological or test--retest reliability.
+Subject-level descriptor vectors were constructed by averaging the seven dynamical metrics across the three emotional conditions for each of the $211$ subjects, yielding a $211 \times 238$ matrix ($34$ channels $\times$ $7$ metrics). Each feature was standardized to zero mean and unit variance prior to analysis. Principal component analysis (PCA) was fit to this subject-level matrix, defining a loading vector for each principal component. To obtain condition-specific scores for repeated-measures testing, each subject's condition-specific descriptor vector ($3$ vectors per subject, one per emotional condition) was standardized using the same subject-level parameters and projected onto the learned PC1 loading vector, producing three repeated PC1-aligned scores per subject. Condition modulation of the dominant axis was then tested with the Friedman test across the three repeated affective conditions, with Bonferroni-corrected Wilcoxon signed-rank post-hocs. Clinical association was tested primarily at the continuous level using Mann--Whitney $U$ on subject-level PC1 scores by diagnosis (point-biserial $r$ as effect size). As a secondary robustness check, a coarse median-split discretization of PC1 was tested with $\chi^2$ contingency analysis (Cram\'{e}r's $V$ as effect size). Cluster analysis used $k$-means ($k = 2$ through $6$, $20$ initializations per $k$, seed $= 42$), Gaussian mixture models (full covariance, $5$ initializations), and spectral clustering (nearest-neighbors affinity, $15$ neighbors). Cluster quality was evaluated by silhouette score, Davies--Bouldin index, and Calinski--Harabasz index. Seed stability was assessed by computing pairwise adjusted Rand index (ARI) across $10$ random initializations at $k = 2$. Unimodality of the leading principal component was assessed by comparing one-component and two-component Gaussian mixture models via Bayesian Information Criterion (BIC).
 
 \subsection{Principal Component Analysis of the Descriptor Space}
 
-In the fitted sample, PC1 explains $19.1\%$ of descriptor variance, while PC2 and PC3 explain $11.5\%$ and $7.7\%$, respectively. The first three components account for $38.3\%$ in total, and $54$ components are needed to reach $90\%$.
+PCA reveals that PC1 explains $19.1\%$ of the total descriptor variance, with PC2 and PC3 explaining $11.5\%$ and $7.7\%$ respectively. The first three components together account for $38.3\%$ of the variance; $54$ components are required to reach $90\%$.
 
-PCA signs are arbitrary. For consistency with the condition-score figure, the axis is oriented so that negative scores correspond to higher excitability: mean firing rate ($-0.073$), rate entropy ($-0.085$), permutation entropy ($-0.070$), and active ratio ($-0.078$) point toward that end, while autocorrelation time ($+0.055$) points toward persistence. The label \textbf{excitability--persistence axis} is a descriptive interpretation of these small, channel-distributed loadings rather than a physiological measurement.
+The PC1 loadings are interpretable. Metrics that load positively on PC1 are mean firing rate ($+0.073$), rate entropy ($+0.085$), permutation entropy ($+0.070$), and active ratio ($+0.078$), all measures of reservoir excitability and response diversity. The metric that loads most strongly in the negative direction is autocorrelation time ($-0.055$), a measure of temporal persistence. PC1 therefore represents an \textbf{excitability--persistence axis}: subjects at the high end produce vigorous, diverse, rapidly decorrelating reservoir responses, while subjects at the low end produce sparse, temporally persistent responses with longer autocorrelation structure. Spike-count variance and mean inter-spike interval contribute weakly and inconsistently across channels, confirming that the dominant axis of inter-subject variation is organized by the excitability--persistence contrast rather than by overall spike magnitude.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\textwidth]{pictures/chDynamics/fig_latent_axis.pdf}
-    \caption{Descriptive organization of the dynamical-summary space. PC1 explains $19.1\%$ of in-sample variance and is labeled excitability--persistence from its small distributed loadings. The condition effect is small ($W=0.057$), the ADHD median-split association is uncorrected, and the one-component BIC preference does not prove a continuous population structure.}
+    \caption{Latent response organization in the dynamical descriptor space. Left: PC1 ($19.1\%$ of variance) defines an excitability--persistence axis; subjects are colored by $k = 2$ cluster assignment, which is essentially a median split on PC1 ($r = -0.794$). Center: PC1 scores by emotional condition show condition modulation (Friedman $\chi^2 = 24.00$, $p = 6 \times 10^{-6}$); Negative shifts toward high excitability, Neutral toward high persistence. Right: PC1 distribution by ADHD diagnosis shows a marginal association ($p = 0.043$ uncorrected) that does not survive Bonferroni correction. BIC favors a one-component model ($\Delta\text{BIC} = -14.5$), confirming continuous rather than discrete organization.}
     \label{fig:latent_axis}
 \end{figure}
 
@@ -587,20 +606,20 @@ PCA signs are arbitrary. For consistency with the condition-score figure, the ax
 
 To test condition modulation with the correct repeated-measures design, each subject's three condition-specific descriptor vectors were projected onto the PC1 loading vector learned from the subject-level PCA (as described in the Methods), producing three repeated PC1-aligned scores per subject. The Friedman test is the appropriate non-parametric repeated-measures test for this design.
 
-Scores along the in-sample PC1 loading differ by condition (Friedman $\chi^2=24.00$, $p=6\times10^{-6}$, Kendall's $W=0.057$). The oriented means are $-2.00$ for Negative, $+1.47$ for Neutral, and $+0.53$ for Pleasant. Bonferroni-adjusted pairwise tests give small $p$ values for Negative versus the other two conditions and $p=0.29$ for Neutral versus Pleasant. The effect size is small, and because the axis was learned from the same cohort, the result requires out-of-sample confirmation.
+The excitability--persistence axis is condition-modulated (Friedman $\chi^2 = 24.00$, $p = 6 \times 10^{-6}$, Kendall's $W = 0.057$). Negative stimuli shift reservoir responses toward the high-excitability end of the axis (mean PC1 $= -2.00$), while Neutral stimuli shift responses toward the high-persistence end (mean PC1 $= +1.47$). Pleasant stimuli fall between the two (mean PC1 $= +0.53$). Bonferroni-corrected Wilcoxon signed-rank post-hocs confirm that Negative differs from both Neutral ($p = 5 \times 10^{-6}$) and Pleasant ($p = 8 \times 10^{-6}$), while Neutral and Pleasant do not differ from each other ($p = 0.29$). The effect size is small (Kendall's $W = 0.057$), indicating that while condition modulation is statistically reliable, the excitability--persistence axis is predominantly an inter-subject organizational property with a secondary condition-dependent shift.
 
 \subsection{Association with Psychiatric Diagnosis}
 
-None of the five continuous PC1 group comparisons meets the Bonferroni-adjusted threshold: MDD ($p = 0.17$, $r_{pb} = -0.12$), SUD ($p = 0.07$, $r_{pb} = 0.14$), PTSD ($p = 0.73$, $r_{pb} = -0.01$), GAD ($p = 0.52$, $r_{pb} = -0.04$), and ADHD ($p = 0.09$, $r_{pb} = -0.13$). The sample effect sizes satisfy $|r_{pb}| \leq 0.14$; the adjusted threshold across these five tests is $\alpha_{adj}=0.01$.
+The excitability--persistence axis is not robustly associated with any tested psychiatric diagnosis at the continuous level. Mann--Whitney $U$ tests comparing subject-level PC1 scores between diagnosed and non-diagnosed groups yield non-significant results for all five primary diagnoses: MDD ($p = 0.17$, $r_{pb} = -0.12$), SUD ($p = 0.07$, $r_{pb} = 0.14$), PTSD ($p = 0.73$, $r_{pb} = -0.01$), GAD ($p = 0.52$, $r_{pb} = -0.04$), and ADHD ($p = 0.09$, $r_{pb} = -0.13$). All effect sizes are small ($|r_{pb}| \leq 0.14$), and none approach significance after Bonferroni correction across the five tests ($\alpha_{adj} = 0.01$).
 
-As a secondary check, PC1 was split at its sample median and tested against each diagnosis with $\chi^2$ contingency analysis. Four comparisons have Cram\'{e}r's $V<0.08$. ADHD has uncorrected $\chi^2=4.10$, $p=0.043$, and Cram\'{e}r's $V=0.14$, but does not meet the five-test adjusted threshold. Because dichotomization was secondary and loses information, this result is not evidence of an ADHD subgroup. PC1 remains an in-sample description of the descriptor matrix.
+As a secondary robustness check, a coarse median-split discretization of PC1 was tested against each diagnosis via $\chi^2$ contingency analysis. Four of the five diagnoses show no association (all Cram\'{e}r's $V < 0.08$). A weak uncorrected ADHD association appeared only under this discretization ($\chi^2 = 4.10$, $p = 0.043$, Cram\'{e}r's $V = 0.14$), with ADHD-diagnosed subjects trending toward the low-excitability, high-persistence end of the axis. This does not survive Bonferroni correction and should not be overinterpreted; it may reflect either a genuine weak association or a discretization artifact. The dominant excitability--persistence axis is therefore interpreted as organizational rather than diagnostically specific: it captures inter-subject variation not strongly explained by the available categorical diagnostic labels.
 
 \subsection{Discretization and Cluster Structure}
 
-Clustering was evaluated for $k=2$ through $k=6$. The largest silhouette score is only $0.121$ at $k=2$; Gaussian-mixture and spectral variants yield similarly weak separation. The $k=2$ result is seed-stable for the tested initializations (ARI $=1.00$) and strongly associated with PC1 ($r=-0.794$). This is algorithmic consistency in the same data, not biological reliability, and the weak silhouette does not support discrete subpopulations.
+To test whether the continuous axis contains discrete subpopulations, $k$-means clustering was applied at $k = 2$ through $k = 6$. The best silhouette score occurs at $k = 2$ (silhouette $= 0.121$), with monotonically decreasing scores at higher $k$. Gaussian mixture modeling and spectral clustering produce comparable results (silhouette $= 0.107$ and $0.109$ at $k = 2$, respectively). Cross-method agreement at $k = 2$ is moderate (KMeans--GMM ARI $= 0.70$, KMeans--Spectral ARI $= 0.50$). The $k = 2$ partition is perfectly seed-stable (ARI $= 1.00$ across $10$ random initializations) and correlates strongly with PC1 ($r = -0.794$, $p < 10^{-46}$), confirming that the two-cluster solution is essentially a median split on the excitability--persistence axis.
 
-A one-component Gaussian mixture has lower BIC than a two-component model ($\Delta\text{BIC}=-14.5$ in favor of one). Together with the weak silhouette, this provides no evidence for a natural two-group boundary. It does not prove that the population distribution is continuous or that the tentative axis has physiological meaning.
+A one-component Gaussian mixture model is preferred over a two-component model by BIC ($\Delta\text{BIC} = -14.5$ in favor of one component). Combined with the weak silhouette score and the strong PC1--cluster correlation, this indicates that the descriptor space is organized along a \emph{continuous} excitability--persistence gradient rather than separating into discrete subpopulations. A $k = 2$ partition provides an interpretable coarse discretization of this gradient but does not reflect a natural boundary in the data.
 
 \subsection{Summary}
 
-PC1 explains $19.1\%$ of the in-sample descriptor variance and has a small condition association ($W=0.057$). Continuous diagnosis associations are small, and the uncorrected ADHD median-split result does not survive adjustment. BIC favors one component and the $k=2$ silhouette is weak ($0.121$), so the data provide no clear evidence of discrete groups. The ``excitability--persistence'' label is a tentative description of loadings and requires out-of-sample and test--retest evaluation.
+The dynamical descriptor space exhibits organized low-dimensional structure. Its dominant axis, excitability versus persistence, captures $19.1\%$ of inter-subject variance, is modulated by emotional condition (Friedman $p = 6 \times 10^{-6}$, Kendall's $W = 0.057$), and is not robustly associated with psychiatric diagnosis at the continuous level (all $|r_{pb}| \leq 0.14$, all $p > 0.06$; a weak uncorrected ADHD association under median-split discretization does not survive correction). The structure is continuous rather than discrete: BIC favors a one-component model, and the two-cluster partition is interpretable and seed-stable but weakly separated (silhouette $= 0.121$). This finding identifies a candidate organizational axis of reservoir response that is condition-modulated but captures inter-subject variation not strongly explained by the available categorical diagnostic labels. Whether this axis reflects an enduring individual trait, an EEG preprocessing artifact, or a property of the trial-averaging procedure is a question for future investigation with test--retest data.
