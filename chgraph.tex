@@ -8,11 +8,11 @@ The question now shifts from temporal to relational: does propagation across the
 
 The preceding chapters established the reservoir component of ARSPI-Net as a nonlinear temporal feature extractor for single-channel EEG. Chapter~\ref{chap:lsm} validated the Leaky Integrate-and-Fire reservoir under controlled conditions, and Chapter~\ref{chap:embeddings} demonstrated that binned spike-count features (BSC$_6$), reduced to sixty-four principal components, provide a compact and discriminative embedding for each electrode channel. The present chapter asks the next question in the pipeline: how should these channel-wise embeddings be coupled across the multichannel EEG array so that inter-electrode structure can be exploited for both classification and scientific interpretation?
 
-This chapter pursues three interleaved scientific questions on the full $211$-subject SHAPE dataset. The first is a representation question: how much of the reservoir embedding space is occupied by condition-related signal versus subject-identity nuisance structure? The second is a graph-propagation question: under what finite-sensor graph conditions does message-passing propagation increase or decrease the detectability of a weak condition signal embedded in strong subject-level noise? The third is a clinical-topological question: when the same graph is analyzed descriptively rather than propagatively, what transdiagnostic network phenotypes emerge? The chapter then extends these questions through two additional analyses. A paired-granularity comparison repeats the pipeline at four-class resolution (Threat, Mutilation, Cute, Erotic), identifying the regime boundary where the reservoir's temporal coding advantage transitions from dominant to insufficient. A layer ablation experiment directly tests whether ARSPI-Net's discriminative embedding, dynamical trajectory descriptors (Chapter~\ref{chap:dynamics}), and graph-topological descriptors carry redundant or complementary information.
+This chapter pursues three interleaved scientific questions on the SHAPE dataset. The first is a representation question: what condition information is retained by a fixed spiking reservoir after fold-safe compression? The second is a graph-propagation question: under what finite-sensor graph conditions does message-passing increase or decrease the detectability of a weak condition signal? The third is a clinical-topological question: what exploratory associations appear when the same graph is treated descriptively? A paired-granularity comparison evaluates three conditions (Negative, Neutral, Pleasant) and four affective categories (Threat, Mutilation, Cute, Erotic). A layer ablation asks whether the discriminative embedding, dynamical trajectory descriptors (Chapter~\ref{chap:dynamics}), and graph-topological descriptors carry redundant or complementary information. The post-defense audit separates corrected experiments from results retained from the defended workflow.
 
-The experimental program produces five principal findings. First, variance decomposition reveals that subject identity accounts for $62.6\%$ of embedding variance, condition accounts for $8.7\%$, and residual within-subject variability accounts for $28.7\%$, a $7\times$ subject-to-condition dominance ratio. Removing the subject-identity component through per-subject centering increases balanced accuracy from $63.4\%$ to $79.4\%$, indicating that cross-subject evaluation obscures condition-discriminative structure in the reservoir representation. Second, a Propagation Operating Characteristic analysis demonstrates that no tested graph operator, including smoothing, high-pass, residual, difference-aware, and attention-based variants, exceeds the non-propagated baseline. Third, the same graph, treated as a \emph{descriptive topological object}, yields exploratory transdiagnostic network phenotypes, with the strongest nominal association observed for Substance Use Disorder across three complementary metrics ($p = 0.0004$ for the strongest parametric comparison). Fourth, the paired-granularity comparison identifies a regime boundary: the reservoir outperforms band-power by $+12.5$~pp at three-class but is outperformed by $-6.2$~pp at four-class, with the strongest nominal clinical association shifting from SUD to PTSD. Fifth, the layer ablation matrix demonstrates that the three response layers are operationally distinct: the embedding dominates emotion classification, while different clinical labels attain their largest measured effects in different layers.
+The corrected experiments produce four principal findings. First, the fixed reservoir BSC$_6$/SRP-64 representation reaches $60.6\%$ balanced accuracy for three conditions and $53.2\%$ for four categories, exceeding the matched conventional baseline by $11.3$ and $16.5$ percentage points. Participant-label permutation tests give $p=0.0099$ for both tasks. Second, destroying temporal-bin order, electrode identity, or both reduces performance, identifying temporal order and spatial identity as contributors rather than attributing the result to total spike count alone. Third, the result is stable across three prespecified reservoir seeds; early, middle, and late window ablations show that useful information is distributed over the epoch. Fourth, raw ERP summaries remain stronger ($68.1\%$ and $60.5\%$), so the contribution is a structured, inspectable transform rather than best-in-class accuracy. The archived graph and clinical analyses remain useful as exploratory records, but their global preprocessing and broad multiplicity prevent confirmatory inference.
 
-The chapter's central contribution is twofold. First, a regime characterization: a detection-theoretic understanding of when and why graph operators increase or decrease the detectability of a weak task signal embedded in strong nuisance structure on finite-sensor arrays, formalized through the Propagation Operating Characteristic and extended across two class granularities. Second, a complementarity analysis: the layer ablation matrix directly demonstrates that ARSPI-Net's three response layers carry operationally distinct information, with the discriminative embedding dominating emotion classification while different clinical disorders are most detectable through different layers of the architecture.
+The chapter's central contribution is a reproducible boundary around the evidence. The corrected analysis tests the fixed reservoir under two affective granularities and targeted destruction controls. The archived graph-propagation, centering, and layer-ablation results generate hypotheses about representation geometry and complementarity, but do not establish universal graph regimes, prospective centering gains, or diagnostic biomarkers.
 
 The chapter is organized as follows. Sections~\ref{sec:ch5_gnn_theory}--\ref{sec:ch5_dataset} present the theoretical framework and dataset. Section~\ref{sec:ch5_raw_obs} characterizes the raw data at every pipeline stage. Section~\ref{sec:ch5_classification} presents the classification experiments. Section~\ref{sec:ch5_variance} develops the variance decomposition, subject-nuisance suppression, and detection-theoretic analyses. Section~\ref{sec:ch5_regime} presents the Propagation Operating Characteristic and graph construction sweep. Sections~\ref{sec:ch5_interpretability}--\ref{sec:ch5_nonrep} demonstrate that graph-topological analysis provides a transdiagnostic clinical interpretability tool. Section~\ref{sec:ch5_4class} presents the paired-granularity regime comparison. Section~\ref{sec:ch5_ablation} presents the layer ablation and complementarity analysis. Sections~\ref{sec:ch5_novelty}--\ref{sec:ch5_summary} discuss novelty, significance, and the bridge to Chapter~\ref{chap:dynamics}.
 
@@ -105,6 +105,8 @@ All $211$ subjects have comprehensive diagnostic metadata from structured clinic
 \subsection{Preprocessing Pipeline}
 
 Four steps transform each raw $1229 \times 34$ ERP matrix into the reservoir format: baseline removal (discard first $205$ rows), $4\times$ anti-aliasing decimation to $256$~Hz ($256$ samples), per-channel z-score normalization, and LIF reservoir processing ($N_{\text{res}} = 256$, $\beta = 0.05$, $M_{\text{th}} = 0.5$) with BSC$_6$ encoding and PCA-64 reduction. The output is a $34 \times 64$ node feature matrix per observation.
+
+The raw-data audit identified a mismatch between this specification and the supplied legacy feature pickle. The pickle's $633\times256\times34$ array is exactly the result of taking every fourth row from rows $0$--$1023$ and z-scoring each epoch and channel. It therefore includes the $205$-sample prestimulus segment, omits the last $205$ poststimulus samples, and performs no anti-alias filtering. For three representative conditions from Subject~6, the maximum absolute difference between the pickle and that stride operation is zero, whereas correlations between the legacy and corrected arrays are $0.27$, $0.06$, and $0.30$. The corrected validation below is rebuilt from the text files and does not use the pickle for headline results. Subject~127 is excluded from both granularities because a recording is constant; Subject~195 is additionally excluded from the four-category analysis because the Cute recording contains a constant channel. The corrected sample sizes are therefore $211$ participants ($633$ observations) for three conditions and $210$ participants ($840$ observations) for four categories.
 
 
 \section{Raw Data Observations}
@@ -353,11 +355,43 @@ Figure~\ref{fig:obs11_variance} provides direct visual and quantitative characte
 
 \subsection{Protocol}
 
-All experiments target three-way emotion discrimination ($211$ observations per class). Evaluation uses $10$-fold stratified cross-validation with subject-level splitting: no subject's observations appear in both training and test sets.
+The chapter now distinguishes a corrected confirmatory stream from the archived exploratory stream. The corrected stream uses five repeats of five-fold participant-grouped validation. Every participant's complete condition panel remains in one fold. Per-feature standardization and the linear logistic readout are fitted on training participants only. Instead of PCA, BSC$_6$ is compressed from $1{,}536$ to $64$ coordinates with a fixed sparse random projection shared across electrodes. Because that projection is generated from a prespecified seed and does not estimate a basis from the observations, held-out participants cannot influence it. Reported intervals are participant-bootstrap $95\%$ intervals over the repeated out-of-fold predictions. A separate deterministic ridge readout is used for $100$ within-participant label permutations.
+
+The corrected results are shown in Table~\ref{tab:corrected_validation} and Figure~\ref{fig:corrected_validation}. For three conditions, BSC$_6$/SRP-64 reaches $60.6\%$ balanced accuracy (bootstrap interval $57.8$--$63.4\%$); for four categories it reaches $53.2\%$ ($50.6$--$55.8\%$). The ridge permutation tests give $p=0.0099$ at both granularities. Conventional band-power plus Hjorth features reach $49.4\%$ and $36.7\%$, respectively. The fixed reservoir therefore exceeds the conventional baseline by $11.3$ percentage points for three conditions (bootstrap interval $7.9$--$14.7$) and $16.5$ points for four categories ($13.3$--$19.8$). Fusion adds $1.3$ points at three conditions ($0.0$--$2.6$) and no stable gain at four categories.
+
+\begin{table}[t]
+\centering
+\caption{Corrected raw-data validation. Values are mean balanced accuracy across five repeats of five-fold participant-grouped validation; brackets are participant-bootstrap $95\%$ intervals.}
+\label{tab:corrected_validation}
+\small
+\begin{tabular}{lcc}
+\hline
+\textbf{Representation} & \textbf{Three conditions} & \textbf{Four categories} \\
+\hline
+Raw ERP, 16 temporal bins & $68.1\%$ $[65.1,71.1]$ & $60.5\%$ $[57.9,63.0]$ \\
+Conventional spectral/Hjorth & $49.4\%$ $[46.8,51.9]$ & $36.7\%$ $[34.6,38.9]$ \\
+BSC$_6$/SRP-64 & $60.6\%$ $[57.8,63.4]$ & $53.2\%$ $[50.6,55.8]$ \\
+BSC$_6$/SRP-64 + conventional & $62.0\%$ $[59.1,64.8]$ & $53.5\%$ $[50.8,56.3]$ \\
+\hline
+Chance & $33.3\%$ & $25.0\%$ \\
+\hline
+\end{tabular}
+\end{table}
+
+The destruction controls test what the reservoir representation uses. Independently shuffling the six temporal bins within each observation and electrode lowers accuracy by $7.4$ points at three conditions ($3.7$--$11.1$) and $12.9$ points at four categories ($9.9$--$16.0$). Collapsing time lowers accuracy by $4.9$ and $8.6$ points. Independently shuffling electrode order lowers accuracy by $13.9$ and $20.1$ points. Thus both temporal order and stable electrode identity contribute to held-out classification; the result does not require an anatomical interpretation of unlabeled channels.
+
+Across reservoir seeds $7$, $42$, and $99$, three-condition accuracy ranges from $60.5\%$ to $62.1\%$. Temporal-window ablation gives $60.5\%$ for $39$--$273$~ms, $56.9\%$ for $273$--$508$~ms, $56.7\%$ for $508$--$742$~ms, $48.5\%$ for $742$--$977$~ms, and $63.3\%$ when six bins span $39$--$977$~ms. The full-epoch gain shows that later activity adds information, while the earliest window is the strongest isolated segment.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{pictures/chGraphNeuralNetworks/fig_corrected_novelty_validation.pdf}
+    \caption{Corrected participant-held-out validation. A: primary baselines with participant-bootstrap $95\%$ intervals. B: destruction controls for temporal and electrode organization. C: temporal-window ablation; the vertical marker at the early window spans seeds 7, 42, and 99. Dotted lines show chance.}
+    \label{fig:corrected_validation}
+\end{figure}
 
 \subsection{Baseline Methods}
 
-Three baselines establish the classification landscape (Table~\ref{tab:baselines}).
+The following PCA/SVM results are retained to document the defended workflow (Table~\ref{tab:baselines}). They were generated from the legacy stride-preprocessed pickle and a globally fitted PCA basis. They are not the corrected estimates and are not used for the chapter's primary inference.
 
 \textbf{M1: Band-Power + SVM.} Conventional spectral features ($170$ dimensions) classified by RBF-SVM. No reservoir, no graph.
 
@@ -367,7 +401,7 @@ Three baselines establish the classification landscape (Table~\ref{tab:baselines
 
 \begin{table}[t]
 \centering
-\caption{Baseline classification ($N = 211$ subjects, $633$ observations, $10$-fold subject-level CV).}
+\caption{Archived baseline classification ($N = 211$ subjects, $633$ observations). PCA was fitted globally and the input pickle did not implement the stated preprocessing; values are descriptive legacy estimates.}
 \label{tab:baselines}
 \begin{tabular}{llccc}
 \hline
@@ -380,11 +414,11 @@ M3: Relational + SVM & Pairwise diffs & $200$ & $61.8 \pm 7.0\%$ & $0.437$ \\
 \end{tabular}
 \end{table}
 
-The reservoir's concatenated embeddings (M2) achieve $63.4\%$, a $12.5$-pp gain over conventional features and the pipeline's best accuracy. At $N = 211$, M2 outperforms the pairwise relational features (M3) by $1.6$~pp, reversing the marginal M3 advantage observed at $N = 115$. The simpler concatenated representation benefits more from additional training data than the high-dimensional ($35{,}904$-d) relational feature space.
+In that archived workflow, the concatenated embedding is $12.5$ points above band-power and $1.6$ points above pairwise relational features. Because the input and PCA differ from the corrected specification, those gaps cannot identify an architectural or sample-size mechanism. The corrected comparison in Table~\ref{tab:corrected_validation} supplies the defensible estimate.
 
 \subsection{Message-Passing GNN Experiments}
 
-Three architectures were evaluated as five-seed ensembles with concatenated graph readouts classified by SVM (Figure~\ref{fig:gnn_comparison}, Table~\ref{tab:gnn_results}). The concatenated PCA-64 baseline (M2) significantly outperforms every message-passing architecture ($p < 0.04$, Wilcoxon signed-rank across 10 CV folds, where each fold provides one paired accuracy observation per architecture).
+Three architectures were evaluated in the archived workflow as five-seed ensembles with concatenated graph readouts classified by SVM (Figure~\ref{fig:gnn_comparison}, Table~\ref{tab:gnn_results}). The displayed concatenated baseline is higher than each message-passing value. The fold-wise Wilcoxon values are descriptive because cross-validation folds share training participants and do not constitute independent replicates; global preprocessing further prevents a corrected performance claim.
 
 \begin{figure}[H]
     \centering
@@ -395,7 +429,7 @@ Three architectures were evaluated as five-seed ensembles with concatenated grap
 
 \begin{table}[t]
 \centering
-\caption{Message-passing GNN results at $N = 211$. All architectures are significantly outperformed by the concatenated PCA-64 baseline (M2), identifying a regime boundary for message-passing on this graph class.}
+\caption{Archived message-passing results at $N = 211$. The non-propagated value is higher in this workflow, but the global preprocessing and dependent fold comparison do not establish a general regime boundary.}
 \label{tab:gnn_results}
 \begin{tabular}{lcccc}
 \hline
@@ -408,16 +442,16 @@ EdgeConv (5-seed) & $48.5 \pm 5.1\%$ & $0.234$ & $0.006$ & $53.0\%$ \\
 \end{tabular}
 \end{table}
 
-The internal replication at two sample sizes strengthens the architectural finding. At $N = 115$, GIN achieved $51.6\%$ and EdgeConv $53.0\%$; at $N = 211$, these shifted to $49.8\%$ and $48.5\%$ respectively, while the concatenated baseline improved from $60.6\%$ to $63.4\%$. The divergence, reservoir embeddings benefit from additional data while message-passing architectures do not, confirms that the regime boundary is structural rather than statistical. This is, to our knowledge, the first demonstration in the EEG-GNN literature that the performance gap between message-passing and non-graph baselines \emph{widens} with increasing sample size, identifying a fundamental architectural property of this graph class.
+At $N = 115$, the archived GIN and EdgeConv values are $51.6\%$ and $53.0\%$; at $N = 211$, they are $49.8\%$ and $48.5\%$, while the concatenated value changes from $60.6\%$ to $63.4\%$. The smaller cohort is nested in the larger cohort and the same global pipeline is reused, so this is not an independent replication or evidence of a fundamental sample-size law. It is a hypothesis that should be retested with verified electrode labels, fold-local graph construction, and an external cohort.
 
 
 \subsection{Conventional End-to-End Baselines}
 
-The preceding sections compare ARSPI-Net against spectral features and graph-propagation variants. A natural question is how the reservoir embedding compares against standard trainable models operating directly on the raw multichannel EEG. Table~\ref{tab:conventional_baselines} presents this comparison using the same $10$-fold subject-level cross-validation protocol.
+The preceding sections compare ARSPI-Net against spectral features and graph-propagation variants. Table~\ref{tab:conventional_baselines} retains the defended comparison with trainable models for completeness. These values use the archived input pickle, global preprocessing, and, in the centered columns, the complete held-out participant panel. They are descriptive and are not used as corrected prospective estimates.
 
 \begin{table}[t]
 \centering
-\caption{Complete baseline comparison ($N = 211$, $633$ observations, $10$-fold subject-level CV). Deep models use $5$-seed ensembles with majority voting. The raw EEG input is $34 \times 256 = 8{,}704$ dimensions (z-scored, $256$~Hz). Centered columns show accuracy after per-subject mean centering.}
+\caption{Archived baseline comparison ($N = 211$, $633$ observations). Deep models use $5$-seed ensembles with majority voting. Global preprocessing and complete-panel centering make these descriptive legacy estimates, not prospective performance.}
 \label{tab:conventional_baselines}
 \small
 \begin{tabular}{llcccc}
@@ -445,15 +479,15 @@ Reservoir + LogReg & BSC$_6$/PCA & $2{,}176$ & $59.4 \pm 3.6\%$ & $78.8 \pm 3.4\
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{pictures/chGraphNeuralNetworks/fig_baseline_comparison.pdf}
-\caption{Complete baseline comparison on the three-class SHAPE task ($N = 211$, $10$-fold subject-level CV). Left bars: uncentered (cross-subject). Right bars: per-subject centered. The centering gain ($+13$ to $+21$~pp) is universal across all representations, confirming that subject-covariance entanglement is a property of the signal geometry, not of any specific architecture. Chance $= 33.3\%$.}
+    \caption{Archived baseline comparison on the three-condition SHAPE task. Left bars: uncentered. Right bars: complete-panel centered. The shared increase is descriptive; global preprocessing and the transductive centering operation prevent a prospective or architecture-independent claim. Chance $=33.3\%$.}
 \label{fig:baseline_comparison}
 \end{figure}
 
-Four observations characterize the classification landscape (Figure~\ref{fig:baseline_comparison}, Table~\ref{tab:conventional_baselines}). First, EEGNet achieves the highest uncentered accuracy ($72.0\% \pm 4.9\%$). Second, the reservoir matches trained recurrent models (GRU $59.9\%$, LSTM $58.0\%$) with zero trainable recurrent parameters. Third, raw EEG with a linear readout ($70.5\%$) outperforms the reservoir ($59.4\%$), with the gap attributable to the memory--nonlinearity tradeoff at the BSC$_6$ compression level \cite{Dambre2012InformationProcessing}.
+Within this archived workflow, EEGNet has the highest displayed uncentered value ($72.0\% \pm 4.9\%$), the reservoir value is similar to the GRU and LSTM values, and the raw-EEG linear readout exceeds the reservoir. These are observations about this implementation, not evidence that the gap is caused by a particular theoretical tradeoff.
 
-Fourth, and most critically: per-subject centering reveals that every architecture in the comparison was substantially underperforming due to subject-covariance entanglement. EEGNet gains $+17.1$~pp ($72.0\% \to 89.1\%$), raw EEG gains $+17.9$~pp ($70.5\% \to 88.4\%$), the reservoir gains $+19.4$~pp ($59.4\% \to 78.8\%$), and GRU gains $+18.5$~pp ($59.9\% \to 78.4\%$). For this controlled affective probe, the centering operation is the dominant intervention; ARSPI-Net's distinctive value lies in the staged, interpretable structure of its representation rather than in this particular classification score. After centering, ARSPI-Net ($78.8\%$) matches GRU ($78.4\%$) while providing a fully traceable signal chain (from input ERP through membrane dynamics, spike rasters, temporal codes, and dynamical descriptors) that trained recurrent models cannot expose.
+Complete-panel centering increases every displayed value, but the operation uses all conditions for each held-out participant. It is therefore a transductive repeated-measures contrast, unavailable when a prospective participant contributes one recording. The centered values cannot establish that centering dominates architecture choice or that the resulting scores are deployable.
 
-\paragraph{Statistical confidence and power.} The $95\%$ intervals for the centering gains are $[+16.1,+18.1]$~pp for EEGNet, $[+14.0,+21.8]$~pp for raw EEG, $[+14.8,+24.0]$~pp for the reservoir, and $[+13.4,+23.6]$~pp for the GRU. All intervals exclude zero. A power analysis for the $N = 211$ sample with $C = 3$ conditions per subject yields a minimum detectable standardized effect size of $d = 0.193$ at $\alpha = 0.05$ and $80\%$ power. The observed centering gains correspond to $d > 2.0$ for most architectures, confirming that the study is substantially overpowered for detecting the entanglement effect and that the gains are not attributable to sampling variability.
+\paragraph{Statistical scope.} The original intervals summarize resampling variation inside the archived workflow. They do not repair global preprocessing or the transductive estimand. A prospective centering method would require calibration data available at prediction time and independent evaluation.
 
 \subsubsection{Interpretation: ARSPI-Net as an Intrinsically Interpretable Measurement Framework}
 
@@ -461,7 +495,7 @@ The complete baseline table (Table~\ref{tab:conventional_baselines}) distinguish
 
 At $78.8\%$ centered accuracy, ARSPI-Net supports discriminative classification, seven dynamical descriptors (Chapter~\ref{chap:dynamics}), and graph-topological analysis (Sections~\ref{sec:ch5_interpretability}--\ref{sec:ch5_ablation}). Its fixed recurrent weights make the transformation reproducible for a specified initialization and parameter set. Some intermediate variables have physical units; others, including PCA loadings and graph summaries, are dimensionless. The advantage is explicit construction and inspectability, not demonstrated clinical meaning for every variable.
 
-The accuracy gap between raw EEG ($88.4\%$) and the reservoir embedding ($78.8\%$) admits a principled information-theoretic interpretation. Dambre et al.\ \cite{Dambre2012InformationProcessing} established a fundamental tradeoff in reservoir computing: linear dynamics preserves memory perfectly but cannot perform nonlinear transformation, while nonlinear dynamics enables computation but degrades stored memory. The $\sim$10~pp gap is an empirical measurement of this tradeoff at the BSC$_6$ compression level. What the raw-EEG linear model gains in memory preservation, it forfeits in structured analyzability: the $8{,}704$-dimensional raw-EEG readout answers one question (which condition was presented) but exposes none of the dynamical, topological, or coupling structure that the reservoir's staged representation makes accessible.
+The archived accuracy gap is consistent with information loss during nonlinear transformation and BSC$_6$ compression, but it is not a direct measurement of the memory--nonlinearity tradeoff described by Dambre et al.\ \cite{Dambre2012InformationProcessing}. The corrected comparison likewise shows that raw ERP summaries outperform BSC$_6$/SRP-64. The reservoir's defensible advantage is the availability of a specified sequence of membrane, spike, temporal-bin, and graph-organized quantities for analysis.
 
 
 \section{Representation Geometry: Variance Decomposition and Signal Detection}
@@ -578,12 +612,12 @@ Third, pairwise cosine similarity increases monotonically with $K$, from $0.138$
 
 A natural question is whether the regime boundary is specific to Pearson-correlation adjacency or whether it generalizes across graph construction families. Figure~\ref{fig:exp04_sweep} compares classification accuracy under two-layer GCN propagation for three adjacency constructions: thresholded Pearson correlation ($20\%$ density, $113$ edges), spatial-distance graph ($126$ edges), and degree-matched random graph ($113$ edges). All three produce lower accuracy than the non-propagated baseline ($K = 0$): Pearson $58.1\%$, spatial $54.5\%$, random $54.0\%$, versus $63.4\%$ at $K = 0$.
 
-The observation that even the Pearson graph, which encodes genuine functional relationships between channels, produces lower accuracy than no graph at all demonstrates that the regime boundary is a property of the graph size and density, not of the specific adjacency construction. The smoothing inherent in message-passing on a $34$-node, $20\%$-density graph absorbs more inter-channel discriminative contrast than any adjacency can contribute in relational information.
+Within the archived sweep, every tested adjacency produces a lower displayed value than no propagation. This pattern is consistent with smoothing of inter-channel contrast, but global preprocessing and the limited set of graph constructions prevent attributing the result generally to graph size or density.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{pictures/chGraphNeuralNetworks/exp04_graph_construction_sweep.pdf}
-    \caption{Graph construction sweep. All adjacency families (Pearson, spatial, random) produce lower accuracy at $K = 2$ than the non-propagated baseline ($K = 0$). The regime boundary is robust across graph construction methods.}
+    \caption{Archived graph construction sweep. Pearson, spatial, and random adjacencies produce lower displayed values at $K=2$ than at $K=0$ in this workflow; the result is hypothesis-generating rather than a general regime boundary.}
     \label{fig:exp04_sweep}
 \end{figure}
 
@@ -636,7 +670,7 @@ SUD produces the strongest clinical effect observed in this chapter, with the la
 
 \textbf{SUD $\times$ Strength Reactivity ($p = 0.0004$, $d = -0.52$).} Non-SUD subjects increase mean connection strength during negative processing ($\Delta = +0.037$); SUD subjects show the opposite ($\Delta = -0.023$). This is the strongest clinical effect observed in this dataset.
 
-\textbf{SUD $\times$ Efficiency Reactivity ($p = 0.003$, $d = +0.43$).} SUD subjects increase global efficiency during negative processing ($\Delta = +0.022$); non-SUD subjects decrease it ($\Delta = -0.020$). The direction reversal indicates a qualitatively different mode of network reorganization.
+\textbf{SUD $\times$ Efficiency Reactivity ($p = 0.003$, $d = +0.43$; uncorrected).} The archived groups have opposite signed mean contrasts ($\Delta=+0.022$ and $-0.020$). This nominal interaction does not establish a distinct mode of network reorganization.
 
 \textbf{SUD $\times$ Clustering Reactivity ($p = 0.012$, $d = -0.35$).} SUD subjects reduce local clustering during negative processing; non-SUD subjects increase it.
 
@@ -688,18 +722,18 @@ No clinical variable produced edges surviving FDR correction (Figure~\ref{fig:ed
 \end{figure}
 
 
-\section{Paired-Granularity Regime Comparison}
+\section{Corrected Paired-Granularity Comparison}
 \label{sec:ch5_4class}
 
-The preceding sections characterize the architecture at three-class resolution (Negative, Neutral, Pleasant). A natural question follows: how does the discriminative and representational behavior of the architecture change as the class boundary moves from coarse valence grouping to finer within-valence affective distinctions? To answer this, the entire pipeline (reservoir processing, BSC$_6 \to$ PCA-64 embedding, graph construction, classification, variance decomposition, and clinical analysis) is repeated at four-class resolution (Threat, Mutilation, Cute, Erotic) on the same $211$ subjects.
+The corrected pipeline evaluates three conditions (Negative, Neutral, Pleasant) and four affective categories (Threat, Mutilation, Cute, Erotic). Subject~127 is excluded from both tasks for a constant recording; Subject~195 is additionally excluded from the four-category task for a constant Cute recording. The resulting samples contain $211$ participants and $633$ observations at three conditions, and $210$ participants and $840$ observations at four categories.
 
-\subsection{The Regime Boundary: Where Temporal Coding Advantage Reverses}
+\subsection{Persistence of Temporal Coding Across Granularities}
 
-Table~\ref{tab:regime_comparison} presents the cross-granularity comparison. The central observation is a regime inversion: at three-class, the reservoir embedding outperforms band-power features by $+12.5$~pp ($63.4\%$ vs.\ $50.9\%$); at four-class, band-power outperforms the reservoir by $+6.2$~pp ($40.4\%$ vs.\ $34.2\%$). The same $211$ subjects, the same pipeline, the same cross-validation protocol, the only change is the class boundary. The reservoir's temporal coding advantage is regime-dependent.
+Table~\ref{tab:regime_comparison} presents the corrected comparison. The reservoir representation exceeds the conventional band-power/Hjorth baseline at both granularities: $+11.3$ percentage points at three conditions and $+16.5$ points at four categories. Thus, the previously displayed reversal does not survive reconstruction from raw files. The archived reversal combined a nonmatching time slice, stride-based downsampling, global PCA, and unequal quality-control samples; it is not retained as a scientific finding.
 
 \begin{table}[t]
 \centering
-\caption{Cross-granularity comparison of ARSPI-Net operating regimes. The reservoir's advantage over band-power reverses at four-class, identifying a regime boundary for temporal spike coding.}
+\caption{Corrected cross-granularity comparison. Intervals are participant-bootstrap $95\%$ intervals around predictions pooled from five repeats of five-fold participant-grouped cross-validation.}
 \label{tab:regime_comparison}
 \small
 \renewcommand{\arraystretch}{1.15}
@@ -707,33 +741,27 @@ Table~\ref{tab:regime_comparison} presents the cross-granularity comparison. The
 \hline
 \textbf{Quantity} & \textbf{3-class} & \textbf{4-class} \\
 \hline
-Number of classes & 3 & 4 \\
-Best raw classifier & Reservoir + SVM & BandPower + SVM \\
-Best raw balanced accuracy & $63.4\%$ & $40.4\%$ \\
-Best centered accuracy & $79.4\%$ & $52.0\%$ \\
-Subject-centering gain & $+16.0$ pp & $+10.8$ pp \\
-Band-power accuracy & $50.9\%$ & $40.4\%$ \\
-Reservoir $>$ BandPower? & Yes ($+12.5$ pp) & No ($-6.2$ pp) \\
-GNN beats non-propagated? & No & No \\
-Subject variance fraction & $62.6\%$ & $47.0\%$ \\
-Condition variance fraction & $8.7\%$ & $2.4\%$ \\
-Subject / condition ratio & $7.2\times$ & $19.6\times$ \\
-Strongest clinical finding & SUD $p = 0.0004$ & PTSD $p = 0.036$ \\
+Participants / observations & $211/633$ & $210/840$ \\
+Chance & $33.3\%$ & $25.0\%$ \\
+Raw ERP-16 & $68.1\%$ $[65.1,71.1]$ & $60.5\%$ $[57.9,63.0]$ \\
+Conventional band-power/Hjorth & $49.4\%$ $[46.8,51.9]$ & $36.7\%$ $[34.6,38.9]$ \\
+BSC$_6$/SRP-64 & $60.6\%$ $[57.8,63.4]$ & $53.2\%$ $[50.6,55.8]$ \\
+Reservoir minus conventional & $+11.3$ pp $[7.9,14.7]$ & $+16.5$ pp $[13.3,19.8]$ \\
+Conventional + reservoir fusion & $62.0\%$ $[59.1,64.8]$ & $53.5\%$ $[50.8,56.3]$ \\
+Participant-label permutation $p$ & $0.0099$ & $0.0099$ \\
 \hline
 \end{tabular}
 \end{table}
 
-The variance decomposition quantifies the underlying signal regime. At three-class, condition accounts for $8.7\%$ of embedding variance (subject-to-condition ratio $7.2\times$). At four-class, condition accounts for $2.4\%$ (ratio $19.6\times$). The $3.6\times$ reduction in condition signal fraction explains the accuracy drop: the reservoir's temporal coding is most advantageous when the condition signal is strong enough to survive the embedding transformation. At four-class, the within-valence discriminations (Threat vs.\ Mutilation, Cute vs.\ Erotic) require finer-grained distinctions that the BSC$_6$ temporal binning does not resolve, and simpler spectral features capture the remaining structure more efficiently.
+The reservoir's absolute accuracy declines as the task moves from three to four labels, as expected for a more granular decision. Its margin over the matched conventional features does not decline. This persistence is the defensible cross-granularity finding. Raw ERP-16 remains stronger at both granularities, which rules out an accuracy-superiority claim for the reservoir.
 
-\subsection{Within-Valence Arousal Hierarchy}
+\subsection{Archived Within-Valence Comparisons}
 
-The four-class pairwise classification reveals that the category hierarchy tracks arousal rather than valence. The easiest pairwise discrimination is Cute vs.\ Erotic ($69.0\%$), a within-positive-valence comparison that differs primarily in arousal. The hardest is Threat vs.\ Cute ($52.8\%$), a between-valence comparison with similar arousal profiles. The observation that within-valence comparisons spanning an arousal gradient are easier than between-valence comparisons with matched arousal indicates that the reservoir's driven trajectory is more sensitive to the arousal dimension than to the valence dimension of affective input.
+The archived pairwise analysis displays $69.0\%$ for Cute versus Erotic and $52.8\%$ for Threat versus Cute. Because stimulus-level arousal and valence ratings were not modeled and the archived features used the nonmatching preprocessing path, these values do not establish that the reservoir is more sensitive to arousal than valence. That hypothesis requires a corrected model with continuous stimulus ratings and participant-grouped evaluation.
 
 \subsection{Four-Class Clinical Findings}
 
-At four-class, PTSD produces the strongest clinical effects ($11$ significant channel-metric pairs, $28$ significant edges), displacing SUD as the primary clinical variable from the three-class analysis. The four-class resolution reveals a PTSD $\times$ Threat--Mutilation interaction ($p = 0.036$) that is structurally impossible at three-class resolution, where both threat and mutilation images are collapsed into the single Negative condition. PTSD subjects show differential network reorganization to threat-relevant versus general aversive stimuli, a threat-specificity signature consistent with the threat hypervigilance model of PTSD. The SUD $\times$ global efficiency interaction replicates at four-class ($p = 0.008$), providing cross-granularity validation of the SUD network phenotype.
-
-The clinical signal hierarchy shift (SUD strongest at three-class, PTSD strongest at four-class) reveals that different disorders leave their strongest signatures at different levels of emotional resolution. SUD, which produces blunted general emotional reactivity, is most detectable when emotional categories are broadly grouped. PTSD, which produces threat-specific hypervigilance, requires within-valence resolution to reveal its distinctive phenotype.
+The archived four-category screen contains $11$ nominal PTSD channel--metric cells, $28$ nominal PTSD edges, an uncorrected PTSD-by-category interaction ($p=0.036$), and an uncorrected SUD-by-efficiency interaction ($p=0.008$). These tests arose within broad exploratory families, were not independently replicated, and were not rerun as corrected confirmatory analyses. They therefore do not establish threat specificity, disorder-dependent network reorganization, cross-granularity replication, or biomarkers. Their appropriate role is to define prespecified hypotheses for a new sample.
 
 
 \section{Layer Ablation and Complementarity Analysis}
@@ -795,7 +823,7 @@ C6 (C) & $52.7\%$ & $49.7\%$ & $47.0\%$ & $\mathbf{53.8\%}$ & $\mathbf{53.0\%}$ 
 
 \subsection{Interpretation: Operationally Distinct Response Layers}
 
-The emotion and clinical ablation matrices jointly support the dissertation's corrected central thesis. For emotion classification, the discriminative embedding is the primary substrate; the later layers are explanatory and organizational. For clinical characterization, the strongest sensitivity appears in different layers for different disorders: dynamical metrics for SUD and PTSD, topological metrics for GAD, and coupling for ADHD. The three response layers are operationally distinct, they are not interchangeable, and each is most sensitive to different aspects of the signal. The later layers do not primarily improve classification; they expose structure that the embedding classifier does not require for emotion discrimination but that carries clinical information accessible only through the multi-layer architecture.
+The archived emotion and clinical ablation matrices suggest that the measured feature families are not numerically interchangeable. The embedding has the highest displayed emotion value; clinical values are near chance and vary by label and feature family. Because preprocessing was global and no clinical readout supplies confirmatory discrimination, these matrices do not establish disorder-specific sensitivity or information accessible only through the multi-layer architecture. They motivate a corrected, prespecified ablation in an independent sample.
 
 
 \section{Novelty, Significance, and Engineering Implications}
@@ -803,7 +831,7 @@ The emotion and clinical ablation matrices jointly support the dissertation's co
 
 \subsection{Novel Contributions}
 
-This chapter contributes a signal-detection analysis, a propagation-regime characterization, a nuisance-structure analysis, a paired-granularity comparison, a layer-ablation analysis, and a centered baseline comparison. The clinical-label results are exploratory: the strongest SUD parametric comparison has $p = 0.0004$, but its label-permutation result is $p = 0.073$ and the larger-sample analysis is nested rather than an independent replication. The ablation results therefore establish operational differences among measured layers in this cohort, not validated disorder-specific explanations.
+The corrected contribution is a fold-safe, participant-grouped evaluation of a fixed temporal spike code at two label granularities, accompanied by temporal-order, temporal-collapse, electrode-identity, population-count, seed, temporal-window, fusion, and participant-label-permutation analyses. LSM and SNN emotion classification predate this work; novelty lies in the specified SHAPE application, the inspectable intermediate code, and the controls that delimit what it uses. Archived propagation, nuisance, ablation, centering, and clinical analyses remain hypothesis-generating. The strongest SUD parametric comparison has $p=0.0004$, but its label-permutation result is $p=0.073$.
 
 \subsection{Significance for Electrical Engineering}
 
@@ -811,9 +839,9 @@ The Propagation Operating Characteristic provides a systematic way to compare gr
 
 \subsection{Significance for Clinical Affective Neuroscience}
 
-The results in this chapter open a new direction in clinical electrophysiology. The SUD findings provide the first graph-topological characterization of how substance use disorder modulates emotional brain network reactivity using neuromorphic embeddings. The triple interaction (strength, efficiency, clustering) describes a coherent network-level phenotype: SUD subjects respond to negative stimuli with weaker, more diffuse, and less locally organized network activity, a pattern that no channel-level or amplitude-level analysis could have revealed. The observation that this phenotype emerges from a reservoir-derived representation rather than from conventional spectral features suggests that the spiking transformation captures aspects of the neural signal that traditional power-spectral methods miss.
+The archived clinical screens illustrate how neuromorphic embeddings can generate graph-level hypotheses, but they do not establish a first clinical characterization, a coherent SUD phenotype, or information missed by spectral features. The nominal strength, efficiency, and clustering contrasts arose within broad search families; the strongest comparison does not pass the participant-label permutation test. Their defensible impact is to supply explicit, prespecifiable targets for independent replication.
 
-More broadly, the subject-centering discovery, that classification accuracy increases from $63.4\%$ to $79.4\%$ when the subject-identity component is removed, has implications beyond this dataset. It demonstrates that the standard practice of training a single classifier across all subjects in an EEG study conflates two fundamentally different sources of variance: individual neural architecture and condition-specific processing. Disentangling these sources, as this chapter does through per-subject centering, reveals that the condition signal in clinical EEG is substantially stronger than the field's typical classification accuracies suggest.
+More broadly, the archived increase from $63.4\%$ to $79.4\%$ after complete-panel centering motivates explicit study of participant nuisance. It does not demonstrate a prospective gain or show that condition signal is generally stronger than published EEG accuracies suggest, because the centering operation is transductive and preprocessing was global.
 
 
 \section{Scope and Future Directions}
@@ -862,7 +890,7 @@ A temporal resolution sweep across three binning granularities further character
 \bottomrule
 \end{tabular}
 \end{center}
-Finer temporal resolution does not improve classification accuracy, it reduces it. This is consistent with the information-bottleneck prediction \cite{tishby_deep_2015}: at the six-bin level, the representation has reached the compression-relevance frontier for this task. Finer binning increases the mutual information $I(X; T)$ without increasing $I(T; Y)$, adding dimensionality that is purely nuisance. The concentration ratio (peak-bin accuracy divided by mean-bin accuracy) increases slightly at finer resolution, indicating marginally more selective discrimination, but not enough to compensate for the increased dimensionality.
+In this archived sweep, finer temporal resolution does not improve the displayed classification value. That pattern is qualitatively compatible with an information-bottleneck account \cite{tishby_deep_2015}, but mutual information was not estimated and the experiment cannot locate a compression--relevance frontier. Increased dimensionality, regularization, or pipeline-specific variance are alternative explanations.
 
 The peak bin shifts from LPP (234--273~ms) at 6-bin resolution to N2 (176--195~ms) at 12- and 24-bin resolution, suggesting that finer temporal resolution reveals a secondary discriminative peak in the N2 window that the coarser binning aggregates with adjacent non-discriminative timesteps.
 
@@ -944,20 +972,20 @@ This chapter characterized the discriminative embedding layer and spatial-topolo
 \section{Chapter Summary}
 \label{sec:ch5_summary}
 
-This chapter makes eight contributions validated on $211$ subjects ($633$ observations at three-class; $844$ observations at four-class).
+This chapter separates four corrected findings from four hypothesis-generating archived analyses. The corrected samples contain $211$ participants ($633$ observations) for three conditions and $210$ participants ($840$ observations) for four categories.
 
-First, variance decomposition establishes that subject identity accounts for $62.6\%$ of embedding variance, with condition signal at $8.7\%$ ($7\times$ ratio). Subject-centering increases classification accuracy by $+13$ to $+21$~pp across all seven tested representations, including EEGNet ($72.0\% \to 89.1\%$), raw EEG ($70.5\% \to 88.4\%$), and ARSPI-Net ($59.4\% \to 78.8\%$). The cross-architecture pattern indicates that subject-covariance entanglement is not specific to the reservoir representation in this dataset.
+First, corrected participant-grouped evaluation places BSC$_6$/SRP-64 at $60.6\%$ for three conditions and $53.2\%$ for four categories. The corresponding advantages over conventional band-power/Hjorth features are $11.3$ and $16.5$ percentage points, with participant-label permutation $p=0.0099$ for both tasks.
 
-Second, a Propagation Operating Characteristic across six graph densities, six propagation depths, three adjacency constructions, and four contrast-preserving operator families demonstrates that no graph operator exceeds the non-propagated baseline on this graph class.
+Second, temporal-bin shuffle, temporal collapse, channel shuffle, and population-count controls reduce accuracy. The intact representation therefore uses temporal order and electrode identity, not only global spike totals.
 
-Third, PCA nuisance regression monotonically destroys accuracy because subject and condition share principal components, a structural discovery about the geometry of multichannel affective EEG embeddings.
+Third, three fixed reservoir seeds give closely similar results, and temporal-window ablations show useful information across early, middle, and late windows. The full corrected window reaches $63.3\%$ in the three-repeat robustness experiment.
 
-Fourth, graph-topological analysis identifies nominal SUD emotional-reactivity associations across three complementary metrics ($p = 0.0004$, $0.003$, $0.012$). The strongest effect does not reach significance under the empirical label-permutation test ($p = 0.073$), and the nested-sample comparison is not an independent replication.
+Fourth, raw ERP-16 outperforms the reservoir at both granularities ($68.1\%$ and $60.5\%$), setting an important boundary: ARSPI-Net is not an accuracy leader on this dataset.
 
-Fifth, the paired-granularity comparison identifies a regime boundary: the reservoir outperforms band-power by $+12.5$~pp at three-class but is outperformed by $-6.2$~pp at four-class. The condition variance fraction drops from $8.7\%$ to $2.4\%$, and PTSD displaces SUD as the strongest clinical effect when within-valence resolution is available.
+Fifth, the archived graph-propagation sweep displays no improvement over the non-propagated representation. Global preprocessing prevents that sweep from establishing a universal graph operating boundary.
 
-Sixth, the layer ablation matrix demonstrates that the embedding dominates emotion classification ($59.4\%$ vs.\ $42.2\%$ for dynamics, $35.3\%$ for topology), confirming that the reservoir's temporal coding carries the richest linearly separable condition signal.
+Sixth, archived variance decomposition and complete-panel centering motivate research on subject nuisance, but the centering estimand is transductive and not prospective.
 
-Seventh, the clinical ablation reveals that different layers carry the strongest clinical sensitivity for different disorders (dynamics for SUD and PTSD, topology for GAD, coupling for ADHD) supporting the interpretation that ARSPI-Net's three response layers are operationally distinct and provide layer-specific clinical interpretability that no single-stage classifier can match.
+Seventh, the archived layer ablation suggests that embedding, dynamics, topology, and coupling summarize different aspects of the signal. Near-chance clinical readouts and global preprocessing preclude a claim of disorder detection or superiority to single-stage classifiers.
 
-Eighth, a comprehensive baseline comparison with centered evaluation establishes that the centering intervention dominates architecture choice: ARSPI-Net ($78.8\%$ centered) matches trained GRU ($78.4\%$) with zero trainable recurrent parameters, while providing a fully traceable, intrinsically interpretable signal chain from input ERP to classification output.
+Eighth, archived clinical screens yield nominal candidates but no validated biomarkers. The scientific value of retaining them is transparency and the generation of prespecified replication targets.

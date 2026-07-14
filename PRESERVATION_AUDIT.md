@@ -7,7 +7,7 @@ It does not use the shortened 272-page manuscript as a prose base.
 
 | Item | Supplied source | Audited build |
 | --- | ---: | ---: |
-| Total PDF pages | 329 | 329 |
+| Total PDF pages | 329 | 330 |
 | Chapter 1 start | 1 | 1 |
 | Chapter 2 start | 17 | 17 |
 | Chapter 3 start | 50 | 51 |
@@ -36,6 +36,10 @@ conclusion and literature review were retained.
 - The unsupported DEAP numerical generalization claim was removed.
 - The SHAPE study is identified as Stress, Health, and the Psychophysiology of Emotion and cited to the Laboratory for Clinical Affective Neuroscience.
 - Recent primary literature was added on participant-wise EEG validation and modular echo-state networks.
+- Corrected SHAPE experiments were rebuilt from the raw files after the supplied feature pickle was found not to match the stated time slice and downsampling procedure.
+- The corrected BSC6/SRP-64 representation reaches 60.6% balanced accuracy for three conditions and 53.2% for four categories under repeated participant-grouped validation; raw ERP summaries remain stronger.
+- Temporal-order, electrode-identity, population-count, reservoir-seed, temporal-window, fusion, and participant-label permutation analyses now bound the novelty claim.
+- The archived three-to-four-class regime inversion was withdrawn because it does not survive corrected preprocessing.
 
 ## Submission checks
 
@@ -44,5 +48,5 @@ conclusion and literature review were retained.
 - No encryption or password.
 - Fonts embedded.
 - No GitHub links or repository language in the dissertation source or extracted PDF text.
-- Committee names: Wendy Tang, Alex Doboli, Brady Nelson, Sangjin Hong.
-- Unsigned committee recommendation page retained as page ii; no scanned signed form included.
+- Committee names: Wendy Tang, Alex Doboli, Brady D. Nelson, Sangjin Hong.
+- The June 2026 Graduate School guidelines require an unsigned signature page as page ii of the dissertation PDF and a separate Adobe Sign page submitted to the Graduate School. The unsigned page is retained; no scanned signed form is embedded.
