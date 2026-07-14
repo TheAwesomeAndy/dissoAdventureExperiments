@@ -37,13 +37,38 @@ The reservoir architecture and neuron model are described in Chapter~\ref{chap:b
 
 The membrane time constant $\tau_m$ is the single most important parameter governing how an LIF reservoir processes temporal structure. To understand why, consider the reservoir from two complementary perspectives: the time-domain view of temporal integration and the frequency-domain view of spectral filtering.
 
-In the time domain, the subthreshold impulse response of the LIF neuron is a truncated exponential $h(t) = (1/\tau_m)\,e^{-t/\tau_m}$ for $t \geq 0$, which Lindeberg proved is the uniquely determined time-causal smoothing kernel satisfying non-creation of new structures across temporal scales \cite{lindeberg_2016}. This is not a biological curiosity; it is a deep result from scale-space theory establishing that the exponential decay of the LIF membrane is the \emph{only} causal temporal smoothing operation that does not introduce spurious features into the signal. The membrane time constant $\tau_m$ controls the width of this smoothing kernel: larger $\tau_m$ integrates over wider temporal windows, effectively forming a longer ``memory'' of past input, while smaller $\tau_m$ restricts integration to a narrow window around the present.
+In the time domain, the isolated subthreshold LIF neuron has exponential impulse response $h(t) = (1/\tau_m)\,e^{-t/\tau_m}$ for $t \geq 0$. Lindeberg's time-causal scale-space construction provides an axiomatic context in which cascades of truncated exponentials arise as variation-diminishing causal smoothing kernels \cite{lindeberg_2016}. That result applies to the linear scale-space construction, not to the complete recurrent threshold-and-reset reservoir. Here it motivates, but does not uniquely determine, the membrane filter. The parameter $\tau_m$ controls the kernel width: larger $\tau_m$ integrates over a wider temporal interval, while smaller $\tau_m$ emphasizes recent input.
 
 In the frequency domain, the same kernel acts as a first-order low-pass filter with transfer function $H(f) = 1/(1 + j2\pi f \tau_m)$ and $-3$\,dB cutoff frequency $f_c = 1/(2\pi\tau_m)$. Each neuron therefore performs spectral filtering whose bandwidth is directly controlled by $\beta$: smaller $\beta$ (larger $\tau_m$) yields a narrower bandwidth that emphasizes slow fluctuations, while larger $\beta$ (smaller $\tau_m$) admits higher-frequency content at the cost of shorter memory. For a population of $N_{\text{res}}$ neurons sharing the same $\tau_m$, the entire reservoir applies the same spectral weighting to its input, which means the choice of $\beta$ determines which frequency components of the driving signal are preferentially retained in the reservoir state and which are attenuated.
 
-This has a direct connection to the general theory of reservoir memory. Dambre et al.\ \cite{dambre_2012} proved a fundamental trade-off in reservoir computing: a reservoir cannot simultaneously maximize its linear memory capacity (how far into the past it can recall) and its nonlinear computational capacity (how complex a transformation it can perform on its input). Linear memory is maximized when the reservoir dynamics are strongly contracting ($\tau_m$ very large relative to the input timescale), while nonlinear computation benefits from dynamics closer to the edge of stability. The choice of $\tau_m$ therefore positions the reservoir along this trade-off curve: very large $\tau_m$ favors long-range memory at the expense of nonlinear richness, while small $\tau_m$ favors nonlinear transformation at the expense of memory depth.
+This has a direct connection to the general theory of reservoir memory. Dambre et al.\ show that, under their assumptions, the sum of orthogonal information-processing capacities is bounded by the number of accessible state variables \cite{dambre_2012}. Allocating capacity to nonlinear functions therefore leaves less capacity for delayed linear reconstruction, and conversely. That theorem does not prescribe a universally optimal $\tau_m$ for this spiking network. It instead motivates treating $\tau_m$ as a design variable that changes the empirical allocation between persistence and nonlinear transformation.
 
 For a reservoir intended to process EEG, the choice of $\tau_m$ has concrete engineering consequences. EEG signals contain frequency content spanning delta ($<4$\,Hz) through gamma ($>30$\,Hz) bands, and the transient responses of interest (such as event-related activity in post-stimulus epochs) evolve over timescales of tens to hundreds of milliseconds. The reservoir's intrinsic time constant must be compatible with these timescales: too fast, and the reservoir forgets relevant history before it can be read out; too slow, and distinct transient events are blurred together. This module quantifies this trade-off empirically by sweeping $\beta$ across an order of magnitude and measuring the resulting temporal persistence of the reservoir's driven response.
+
+The subthreshold case gives an exact reference calculation. For a scalar unit
+with $M[t]=\alpha M[t-1]+I[t]$, $\alpha=1-\beta$, suppose two inputs are equal
+after time $t_0$. Then $|\Delta M[t_0+k]|=\alpha^k|\Delta M[t_0]|$.
+
+\begin{proposition}[Effective subthreshold memory horizon]
+\label{prop:subthreshold_horizon}
+For tolerance $\varepsilon>0$ and initial difference
+$0<|\Delta M[t_0]|\le M$, the influence is at most $\varepsilon$ whenever
+\begin{equation}
+k\ge K_\varepsilon
+=\left\lceil\frac{\log(\varepsilon/M)}{\log\alpha}\right\rceil.
+\end{equation}
+For small $\beta$, $K_\varepsilon\approx \beta^{-1}\log(M/\varepsilon)$.
+\end{proposition}
+
+\begin{proof}
+Repeated substitution gives $|\Delta M[t_0+k]|\le\alpha^kM$. Solving
+$\alpha^kM\le\varepsilon$ for $k$ yields the bound. The approximation uses
+$\log(1-\beta)=-\beta+O(\beta^2)$.
+\end{proof}
+
+This is exact for a fixed subthreshold itinerary. Spike events can erase,
+preserve, or discontinuously change differences, so the horizon is a reference
+timescale rather than a global theorem for the full reservoir.
 
 \subsection{Experimental Design}
 
@@ -107,6 +132,32 @@ Module 1 established control over the reservoir's temporal dynamics, but it did 
 Below the firing threshold $M_{\text{th}}$, the membrane potential evolves as a continuous analog variable governed by linear dynamics: $M_i[t] = (1 - \beta) M_i[t-1] + I_{\text{tot},i}[t]$. In this regime, the reservoir is a \emph{linear} dynamical system (since the LIF dynamics are linear below threshold) whose response to any input is a weighted superposition of the exponential modes determined by $\mathbf{W}^{\text{rec}}$. The specific superposition is set by the projection direction determined by $\mathbf{W}^{\text{in}}$. Different random $\mathbf{W}^{\text{in}}$ matrices excite different modes with different amplitudes, producing potentially very different global responses to the same input. This is a fundamental consequence of the linearity of the subthreshold dynamics: without any nonlinear mechanism to constrain the state-space trajectory, the full dimensionality of the random projection is preserved, and initialization-dependent differences can grow or persist indefinitely.
 
 Above threshold, the neuron emits a spike and resets, introducing a strong piecewise nonlinearity that qualitatively changes the dynamics. The threshold-and-reset mechanism acts as a form of \emph{state-space contraction}: when $M_i[t] \geq M_{\text{th}}$, the membrane potential is reset to $M_{\text{reset}}$, erasing the precise pre-spike trajectory and replacing it with a stereotyped event. Regardless of the specific trajectory that brought the neuron to threshold (whether it arrived from a high or low initial potential, via a fast or slow approach) the post-reset state is the same. At the population level, this contraction has a regularizing effect: it reduces the sensitivity of the collective output to the specific $\mathbf{W}^{\text{in}}$ realization, because the threshold-crossing events produce the same reset regardless of the initialization-dependent trajectory that led to them.
+
+The contraction language requires a boundary condition because the spike map is
+discontinuous at threshold. Let $P_i[t]$ be the pre-threshold membrane and define
+the threshold margin over a finite trajectory by
+\begin{equation}
+\gamma=\min_{i,t}|P_i[t]-M_{\mathrm{th}}|.
+\end{equation}
+
+\begin{lemma}[Spike-itinerary stability away from threshold]
+\label{lem:spike_margin}
+If $\gamma>0$ and a perturbed trajectory satisfies
+$\max_{i,t}|P_i'[t]-P_i[t]|<\gamma$, then
+$S_i'[t]=S_i[t]$ for every neuron and time in the analyzed window.
+\end{lemma}
+
+\begin{proof}
+For each $(i,t)$, the perturbation is smaller than the distance from $P_i[t]$ to
+the threshold. It therefore cannot move that value across the threshold, so the
+threshold indicator is unchanged.
+\end{proof}
+
+Within such a margin-preserving region the system follows one affine/reset
+itinerary and ordinary contraction calculations apply. At the boundary,
+arbitrarily small perturbations may change a spike decision; global contraction
+cannot be inferred merely from reset events. The empirical seed sweep below
+therefore tests a property that the reset mechanism alone does not prove.
 
 This distinction between analog and digital operating regimes has a deep connection to the theoretical requirements for reservoir computing. The separation property of Maass et al.\ \cite{Maass2002RealTime} requires that different input signals be mapped to distinguishably different reservoir states. In the subthreshold regime, the states are distinguishable but highly dependent on the random projection; in the spiking regime, the states are distinguishable \emph{and} regularized by the threshold nonlinearity, making the representation more robust across instances. The approximation property, on the other hand, requires that the readout can extract the relevant information from the reservoir state. A state representation that is consistent across random initializations is far more useful for this purpose than one that requires instance-specific calibration.
 

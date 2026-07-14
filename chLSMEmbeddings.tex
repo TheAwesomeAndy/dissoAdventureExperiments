@@ -22,6 +22,32 @@ This debate is directly relevant to the ARSPI-Net embedding problem. If the rese
 
 From a statistical perspective, the ideal feature extraction would produce a \emph{sufficient statistic} for the classification task: a function $T(\mathbf{S})$ that preserves all information about the class label $y$. The data processing inequality guarantees that $I(y; T(\mathbf{S})) \leq I(y; \mathbf{S})$, with equality if and only if $T$ is sufficient. The coding scheme comparison in this chapter is therefore an empirical assessment of how close different summary statistics come to sufficiency. This connects to the information bottleneck principle \cite{tishby_deep_2015}, which formalizes the trade-off between compression and relevance that the BSC$_6 \to$ PCA-64 pipeline must navigate.
 
+Let the time indices be partitioned into disjoint bins
+$\mathcal{B}_1,\ldots,\mathcal{B}_K$. For a binary spike matrix $S$, define
+$B_K(S)_{ik}=\sum_{t\in\mathcal{B}_k}S_{it}$.
+
+\begin{proposition}[Stability of binned spike counts]
+\label{prop:bsc_stability}
+For any two spike matrices $S,S'$ on the same grid,
+\begin{equation}
+\|B_K(S)-B_K(S')\|_1\le \|S-S'\|_1.
+\end{equation}
+Thus inserting or deleting $r$ spikes changes the BSC vector by at most $r$ in
+$\ell_1$; moving one spike between bins changes it by at most two.
+\end{proposition}
+
+\begin{proof}
+For each neuron and bin, the triangle inequality gives
+$|\sum_{t\in\mathcal{B}_k}(S_{it}-S'_{it})|
+\le\sum_{t\in\mathcal{B}_k}|S_{it}-S'_{it}|$. Summing over the disjoint bins
+and neurons yields the result. A move is one deletion plus one insertion.
+\end{proof}
+
+The inequality isolates the robustness introduced by temporal aggregation: spike
+edits cannot be amplified in $\ell_1$ by BSC. The converse does not hold because
+opposing edits within one bin may cancel. BSC stability is therefore obtained by
+deliberately discarding within-bin timing.
+
 \subsection{An Evaluation Task: Temporal Pattern Discrimination}
 
 To probe the rate-versus-temporal coding question, this chapter uses a controlled task specifically designed so that the two stimulus classes are indistinguishable by their total energy but distinguishable by their temporal structure. Class~0 (``early burst'') presents three sub-pulses with a strong--medium--weak amplitude profile; Class~1 (``late burst'') reverses this to weak--medium--strong. Both classes have approximately equal total energy within the analysis window, ensuring that any classifier operating on total spike counts (i.e., a rate code) cannot distinguish them. Additive Gaussian noise ($\sigma = 0.5$), amplitude jitter ($\pm 30\%$), and timing jitter ($\pm 5$ steps) are applied to create inter-trial variability. This task is more demanding than the Chapter~\ref{chap:lsm} amplitude discrimination and directly tests whether the reservoir encodes information in temporal structure that the mean rate discards.
@@ -117,6 +143,26 @@ The BSC$_6$ representation is also the more temporally traceable coding scheme. 
 \label{sec:pca_robustness}
 
 \subsection{PCA Compression}
+
+For any linear compressor $P\in\mathbb{R}^{m\times d}$, perturbations obey
+\begin{equation}
+\|Pz-Pz'\|_2\le \|P\|_2\,\|z-z'\|_2.
+\label{eq:linear_compressor_stability}
+\end{equation}
+This follows directly from the definition of the induced spectral norm. For an
+orthogonal PCA projection, $\|P\|_2=1$, so projection cannot increase Euclidean
+perturbations, although discarding components can reduce class margins.
+
+The corrected real-data analysis in Chapter~\ref{chap:arspi_net} uses a fixed
+sparse random projection rather than a data-fitted PCA basis. The finite-set
+Johnson--Lindenstrauss result states that, for $n$ fixed points and
+$0<\varepsilon<1$, an isotropically scaled sub-Gaussian or suitable sparse random
+projection into $m=O(\varepsilon^{-2}\log(n/\delta))$ dimensions preserves all
+pairwise squared distances within multiplicative factor $1\pm\varepsilon$ with
+probability at least $1-\delta$ \cite{achlioptas2003}. The result justifies random
+projection as a geometry-preserving construction in principle. It does not imply
+that $m=64$ meets a prespecified uniform distortion bound for every pair in the
+SHAPE sample; the dissertation evaluates the chosen dimension empirically.
 
 PCA was applied to the 1536-dimensional BSC$_6$ vectors. The explained-variance curve (Figure~\ref{fig:pca_variance}) showed that 64 principal components capture 50.5\% of the total variance while retaining $98.3\% \pm 1.3\%$ classification accuracy. Notably, even 5 components (15.4\% of variance) achieved $99.5\%$ accuracy, indicating that the class-discriminative structure lives in an extremely low-dimensional subspace, the two classes are separated by only a handful of principal directions in the 1536-dimensional BSC$_6$ space.
 

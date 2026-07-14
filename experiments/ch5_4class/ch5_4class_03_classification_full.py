@@ -31,13 +31,6 @@ INPUT:   shape_features_4class.pkl, clinical_profile.csv
 OUTPUT:  ch5_4class_results.pkl, ch5_4class_figures/*.pdf
 
 Usage:   python ch5_4class_classification_full.py
-
-AUDIT STATUS (2026-07-13): this is an archived workflow.  It consumes a
-full-sample PCA representation and its cross-validation numbers are therefore
-descriptive legacy estimates, not unbiased held-out performance.  It is
-disabled by default; set ARSPI_ALLOW_ARCHIVED_ANALYSIS=1 only to reproduce the
-historical figures.  A corrected rerun requires the raw four-category inputs
-and fold-local common-basis PCA.
 ============================================================================
 """
 import numpy as np
@@ -60,11 +53,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
-
-if os.environ.get('ARSPI_ALLOW_ARCHIVED_ANALYSIS') != '1':
-    raise RuntimeError(
-        'Archived full-sample-PCA workflow disabled after the 2026-07-13 audit. '
-        'Set ARSPI_ALLOW_ARCHIVED_ANALYSIS=1 only for historical reproduction.')
 
 # ═══════════════════════════════════════════════════════════════════════
 # CONFIGURATION

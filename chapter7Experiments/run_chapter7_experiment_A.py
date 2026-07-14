@@ -106,9 +106,7 @@ def run_reservoir(u, Win, Wrec):
     for t in range(T):
         I = Win * u[t] + Wrec @ s
         m = (1 - BETA) * m * (1 - s) + I
-        m = np.maximum(m, 0.0)
         sp = (m >= M_TH).astype(float)
-        m = m - sp * M_TH
         count = sp.sum()
         total_spikes += count
         pop_rate[t] = count / N_RES

@@ -47,6 +47,20 @@ The scalar coupling strength is the normalized Frobenius norm:
 \end{equation}
 This normalization maps $\kappa$ to $[0,1]$ and enables comparison across configurations with different $p$ and $q$. A $\kappa$ near zero indicates that the dynamical and topological descriptor families are unaligned across electrodes; a $\kappa$ near one indicates that every dynamical metric is strongly rank-correlated with every topological metric.
 
+\begin{proposition}[Range of the coupling statistic]
+\label{prop:kappa_range}
+For any $p\times q$ matrix of correlation coefficients,
+$0\le\kappa\le1$. Equality $\kappa=1$ requires
+$|C_{jk}|=1$ for all $j,k$.
+\end{proposition}
+
+\begin{proof}
+Each correlation satisfies $C_{jk}^2\le1$, so
+$0\le\sum_{j,k}C_{jk}^2\le pq$. Taking the square root and dividing by
+$\sqrt{pq}$ gives the bound. The upper equality requires equality in every
+summand.
+\end{proof}
+
 Spearman $\mathbf{C}_{s,c}$ and scalar $\kappa_{s,c}$ are the primary coupling instruments throughout this chapter. Canonical Correlation Analysis (CCA) is available as a secondary multivariate summary but is not used for primary inference due to the modest ratio of electrodes ($N_c = 34$) to variables ($p + q = 9$), which produces upward-biased canonical correlations in small samples \cite{wang_cca_2020}.
 
 \subsection{Null Model}
@@ -55,6 +69,51 @@ The electrode-permutation null shuffles the row indices of $\mathbf{T}_{s,c}$ re
 \begin{equation}
 p_{s,c} = \frac{1 + \#\{\kappa_{s,c}^{(\pi)} \ge \kappa_{s,c}\}}{1 + 5000}.
 \end{equation}
+
+The null has a finite-array baseline that can be derived exactly. Consider any
+two nonconstant rank vectors across $C$ electrodes. Center and scale them to unit
+Euclidean norm, calling them $a$ and $b$, so their Spearman correlation after a
+random row permutation is $r_\pi=a^\top P_\pi b$.
+
+\begin{theorem}[Second moment of permutation coupling]
+\label{thm:permutation_coupling}
+Under a uniformly random permutation of one electrode vector,
+\begin{equation}
+\mathbb{E}_\pi[r_\pi]=0,
+\qquad
+\mathbb{E}_\pi[r_\pi^2]=\frac{1}{C-1}.
+\end{equation}
+Consequently, for the normalized Frobenius statistic in
+Equation~\eqref{eq:kappa},
+\begin{equation}
+\mathbb{E}_\pi[\kappa_\pi^2]=\frac{1}{C-1},
+\end{equation}
+even when the $pq$ correlation entries are mutually dependent.
+\end{theorem}
+
+\begin{proof}
+Centering gives $\sum_i a_i=\sum_i b_i=0$, and unit scaling gives
+$\sum_i a_i^2=\sum_i b_i^2=1$. For a uniform permutation,
+$\mathbb{E}[b_{\pi(i)}]=0$, proving the first identity. Further,
+$\mathbb{E}[b_{\pi(i)}^2]=1/C$ and, for $i\ne j$,
+$\mathbb{E}[b_{\pi(i)}b_{\pi(j)}]=-1/[C(C-1)]$. Therefore
+\begin{align}
+\mathbb{E}[r_\pi^2]
+&=\frac{1}{C}\sum_i a_i^2
+-\frac{1}{C(C-1)}\sum_{i\ne j}a_i a_j\\
+&=\frac{1}{C}+\frac{1}{C(C-1)}=\frac{1}{C-1},
+\end{align}
+because $\sum_{i\ne j}a_i a_j=-\sum_i a_i^2=-1$. Finally,
+$\kappa^2=(pq)^{-1}\sum_{j,k}r_{jk}^2$; linearity of expectation gives the
+last result without requiring independence across entries.
+\end{proof}
+
+For $C=34$, the null root-mean-square correlation and root-mean-square coupling
+are both $1/\sqrt{33}\approx0.174$. This is not the mean of $\kappa$; Jensen's
+inequality gives only $\mathbb{E}[\kappa]\le1/\sqrt{33}$. The result explains why
+a positive raw $\kappa$ is expected even under broken electrode correspondence
+and why inference must compare against the permutation distribution rather than
+zero.
 
 
 \section{Data and Experimental Protocol}

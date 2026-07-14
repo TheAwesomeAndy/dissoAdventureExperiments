@@ -77,6 +77,44 @@ such that $\phi$ satisfies three requirements:
 
 ARSPI-Net instantiates $\phi$ as a staged pipeline: the spiking reservoir performs a nonlinear temporal expansion of $x_p(s)$, the BSC$_6$-PCA-64 coding bottleneck compresses the resulting spike representation into a structured embedding, and the graph-topological and dynamical analysis layers extract spatial and temporal properties of $\hat{D}_p$ across three representational scales. The affective condition labels ($s \in \{\text{Negative, Neutral, Pleasant}\}$) serve as controlled probes for evaluating the quality of the recovered structure; the clinical diagnostic metadata ($\delta_p$) serve as the downstream validation target for whether the recovered organization is diagnostically informative.
 
+The inverse problem is not identifiable without additional assumptions. Let the
+complete noiseless forward map be
+\begin{equation}
+    \mathcal{G}_s(D,\delta)=g\!\left(\mathcal{F}(D,s;\delta)\right).
+\end{equation}
+Define observational equivalence by $(D,\delta)\sim_S(D',\delta')$ when
+$\mathcal{G}_s(D,\delta)=\mathcal{G}_s(D',\delta')$ for every $s\in S$.
+
+\begin{proposition}[Non-identifiability under observational equivalence]
+\label{prop:inverse_nonidentifiability}
+If $(D,\delta)\sim_S(D',\delta')$, no deterministic estimator that receives only
+$\{(s,\mathcal{G}_s)\}_{s\in S}$ can return distinct values for those two latent
+systems. Consequently, exact recovery of $D$ is impossible on any equivalence
+class containing more than one element.
+\end{proposition}
+
+\begin{proof}
+Let $\Phi$ be any deterministic estimator of the observations. Observational
+equivalence gives identical arguments to $\Phi$ for the two systems. A function
+has one value for a fixed argument, so the estimator returns the same value in
+both cases. If the equivalence class is non-singleton, exact recovery of every
+member would require different outputs for the same input, a contradiction.
+\end{proof}
+
+\begin{corollary}[The proper recovery target]
+The strongest generally identifiable target is a function that is constant on
+the quotient classes $(D,\delta)/{\sim_S}$, or a task variable whose conditional
+distribution differs across observed signals. ARSPI-Net's named temporal,
+dynamical, and topological summaries are therefore properties of the observed
+response under a fixed measurement chain, not unique reconstructions of cortical
+state.
+\end{corollary}
+
+This result supplies the conceptual boundary for the dissertation. The
+architecture can expose stable and predictive organization in the measured ERP,
+but downstream complexity cannot recover distinctions that the forward map and
+finite stimulus set have made observationally indistinguishable.
+
 Each subsequent chapter addresses a specific aspect of the $\phi$ construction and its three requirements. Chapter~\ref{chap:lsm} establishes the reservoir's operating regime (stability). Chapter~\ref{chap:embeddings} characterizes the coding bottleneck (stability and compression). Chapter~\ref{chap:arspi_net} evaluates the embedding geometry and the graph-propagation regime on real clinical data (interpretability and generalizability). Chapter~\ref{chap:dynamics} extracts dynamical descriptors of $\hat{D}_p$ (interpretability). Chapter~\ref{chap:synthesis} tests whether temporal and spatial properties of $\hat{D}_p$ are systematically coupled (structural coherence). Chapter~\ref{chap:conclusion} consolidates the boundary conditions under which $\phi$ succeeds and identifies the regimes where it does not.
 
 

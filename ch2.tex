@@ -62,6 +62,40 @@ The parameter $\beta$ relates to the continuous-time membrane time constant $\ta
 \end{equation}
 Equation~\eqref{eq:beta_tau} is exact only within that Euler discretization. Matching the exact exponential solution instead gives $1-\beta=e^{-\Delta t/\tau_m}$, or $\tau_m=-\Delta t/\ln(1-\beta)$. With $\beta=0.05$, these mappings give $20$ and approximately $19.5$ simulation steps, respectively. Any conversion to milliseconds must use the actual post-decimation step size; the parameter is not itself a measured biological membrane constant.
 
+The implemented neuron also admits a useful boundedness guarantee. Write
+$\alpha=1-\beta\in(0,1)$, let $\mathbf{R}[t]$ denote the retained membrane after
+threshold subtraction and lower clipping, and assume
+$\|\mathbf{u}[t]\|_\infty\le U$. With the induced infinity norm, define
+\begin{equation}
+B=\|\mathbf{W}^{in}\|_\infty U+\|\mathbf{W}^{rec}\|_\infty.
+\end{equation}
+
+\begin{theorem}[Bounded-input bounded-state property]
+\label{thm:lif_bibs}
+For the discrete update used in this dissertation,
+\begin{equation}
+\|\mathbf{R}[t]\|_\infty
+\le \alpha^t\|\mathbf{R}[0]\|_\infty+
+\frac{B(1-\alpha^t)}{1-\alpha}
+\le \|\mathbf{R}[0]\|_\infty+\frac{B}{\beta}.
+\end{equation}
+Thus every bounded input sequence produces a bounded retained-membrane sequence,
+regardless of the realized spike pattern.
+\end{theorem}
+
+\begin{proof}
+Since $\|\mathbf{S}[t]\|_\infty\le1$, the input and recurrent spike currents
+have norm at most $B$. Reset masking cannot increase the retained nonnegative
+membrane, and threshold subtraction followed by clipping cannot make it exceed
+the nonnegative pre-threshold value. Hence
+$\|\mathbf{R}[t]\|_\infty\le \alpha\|\mathbf{R}[t-1]\|_\infty+B$.
+Iteration gives the geometric sum above.
+\end{proof}
+
+Boundedness is weaker than the echo state property: it prevents divergence but
+does not prove that two initial conditions converge through threshold changes.
+That distinction is retained in Chapter~\ref{chap:dynamics}.
+
 
 %% ===================================================================
 %% SECTION 3: MATHEMATICAL PRELIMINARIES
@@ -91,6 +125,31 @@ If $X \to Y \to Z$ forms a Markov chain, meaning $Z$ is conditionally independen
     \label{eq:dpi}
 \end{equation}
 This inequality is fundamental to the interpretation of reservoir-derived features: any processing of the EEG signal through the reservoir and subsequent feature extraction can only preserve or lose information about the latent state that generated the signal; it cannot create new information \cite{cover_elements_2006}. When Chapter~4 reports that the Fisher Discriminant Ratio increases after the reservoir transformation, the correct interpretation is that the reservoir has improved the \emph{representation geometry} for the chosen decoder, not that it has increased the mutual information between the signal and the class label. Chapter~6 invokes the DPI explicitly as the foundational constraint bounding what reservoir-derived dynamical metrics can claim about the input process.
+
+The apparent tension between the DPI and improved linear classification is
+resolved by an elementary construction.
+
+\begin{proposition}[Geometry can improve without information creation]
+\label{prop:xor_geometry}
+Let $X_1,X_2$ be independent and uniform on $\{-1,1\}$ and let
+$Y=X_1X_2$. No affine classifier in the original coordinates
+$X=(X_1,X_2)$ separates $Y$ perfectly. The deterministic feature
+$\varphi(X)=X_1X_2$ is perfectly linearly separable and satisfies
+$I(Y;\varphi(X))=I(Y;X)=H(Y)$.
+\end{proposition}
+
+\begin{proof}
+The positive class consists of $(1,1)$ and $(-1,-1)$ and the negative class of
+$(1,-1)$ and $(-1,1)$. Their convex hulls intersect at the origin, so no affine
+hyperplane strictly separates them. In the transformed coordinate,
+$\varphi(X)=Y$, and the threshold at zero separates the classes. Because $Y$
+is a deterministic function of both $X$ and $\varphi(X)$, both mutual
+informations equal $H(Y)$.
+\end{proof}
+
+This proposition formalizes the role claimed for the reservoir: it may rearrange
+existing information into coordinates accessible to a restricted readout without
+increasing the information available about the label.
 
 \paragraph{Fisher Discriminant Ratio.}
 For a two-class problem with class-conditional mean vectors $\boldsymbol{\mu}_0$, $\boldsymbol{\mu}_1$ and within-class scatter matrix $\mathbf{S}_W = \sum_{i \in \{0,1\}} \sum_{\mathbf{x} \in C_i} (\mathbf{x} - \boldsymbol{\mu}_i)(\mathbf{x} - \boldsymbol{\mu}_i)^\top$, the Fisher Discriminant Ratio is

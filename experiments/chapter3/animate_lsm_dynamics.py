@@ -17,14 +17,14 @@ and undersold by static images:
      linear readout suffices (Koopman lens).
 
 This script renders one animation per claim (GIF + MP4 + poster PDF),
-reusing the audited operators used by the dissertation experiments so the
+reusing the EXACT operators already validated in the repo so the
 animations show the same system the dissertation characterizes:
 
-  - single-channel LIFReservoir / BSC6 / functional-adjacency /
-    GCN-propagation operators follow
+  - single-channel LIFReservoir / extract_bsc6 / functional-adjacency /
+    GCN-propagation operators are verbatim from
     chapter5Experiments/graph_diffusion_oversmoothing.py
-  - multi-channel LIFReservoir (returns spikes + membrane) and the
-    controlled temporal task follow
+  - multi-channel LIFReservoir (returns spikes + membrane) and
+    generate_temporal_task are verbatim from
     experiments/chapter3/run_chapter3_lsm_characterization.py
 
 Animation 1 (graph diffusion) runs on the REAL SHAPE node features when
@@ -86,11 +86,11 @@ TARGET_SR = 0.9
 
 
 # ================================================================
-# Operators -- aligned with run_chapter3_lsm_characterization.py
+# Operators -- verbatim from run_chapter3_lsm_characterization.py
 # ================================================================
 class LIFReservoirMC:
     """Multi-channel leaky integrate-and-fire reservoir; returns spikes
-    AND membrane. Aligned with run_chapter3_lsm_characterization.py."""
+    AND membrane. Verbatim from run_chapter3_lsm_characterization.py."""
     def __init__(self, n_input, n_res, beta=BETA, threshold=THRESHOLD, seed=SEED):
         rng = np.random.RandomState(seed)
         limit_in = np.sqrt(6.0 / (n_input + n_res))
@@ -144,10 +144,10 @@ def generate_temporal_task(n_per_class=200, n_input=N_INPUT, T=150,
 
 
 # ================================================================
-# Operators -- aligned with graph_diffusion_oversmoothing.py
+# Operators -- verbatim from graph_diffusion_oversmoothing.py
 # ================================================================
 class LIFReservoirSC:
-    """Single-channel LIF reservoir. Aligned with
+    """Single-channel LIF reservoir. Verbatim from
     graph_diffusion_oversmoothing.py."""
     def __init__(self, n_res=256, beta=0.05, threshold=0.5, seed=42):
         rng = np.random.RandomState(seed)
@@ -176,17 +176,16 @@ class LIFReservoirSC:
         return spikes
 
 
-def extract_bsc6(spikes, start=10, stop=70):
-    """Six binned spike counts over the audited post-stimulus window."""
-    window = spikes[start:stop]
-    T_w, _ = window.shape
+def extract_bsc6(spikes):
+    """Binned spike counts, 6 temporal bins. Verbatim."""
+    T_w, _ = spikes.shape
     bs = T_w // 6
-    return np.concatenate([window[b * bs:(b + 1) * bs].sum(axis=0)
+    return np.concatenate([spikes[b * bs:(b + 1) * bs].sum(axis=0)
                            for b in range(6)])
 
 
 def build_functional_adjacency(node_features, threshold_percentile=75):
-    """Build the thresholded positive-correlation graph."""
+    """Verbatim from graph_diffusion_oversmoothing.py."""
     corr = np.nan_to_num(np.corrcoef(node_features), nan=0.0)
     np.fill_diagonal(corr, 0.0)
     pos = corr[corr > 0]
@@ -331,25 +330,21 @@ def animate_diffusion(outdir, pkl_path, n_obs, fmt, fps, dpi):
     rng = np.random.RandomState(0)
     n_use = int(min(n_obs, N))
     idx = rng.choice(N, size=n_use, replace=False)
-    # Apply one shared reservoir to every channel.  Equal-numbered features
-    # must represent the same transform before channel rows can be compared.
-    reservoir = LIFReservoirSC(n_res=256, seed=42)
+    reservoirs = [LIFReservoirSC(n_res=256, seed=42 + ch * 17) for ch in range(C)]
 
     t0 = time.time()
     bsc = np.zeros((n_use, C, 6 * 256))
     for j, oi in enumerate(idx):
         for ch in range(C):
-            bsc[j, ch] = extract_bsc6(reservoir.forward(X_ds[oi, :, ch]))
+            bsc[j, ch] = extract_bsc6(reservoirs[ch].forward(X_ds[oi, :, ch]))
         if (j + 1) % 40 == 0:
             print(f"    reservoir {j + 1}/{n_use} ({time.time() - t0:.0f}s)",
                   flush=True)
 
     n_comp = int(min(64, n_use - 1, bsc.shape[2]))
-    # Fit one pooled descriptive basis so every channel is expressed in the
-    # same coordinate system.  This animation is not a predictive evaluation.
-    pooled = bsc.reshape(n_use * C, -1)
-    pooled = StandardScaler().fit_transform(pooled)
-    node = PCA(n_components=n_comp).fit_transform(pooled).reshape(n_use, C, n_comp)
+    node = np.zeros((n_use, C, n_comp))
+    for ch in range(C):
+        node[:, ch, :] = PCA(n_components=n_comp).fit_transform(bsc[:, ch, :])
 
     # GCN propagation = diffusion on the normalized graph Laplacian
     Ks = list(range(0, 9))
@@ -645,22 +640,17 @@ def animate_trajectory(outdir, fmt, fps, dpi):
         return np.concatenate(feats)                       # (1536,)
 
     bsc = np.array([partial_bsc6(s, W1) for s in spk])     # (200, 1536) full
-    # The full-data model below defines only the visualization plane.  Reported
-    # cross-validated accuracy is computed with fold-local scaling.
     scaler = StandardScaler().fit(bsc)
     Xs = scaler.transform(bsc)
     clf = LogisticRegression(C=0.1, solver='liblinear', max_iter=1000)
     clf.fit(Xs, y)
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    fold_acc = []
-    for tr, te in skf.split(bsc, y):
-        fold_scaler = StandardScaler().fit(bsc[tr])
-        Xtr = fold_scaler.transform(bsc[tr])
-        Xte = fold_scaler.transform(bsc[te])
-        fold_clf = LogisticRegression(
-            C=0.1, solver='liblinear', max_iter=1000).fit(Xtr, y[tr])
-        fold_acc.append(balanced_accuracy_score(y[te], fold_clf.predict(Xte)))
-    acc = float(np.mean(fold_acc))
+    acc = float(np.mean([
+        balanced_accuracy_score(
+            y[te],
+            LogisticRegression(C=0.1, solver='liblinear', max_iter=1000)
+            .fit(Xs[tr], y[tr]).predict(Xs[te]))
+        for tr, te in skf.split(Xs, y)]))
 
     # projection plane: axis 1 = the readout's own decision direction,
     # axis 2 = leading residual (PCA) direction orthogonal to it

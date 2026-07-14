@@ -98,25 +98,15 @@ class LIFReservoir:
         return spikes
 
 
-def bsc6_encode(spikes, n_bins=6, t_start=10, t_end=70):
-    """Encode the stated early window as six equal spike-count bins.
-
-    The defended Chapter 5 run used six full-epoch bins.  This corrected
-    rerun function follows the Chapter 4 specification instead.
-    """
-    if t_end > spikes.shape[0]:
-        raise ValueError(
-            f"BSC6 window [{t_start}, {t_end}) exceeds {spikes.shape[0]} steps")
-    window = spikes[t_start:t_end]
-    T, N = window.shape
-    if T % n_bins != 0:
-        raise ValueError("BSC6 window length must be divisible by n_bins")
+def bsc6_encode(spikes, n_bins=6):
+    """Binned Spike Count with n_bins temporal bins."""
+    T, N = spikes.shape
     bin_size = T // n_bins
     features = np.zeros(n_bins * N)
     for b in range(n_bins):
         s = b * bin_size
-        e = s + bin_size
-        features[b * N:(b + 1) * N] = window[s:e, :].sum(axis=0)
+        e = min(s + bin_size, T)
+        features[b * N:(b + 1) * N] = spikes[s:e, :].sum(axis=0)
     return features
 
 
@@ -196,30 +186,39 @@ def load_shape_3class(data_dir):
 # FEATURE EXTRACTION
 # ══════════════════════════════════════════════════════════════════
 
-def extract_reservoir_features(raw_data):
-    """Run the LIF reservoir and return unreduced BSC6 node features."""
+def extract_reservoir_features(raw_data, n_pca=64):
+    """Run LIF reservoir on all data, extract BSC6-PCA features."""
     N, T, n_ch = raw_data.shape
     print(f"\n  Running LIF reservoir on {N} observations × {n_ch} channels...")
     t0 = time.time()
 
-    # One shared saved transformation keeps equal-numbered feature coordinates
-    # commensurate across channels.
-    reservoir = LIFReservoir(seed=42)
+    # One reservoir per channel (seeded deterministically)
+    reservoirs = {ch: LIFReservoir(seed=42 + ch * 17) for ch in range(n_ch)}
 
-    # Early-window BSC6: (N, n_ch, 6*256) = (N, n_ch, 1536)
+    # BSC6 features: (N, n_ch, 6*256) = (N, n_ch, 1536)
     bsc_all = np.zeros((N, n_ch, 6 * 256))
     for i in range(N):
         if (i + 1) % 10 == 0:  # Print every 10 subjects instead of 100
             print(f"    Processing subject {i+1}/{N}...")
         for ch in range(n_ch):
-            spikes = reservoir.forward(raw_data[i, :, ch])
+            spikes = reservoirs[ch].forward(raw_data[i, :, ch])
             bsc_all[i, ch, :] = bsc6_encode(spikes, n_bins=6)
 
     elapsed = time.time() - t0
     print(f"  Reservoir complete in {elapsed:.0f}s ({elapsed/60:.1f} minutes)")
 
-    print(f"  Unreduced BSC6 feature shape: {bsc_all.shape}")
-    return bsc_all
+    # PCA per channel → (N, n_ch, n_pca)
+    print(f"  Applying PCA-{n_pca} per channel...")
+    pca_all = np.zeros((N, n_ch, n_pca))
+    for ch in range(n_ch):
+        pca = PCA(n_components=n_pca)
+        pca_all[:, ch, :] = pca.fit_transform(bsc_all[:, ch, :])
+
+    # Flatten: (N, n_ch * n_pca)
+    embedding = pca_all.reshape(N, -1)
+    print(f"  Embedding shape: {embedding.shape}")
+
+    return embedding
 
 
 def flatten_raw(raw_data):
@@ -241,45 +240,17 @@ def subject_center(features, subjects):
 # EVALUATION
 # ══════════════════════════════════════════════════════════════════
 
-def _fold_common_pca(train_features, test_features, n_components=64):
-    """Fit a shared channel basis on training participants only."""
-    n_train, n_channels, feature_dim = train_features.shape
-    n_test = test_features.shape[0]
-    train_pool = train_features.reshape(n_train * n_channels, feature_dim)
-    test_pool = test_features.reshape(n_test * n_channels, feature_dim)
-    n_comp = min(n_components, train_pool.shape[0] - 1, feature_dim)
-    scaler = StandardScaler()
-    train_pool = scaler.fit_transform(train_pool)
-    test_pool = scaler.transform(test_pool)
-    pca = PCA(n_components=n_comp, random_state=42)
-    X_train = pca.fit_transform(train_pool).reshape(n_train, n_channels, n_comp)
-    X_test = pca.transform(test_pool).reshape(n_test, n_channels, n_comp)
-    return X_train.reshape(n_train, -1), X_test.reshape(n_test, -1)
-
-
-def evaluate(features, y, subjects, name, n_folds=10,
-             pca_components=None, classifier='logreg'):
-    """Run subject-grouped CV with learned preprocessing fit in-fold."""
+def evaluate(features, y, subjects, name, n_folds=10):
+    """Run subject-level stratified group K-fold CV with LogReg."""
     gkf = StratifiedGroupKFold(n_splits=n_folds, shuffle=True, random_state=42)
     fold_accs = []
 
     for fold, (tr, te) in enumerate(gkf.split(features, y, subjects)):
-        if pca_components is not None:
-            if features.ndim != 3:
-                raise ValueError("Fold-local PCA requires unreduced (sample, channel, feature) input")
-            X_tr, X_te = _fold_common_pca(
-                features[tr], features[te], n_components=pca_components)
-        else:
-            X_tr, X_te = features[tr], features[te]
-
         scaler = StandardScaler()
-        X_tr = scaler.fit_transform(X_tr)
-        X_te = scaler.transform(X_te)
+        X_tr = scaler.fit_transform(features[tr])
+        X_te = scaler.transform(features[te])
 
-        if classifier == 'svm':
-            clf = SVC(C=1.0, kernel='rbf', random_state=42)
-        else:
-            clf = LogisticRegression(C=0.1, max_iter=3000, random_state=42)
+        clf = LogisticRegression(C=0.1, max_iter=3000, random_state=42)
         clf.fit(X_tr, y[tr])
 
         y_pred = clf.predict(X_te)
@@ -354,19 +325,17 @@ Example:
         print(f"\n  Loading pre-computed features from {args.features_pkl}...")
         with open(args.features_pkl, 'rb') as f:
             d = pickle.load(f)
-        bsc_features = d.get('lsm_bsc6_raw', d.get('bsc_all', None))
-        if bsc_features is None:
-            raise ValueError(
-                "The feature file contains only globally reduced embeddings. "
-                "Provide unreduced BSC6 features so PCA can be fitted in each fold.")
-        print(f"  Unreduced BSC6 shape: {bsc_features.shape}")
+        embedding = d.get('embedding', d.get('lsm_bsc6_pca', None))
+        if embedding is not None and embedding.ndim == 3:
+            embedding = embedding.reshape(embedding.shape[0], -1)
+        print(f"  Embedding shape: {embedding.shape}")
     else:
-        bsc_features = extract_reservoir_features(raw_data)
+        embedding = extract_reservoir_features(raw_data, n_pca=64)
 
     # Subject-centered versions
     print("\n  Computing subject-centered versions...")
     raw_flat_c = subject_center(raw_flat, subjects)
-    bsc_features_c = subject_center(bsc_features, subjects)
+    embedding_c = subject_center(embedding, subjects)
 
     # ── Run evaluations ──
     print("\n" + "─" * 70)
@@ -387,27 +356,34 @@ Example:
     print("\n  ── Reservoir Embedding (BSC6-PCA-64) ──")
     print("  Running 10-fold CV for reservoir uncentered...")
     results['res_uncentered'] = evaluate(
-        bsc_features, y, subjects,
-        "(3) Reservoir + LogReg, UNCENTERED", args.n_folds,
-        pca_components=64)
+        embedding, y, subjects,
+        "(3) Reservoir + LogReg, UNCENTERED", args.n_folds)
     print("  Reservoir uncentered complete.")
     print("  Running 10-fold CV for reservoir centered...")
     results['res_centered'] = evaluate(
-        bsc_features_c, y, subjects,
-        "(4) Reservoir + LogReg, SUBJECT-CENTERED", args.n_folds,
-        pca_components=64)
+        embedding_c, y, subjects,
+        "(4) Reservoir + LogReg, SUBJECT-CENTERED", args.n_folds)
     print("  Reservoir centered complete.")
 
     # ── Also run SVM for comparison with existing Chapter 5 numbers ──
     print("\n  ── SVM cross-check (for consistency with Ch5 results) ──")
-    for label, feats, pca_components in [
-            ("Raw EEG uncentered + SVM", raw_flat, None),
-            ("Reservoir uncentered + SVM", bsc_features, 64),
-            ("Reservoir centered + SVM", bsc_features_c, 64)]:
-        fold_accs = evaluate(
-            feats, y, subjects, label, args.n_folds,
-            pca_components=pca_components, classifier='svm')
-        results[f"svm_{label.split()[0].lower()}_{label.split()[1].lower()}"] = fold_accs
+    gkf = StratifiedGroupKFold(n_splits=args.n_folds, shuffle=True, random_state=42)
+
+    for label, feats in [("Raw EEG uncentered + SVM", raw_flat),
+                         ("Reservoir uncentered + SVM", embedding),
+                         ("Reservoir centered + SVM", embedding_c)]:
+        fold_accs = []
+        for tr, te in gkf.split(feats, y, subjects):
+            sc = StandardScaler()
+            X_tr = sc.fit_transform(feats[tr])
+            X_te = sc.transform(feats[te])
+            clf = SVC(C=1.0, kernel='rbf', random_state=42)
+            clf.fit(X_tr, y[tr])
+            fold_accs.append(balanced_accuracy_score(y[te], clf.predict(X_te)))
+        mean_acc = np.mean(fold_accs)
+        std_acc = np.std(fold_accs)
+        print(f"    {label:45s}: {mean_acc*100:.1f}% ± {std_acc*100:.1f}%")
+        results[f"svm_{label.split()[0].lower()}_{label.split()[1].lower()}"] = np.array(fold_accs)
 
     # ── Summary table ──
     print("\n" + "═" * 70)

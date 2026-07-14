@@ -203,6 +203,24 @@ with normalized form
 \end{equation}
 Permutation entropy was introduced by Bandt and Pompe as a natural complexity measure for time series \cite{bandt_permutation_2002}.
 
+\begin{proposition}[Range and equality cases of normalized permutation entropy]
+\label{prop:permutation_entropy_bounds}
+For $d\ge2$, $0\le\hat H_\pi\le1$. Equality $\hat H_\pi=0$ occurs when one
+ordinal pattern has probability one; equality $\hat H_\pi=1$ occurs when all
+$d!$ patterns have probability $1/d!$.
+\end{proposition}
+
+\begin{proof}
+Shannon entropy on a finite alphabet is nonnegative and is maximized by the
+uniform distribution. The ordinal alphabet has at most $d!$ symbols, so
+$0\le H_\pi\le\log_2(d!)$. Division by $\log_2(d!)$ gives the result. The
+standard equality conditions for finite-alphabet entropy give the two cases.
+\end{proof}
+
+The proposition supplies an exact scale interpretation, but finite-sample bias,
+ties, and temporal dependence still affect estimation of the underlying pattern
+probabilities.
+
 \subsection{Phase-Space Visualization}
 
 \paragraph{Definition 6.15 (Reconstructed Phase Portrait).}
@@ -305,7 +323,7 @@ The argument is organized in five layers:
 
 A spectrum analyzer, oscilloscope, or matched-filter bank has its own internal dynamics, yet one can still use it to characterize an input signal so long as the transformation is calibrated and stable. The reservoir plays an analogous role here. It is a fixed nonlinear dynamical operator whose driven internal trajectory encodes information about the input in a high-dimensional state. The key epistemological point is therefore the following: the dynamical metrics computed in this chapter are not claimed to be identical to latent cortical invariants. They are claims about calibrated functionals of the \emph{driven reservoir response}.
 
-In particular, the dissertation does not claim that the reservoir relaxation time is literally the relaxation time of the cortex. Rather, the claim is that the reservoir relaxation time, when extracted under conditions that guarantee input determinism and adequate fidelity, can serve as a consistent and discriminative functional of the EEG drive. This measurement-instrument framing is central because it prevents a category error that would otherwise weaken the chapter's integrity. The uploaded expansion makes this distinction explicit and correctly treats the reservoir as a standardized nonlinear instrument rather than as a direct physiological surrogate.
+In particular, the dissertation does not claim that the reservoir relaxation time is literally the relaxation time of the cortex. Rather, the reservoir relaxation time, when extracted under conditions supporting input determinism and adequate fidelity, is treated as a functional of the EEG drive. This measurement-instrument framing treats the reservoir as a standardized nonlinear transform rather than as a direct physiological surrogate.
 
 \subsection{Formal Signal-Chain Setup}
 
@@ -325,7 +343,7 @@ The three core validity questions are then:
     \item Does the reservoir retain sufficient information about the clinically relevant structure in $\mathbf{u}(t;\theta)$?
     \item Does the chosen functional $\Psi$ preserve the ordering or magnitude of the input property of interest?
 \end{enumerate}
-These same three questions are articulated in the uploaded mapping-theory note and provide the correct defense structure for this chapter.
+These three questions provide the theoretical validation structure for this chapter.
 
 \subsection{Input Determinism: Echo State Property and Generalized Synchronization}
 
@@ -341,11 +359,37 @@ Accordingly, the practical criterion adopted in this dissertation is
 \begin{equation}
 \lambda_1^{(driven)} < 0 \quad \Longrightarrow \quad \mathbf{M}(t) \approx \psi(\mathbf{u}(t),\mathbf{u}(t-1),\ldots)
 \end{equation}
-after transient decay, for the specific operating regime under study. This is the same direction taken in the uploaded note, where generalized synchronization and ESP are used to establish the measurement validity of the reservoir response.
+after transient decay, for the specific operating regime under study.
+
+For the implemented update, one conditional result can be proved without a
+smooth global approximation.
+
+\begin{theorem}[Conditional contraction for a fixed spike itinerary]
+\label{thm:conditional_lif_contraction}
+Consider two reservoir trajectories driven by the same input. If their spike
+indicators are identical through time $t$, then, with $\alpha=1-\beta$,
+\begin{equation}
+\|\mathbf{R}[t]-\mathbf{R}'[t]\|_\infty
+\le\alpha^t\|\mathbf{R}[0]-\mathbf{R}'[0]\|_\infty.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Identical spike indicators make the recurrent currents and threshold
+subtractions identical. The difference update is therefore
+$\Delta\mathbf{R}[k]=\alpha\operatorname{diag}(1-\mathbf{S}[k-1])
+\Delta\mathbf{R}[k-1]$. The diagonal mask has induced infinity norm at most one.
+Applying this inequality recursively proves the bound.
+\end{proof}
+
+The theorem is deliberately conditional. A threshold crossing can change the
+itinerary, so it does not establish a global ESP. Together with the margin lemma
+in Chapter~\ref{chap:lsm}, it does prove local exponential forgetting on every
+finite region whose spike decisions remain unchanged.
 
 \subsection{Fading Memory and Effective Memory Horizon}
 
-Once the state is a function of the input history, one still needs a practical bound on how much history matters. Reservoir systems with the fading-memory property weight remote lags less strongly than recent lags. The relevant engineering consequence is that there exists an effective memory horizon $T_{mem}$ such that perturbations beyond that horizon have negligible effect on the present state. The uploaded expansion proposes relating this horizon to the driven contraction rate through $T_{mem}\approx -1/\lambda_1$ under contracting dynamics; this is a useful heuristic so long as it is presented as an operating approximation rather than as an exact identity.
+Once the state is a function of the input history, one still needs a practical bound on how much history matters. Reservoir systems with the fading-memory property weight remote lags less strongly than recent lags. The relevant engineering consequence is that there exists an effective memory horizon $T_{mem}$ such that perturbations beyond that horizon have negligible effect on the present state. Relating this horizon to the driven contraction rate through $T_{mem}\approx -1/\lambda_1$ is a useful operating heuristic, not an exact identity. Under the fixed-itinerary assumptions of Theorem~\ref{thm:conditional_lif_contraction}, the exact discrete decay is instead $\alpha^k$, yielding the tolerance-dependent horizon in Proposition~\ref{prop:subthreshold_horizon}.
 
 \subsection{Information-Theoretic Bounds}
 
@@ -355,13 +399,13 @@ I(\theta;\Psi)\leq I(\theta;\mathbf{M})\leq I(\theta;\mathbf{u}),
 \end{equation}
 so neither the reservoir nor the downstream functional can create new information about the latent state that was not already present in the EEG input \cite{cover_elements_2006}. This bound is a necessary guardrail on the interpretation of Chapter 4 results. When the reservoir increases the Fisher Discriminant Ratio or improves downstream classification accuracy, the correct reading is that it improves \emph{representation geometry for the chosen decoder}, not that it increases mutual information in violation of DPI.
 
-The uploaded mapping note correctly extends this logic to Fisher-information language, treating any reservoir-derived metric as an estimator whose efficiency must be discussed relative to the information present in the observed EEG rather than in the latent cortical state itself.
+The same logic extends to Fisher-information language: any reservoir-derived metric is an estimator whose efficiency must be discussed relative to the information present in the observed EEG, not the unobserved cortical state.
 
 \subsection{Takens-Type Embedding and Dynamical Sufficiency}
 
 Takens' original theorem concerns smooth, deterministic, autonomous dynamical systems observed through generic scalar functions; under those assumptions, a delay embedding can reconstruct the attractor up to a diffeomorphism \cite{takens_detecting_1981}. Those assumptions do \emph{not} hold literally for noisy, volume-conducted EEG, and they certainly do not hold automatically for a discontinuous spiking reservoir. Any appeal to Takens in this dissertation must therefore be treated as an analogy supported by more recent reservoir-embedding results, not as a direct theorem about the SHAPE EEG itself.
 
-Recent ESN theory is nevertheless highly relevant. Hart, Hook, and Dawes show that a suitable ESN trained on observations of an invertible dynamical system can induce an echo-state map that is generically an embedding with positive probability \cite{hart_embedding_2020}. Related work by Grigoryeva and Ortega establishes strong fading-memory and approximation properties for reservoir systems under bounded inputs \cite{grigoryeva_echo_2018}. These results do not prove that the specific LIF reservoir used here is a diffeomorphic embedding of the latent cortical dynamics. They do, however, support a weaker and defensible proposition: sufficiently rich driven reservoirs can preserve useful topological and predictive structure of an underlying dynamical process under explicit assumptions. The uploaded note is strongest when it presents this as a generalized embedding argument conditioned on ESP, genericity, and dimension assumptions, rather than as an unconditional theorem about real EEG.
+Recent ESN theory is nevertheless highly relevant. Hart, Hook, and Dawes show that a suitable ESN trained on observations of an invertible dynamical system can induce an echo-state map that is generically an embedding with positive probability \cite{hart_embedding_2020}. Related work by Grigoryeva and Ortega establishes strong fading-memory and approximation properties for reservoir systems under bounded inputs \cite{grigoryeva_echo_2018}. These results do not prove that the specific LIF reservoir used here is a diffeomorphic embedding of the latent cortical dynamics. They support a weaker proposition: sufficiently rich driven reservoirs can preserve useful topological and predictive structure under explicit ESP, genericity, and dimension assumptions.
 
 \subsection{Metric-Specific Validity and Monotonicity}
 
@@ -371,10 +415,10 @@ The most difficult issue is not state reconstruction; it is whether a chosen fun
 For symbolic measures such as Lempel--Ziv complexity and permutation entropy, pointwise monotonicity is too strong to claim in general. A nonlinear filter can map a complex input to a simpler output or vice versa in special cases. The defensible claim is instead statistical monotonicity over an ensemble: if the reservoir satisfies ESP, is nondegenerate, and the trial process is sufficiently stationary over the analysis window, then higher entropy-rate inputs should tend, on average, to induce higher complexity outputs. This is consistent with the entropy-rate interpretation of Lempel--Ziv complexity and with the finite-sample cautions in the time-series literature \cite{bandt_permutation_2002,zunino_permutation_2017,little_permutation_2016}.
 
 \paragraph{Driven Lyapunov exponent.}
-The driven Lyapunov exponent is a joint property of the coupled system, not a direct estimator of the cortical Lyapunov spectrum. The uploaded note is particularly useful here: it explicitly states that the driven exponent depends on the instantaneous reservoir Jacobian along the driven trajectory and therefore on how the input positions the reservoir relative to threshold. This is the correct mechanistic interpretation. The dissertation should not claim that the brain's Lyapunov exponent is being measured. It should claim that the reservoir's driven stability is modulated by input structure and may therefore serve as a discriminative systems-level marker.
+The driven Lyapunov exponent is a joint property of the coupled system, not a direct estimator of the cortical Lyapunov spectrum. It depends on the instantaneous reservoir Jacobian along the driven trajectory and therefore on how the input positions the reservoir relative to threshold. The reservoir's driven stability may be modulated by input structure, but it is not the brain's Lyapunov exponent.
 
 \paragraph{Relaxation-time metrics.}
-Among the three families, relaxation-time metrics admit the strongest transfer argument. During the decay phase the reservoir can be approximated locally by a linearized driven system, so the observed decay constant of the population rate depends on both intrinsic reservoir contraction and the autocorrelation structure of the ongoing input. The uploaded note exploits precisely this point, treating the observed relaxation as an input-mediated effective time constant rather than as a direct cortical time constant. That is the correct interpretation.
+Among the three families, relaxation-time metrics admit the strongest transfer argument. During the decay phase the reservoir can be approximated locally by a linearized driven system, so the observed decay constant of the population rate depends on both intrinsic reservoir contraction and the autocorrelation structure of the ongoing input. It is therefore an input-mediated effective time constant rather than a direct cortical time constant.
 
 \subsection{Empirical Validation Framework}
 

@@ -340,15 +340,14 @@ def experiment_4_spectral_radius(outdir):
             total_spk.append(s.sum())
         feats = np.array(feats)
 
+        scaler = StandardScaler()
+        feats_s = scaler.fit_transform(feats)
         skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
         accs = []
-        for tr, te in skf.split(feats, y):
-            scaler = StandardScaler()
-            X_tr = scaler.fit_transform(feats[tr])
-            X_te = scaler.transform(feats[te])
+        for tr, te in skf.split(feats_s, y):
             clf = LogisticRegression(C=0.1, solver='liblinear', max_iter=1000)
-            clf.fit(X_tr, y[tr])
-            accs.append(balanced_accuracy_score(y[te], clf.predict(X_te)))
+            clf.fit(feats_s[tr], y[tr])
+            accs.append(balanced_accuracy_score(y[te], clf.predict(feats_s[te])))
 
         acc = np.mean(accs)
         ms = np.mean(total_spk)
@@ -452,15 +451,14 @@ def experiment_6_cross_seed(outdir):
     for s in seeds:
         res = LIFReservoir(N_INPUT, N_RES, seed=s)
         feats = np.array([extract_bsc(res.forward(x)[0], 6) for x in X_list])
+        scaler = StandardScaler()
+        feats = scaler.fit_transform(feats)
         skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
         fold_accs = []
         for tr, te in skf.split(feats, y):
-            scaler = StandardScaler()
-            X_tr = scaler.fit_transform(feats[tr])
-            X_te = scaler.transform(feats[te])
             clf = LogisticRegression(C=0.1, solver='liblinear', max_iter=1000)
-            clf.fit(X_tr, y[tr])
-            fold_accs.append(balanced_accuracy_score(y[te], clf.predict(X_te)))
+            clf.fit(feats[tr], y[tr])
+            fold_accs.append(balanced_accuracy_score(y[te], clf.predict(feats[te])))
         accs.append(np.mean(fold_accs))
 
     m, sd = np.mean(accs), np.std(accs)

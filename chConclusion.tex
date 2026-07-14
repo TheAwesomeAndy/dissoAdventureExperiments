@@ -21,6 +21,60 @@ The \textbf{topology/coupling layer} (graph-topological descriptors and electrod
 These layers are not interchangeable. In the layer ablation matrix (Chapter~\ref{chap:arspi_net}, Section~\ref{sec:ch5_ablation}), different clinical labels attain their largest measured effects in different layers: dynamical metrics for SUD and PTSD, topological metrics for GAD, and coupling for ADHD. Because several effects are near chance, uncorrected, resolution-dependent, or not permutation-significant, this pattern is best interpreted as layer-dependent measurement sensitivity in this cohort, not as validated disorder detection.
 
 
+\section{Unified Theoretical Statement}
+
+The theoretical results developed across the dissertation define what the
+architecture can guarantee independently of its measured accuracy. Let the
+deterministic representation map be
+\begin{equation}
+Z=Q\circ B_K\circ\mathcal{S}\circ\mathcal{R}(X),
+\end{equation}
+where $\mathcal{R}$ generates pre-threshold membrane trajectories,
+$\mathcal{S}$ applies spike decisions, $B_K$ forms binned counts, and $Q$ is PCA
+or a fixed random projection.
+
+\begin{theorem}[Local robustness of the complete temporal representation]
+\label{thm:pipeline_local_robustness}
+Fix a finite input $X$ whose reservoir trajectory has positive threshold margin
+$\gamma$ as defined in Chapter~\ref{chap:lsm}. If a perturbed input $X'$ produces
+pre-threshold membrane perturbation strictly smaller than $\gamma$ at every
+neuron and time, then
+\begin{equation}
+\mathcal{S}(\mathcal{R}(X'))=\mathcal{S}(\mathcal{R}(X))
+\quad\text{and}\quad Z(X')=Z(X).
+\end{equation}
+Outside this margin-preserving neighborhood, the BSC stage remains
+non-expansive in the spike-edit $\ell_1$ metric according to
+Proposition~\ref{prop:bsc_stability}.
+\end{theorem}
+
+\begin{proof}
+The threshold-margin Lemma~\ref{lem:spike_margin} makes every spike decision
+identical. Identical spike matrices have identical bin counts, and a fixed linear
+map sends identical inputs to identical outputs. The second statement is exactly
+Proposition~\ref{prop:bsc_stability}.
+\end{proof}
+
+This is a robustness theorem, not an accuracy theorem. It proves that the coded
+representation is piecewise constant with respect to sufficiently small input
+perturbations and changes in a controlled way under spike edits. Whether the
+constant regions align with affective labels is empirical. Likewise,
+Theorem~\ref{thm:graph_smoothing} proves that normalized propagation removes
+nonstationary channel contrast, but only the Chapter~\ref{chap:arspi_net}
+experiments establish that the removed contrast is task-relevant in SHAPE.
+
+Together, the results give a conceptual chain. Proposition~\ref{prop:inverse_nonidentifiability}
+limits the recoverable target to observational equivalence classes;
+Theorem~\ref{thm:lif_bibs} prevents state divergence for bounded inputs;
+Theorem~\ref{thm:conditional_lif_contraction} establishes local fading of initial
+conditions; the coding and projection results control representation
+perturbations; Theorem~\ref{thm:graph_smoothing} characterizes spatial
+homogenization; and Theorem~\ref{thm:permutation_coupling} supplies the exact
+finite-electrode baseline for structure--function coupling. The data processing
+inequality remains the global constraint: these stages can expose useful geometry
+but cannot create information absent from the measured EEG.
+
+
 \section{Key Scientific Findings}
 
 \subsection{The Graph-Propagation Regime Characterization}

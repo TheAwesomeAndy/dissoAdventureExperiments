@@ -38,6 +38,49 @@ The message-passing framework \cite{Gilmer2017} updates node representations thr
 \end{equation}
 Three architectures are evaluated: GCN \cite{Kipf2017} (normalized adjacency aggregation), GIN \cite{Xu2019} (sum-aggregation with MLP, maximally expressive under the Weisfeiler-Lehman test), and EdgeConv \cite{Wang2019HeterogeneousGNN} (edge-feature MLP with max-aggregation). For graph-level classification, mean-max pooling produces the graph representation $\mathbf{z} = [\text{mean}(\mathbf{H}^{(K)}) \| \max(\mathbf{H}^{(K)})]$.
 
+The smoothing mechanism can be characterized independently of the learned
+weights. Add self-loops, $\widetilde A=A+I$, let
+$\widetilde D_{ii}=\sum_j\widetilde A_{ij}$, and define the symmetric propagation
+operator
+\begin{equation}
+S=\widetilde D^{-1/2}\widetilde A\widetilde D^{-1/2}.
+\end{equation}
+Let $\Pi$ be the orthogonal projector onto the eigenspace of $S$ associated with
+eigenvalue one; for a disconnected graph this space contains one stationary
+degree-weighted vector per component.
+
+\begin{theorem}[Component-wise graph smoothing]
+\label{thm:graph_smoothing}
+Assume an undirected nonnegative graph with self-loops. Let
+$\rho=\max\{|\lambda|:\lambda\in\sigma(S),\lambda\ne1\}<1$. Then for every node
+feature matrix $H$ and integer $k\ge0$,
+\begin{equation}
+\|S^kH-\Pi H\|_F\le \rho^k\|(I-\Pi)H\|_F.
+\label{eq:graph_contraction}
+\end{equation}
+Thus repeated propagation exponentially removes all feature contrast orthogonal
+to the component-wise stationary subspace.
+\end{theorem}
+
+\begin{proof}
+Because $S$ is real symmetric, write $S=Q\Lambda Q^\top$ with orthonormal
+eigenvectors. Split $Q$ into the eigenvalue-one subspace and its orthogonal
+complement. On the first subspace $S^k$ is the identity; on the complement the
+spectral norm of $S^k$ is at most $\rho^k$. Applying this operator to each feature
+column and summing squared norms gives Equation~\eqref{eq:graph_contraction}.
+\end{proof}
+
+\begin{corollary}[Depth needed to erase a specified contrast]
+If $0<\rho<1$, reducing the nonstationary contrast to a fraction $\varepsilon$
+requires
+$k\ge \lceil\log(\varepsilon)/\log(\rho)\rceil$ propagation steps.
+\end{corollary}
+
+The theorem predicts representation homogenization, not a universal decrease in
+classification accuracy. Accuracy falls only when the removed subspace contains
+task-relevant contrast that the learned transformations do not reconstruct. The
+experiments below test precisely that additional empirical condition.
+
 \subsection{Graph-Topological Descriptors}
 
 Beyond classification, the graph admits topological descriptors: global efficiency $E_{\text{glob}} = \frac{1}{C(C-1)} \sum_{i \neq j} d_{ij}^{-1}$ (network integration), mean clustering coefficient $\bar{C}$ (local redundancy), degree heterogeneity (coefficient of variation of degrees), and mean connection strength. For disconnected node pairs, $d_{ij} = \infty$ by convention, yielding $d_{ij}^{-1} = 0$ in the global efficiency formula; all path-length-based metrics are therefore computed over the full node set, with disconnected pairs contributing zero to the efficiency sum rather than being excluded. At the node level, degree centrality, weighted strength, local clustering, and eigenvector centrality enable channel-specific clinical comparisons.
