@@ -1,0 +1,291 @@
+\chapter{From Spike Trains to Node Embeddings: Solving the Reservoir-to-Graph Representation Problem}
+\label{chap:embeddings}
+
+\section{Introduction: The Representation Bottleneck at the Heart of ARSPI-Net}
+\label{sec:ch4_intro}
+
+With the operating regime established, the question becomes what temporal structure survives the reservoir-to-embedding compression and what is discarded, the bottleneck problem that determines how much of the revealed order is preserved in usable form. This is simultaneously a compression question and an interpretability question: the coding scheme must not only preserve discriminative information but must do so in a form where each feature maps onto a named temporal property of the reservoir's response. A representation that achieves high accuracy but whose features are uninterpretable, as occurs with raw spike-train statistics or learned latent spaces, would violate the intrinsic interpretability requirement established in Chapter~\ref{chap:introduction} (Section~\ref{sec:inverse_problem}).
+
+The research gap identified in Chapter~\ref{chap:background} (Section~\ref{sec:research_gap}) is precise: there is no established, rigorously validated methodology for transforming the output of a spiking reservoir into a representation suitable for graph neural network inference. This is not a minor implementation detail. It is the central methodological problem of the dissertation, because the entire ARSPI-Net architecture depends on the quality of the bridge between its two computational stages. If the node embeddings produced by the LSM front end do not preserve the temporal structure that the reservoir extracts, or if they introduce artifacts that confound the graph model's relational learning, then no amount of sophistication in the GNN back end can compensate. The representation bottleneck between reservoir and graph is the critical design point of the architecture.
+
+Chapter~\ref{chap:lsm} established that the reservoir, at the validated operating point ($\beta = 0.05$, $M_{\text{th}} = 0.5$), produces stable, graded, spike-based responses whose discriminative content is concentrated in the early post-stimulus window. However, that chapter used the coarsest possible feature representation, the mean firing rate, and evaluated it on a deliberately simple amplitude discrimination task. What remains to be determined is how to engineer a representation that preserves the reservoir's temporal structure with sufficient fidelity for the downstream graph model while satisfying the practical constraints of dimensionality, robustness, and interpretability.
+
+The raw output of the reservoir for a single trial and a single EEG channel is a binary spike train matrix $\mathbf{S} \in \{0, 1\}^{N_{\text{res}} \times T}$, where $N_{\text{res}} = 256$ neurons and $T = 60$ time steps in the adopted feature window (steps 10--70). This is a 15,360-element binary spatiotemporal object, sparse, high-dimensional, and structured in both space (across neurons) and time (across steps). A GNN requires a dense, fixed-length feature vector $\mathbf{h}_v^{(0)} \in \mathbb{R}^d$ for each node $v$. The transformation from $\mathbf{S}$ to $\mathbf{h}_v^{(0)}$ determines what aspects of the reservoir's driven response are preserved for the graph model and what aspects are discarded.
+
+
+\section{Theoretical Background: The Neural Coding Problem}
+\label{sec:neural_coding_theory}
+
+The question of how to extract a feature vector from a spike train is a specific instance of the \emph{neural coding problem}, one of the foundational questions in computational neuroscience. The debate concerns what aspects of a neural spike train carry information about the stimulus: the overall firing rate (rate coding), the precise timing of individual spikes (temporal coding), or some combination \cite{gerstner_spiking_2002, dayan2001, Rieke1997}.
+
+This debate is directly relevant to the ARSPI-Net embedding problem. If the reservoir's discriminative information is entirely captured by the firing rate, then the mean firing rate (MFR) is a sufficient representation and no finer temporal resolution is needed. If, however, the information is distributed across the temporal profile of the spiking response, the MFR will discard task-relevant structure.
+
+From a statistical perspective, the ideal feature extraction would produce a \emph{sufficient statistic} for the classification task: a function $T(\mathbf{S})$ that preserves all information about the class label $y$. The data processing inequality guarantees that $I(y; T(\mathbf{S})) \leq I(y; \mathbf{S})$, with equality if and only if $T$ is sufficient. The coding scheme comparison in this chapter is therefore an empirical assessment of how close different summary statistics come to sufficiency. This connects to the information bottleneck principle \cite{tishby_deep_2015}, which formalizes the trade-off between compression and relevance that the BSC$_6 \to$ PCA-64 pipeline must navigate.
+
+Let the time indices be partitioned into disjoint bins
+$\mathcal{B}_1,\ldots,\mathcal{B}_K$. For a binary spike matrix $S$, define
+$B_K(S)_{ik}=\sum_{t\in\mathcal{B}_k}S_{it}$.
+
+\begin{proposition}[Stability of binned spike counts]
+\label{prop:bsc_stability}
+For any two spike matrices $S,S'$ on the same grid,
+\begin{equation}
+\|B_K(S)-B_K(S')\|_1\le \|S-S'\|_1.
+\end{equation}
+Thus inserting or deleting $r$ spikes changes the BSC vector by at most $r$ in
+$\ell_1$; moving one spike between bins changes it by at most two.
+\end{proposition}
+
+\begin{proof}
+For each neuron and bin, the triangle inequality gives
+$|\sum_{t\in\mathcal{B}_k}(S_{it}-S'_{it})|
+\le\sum_{t\in\mathcal{B}_k}|S_{it}-S'_{it}|$. Summing over the disjoint bins
+and neurons yields the result. A move is one deletion plus one insertion.
+\end{proof}
+
+The inequality isolates the robustness introduced by temporal aggregation: spike
+edits cannot be amplified in $\ell_1$ by BSC. The converse does not hold because
+opposing edits within one bin may cancel. BSC stability is therefore obtained by
+deliberately discarding within-bin timing.
+
+\subsection{An Evaluation Task: Temporal Pattern Discrimination}
+
+To probe the rate-versus-temporal coding question, this chapter uses a controlled task specifically designed so that the two stimulus classes are indistinguishable by their total energy but distinguishable by their temporal structure. Class~0 (``early burst'') presents three sub-pulses with a strong--medium--weak amplitude profile; Class~1 (``late burst'') reverses this to weak--medium--strong. Both classes have approximately equal total energy within the analysis window, ensuring that any classifier operating on total spike counts (i.e., a rate code) cannot distinguish them. Additive Gaussian noise ($\sigma = 0.5$), amplitude jitter ($\pm 30\%$), and timing jitter ($\pm 5$ steps) are applied to create inter-trial variability. This task is more demanding than the Chapter~\ref{chap:lsm} amplitude discrimination and directly tests whether the reservoir encodes information in temporal structure that the mean rate discards.
+
+
+\section{Reservoir Size Ablation}
+\label{sec:size_ablation}
+
+The representational capacity of a reservoir scales with its dimensionality \cite{jaeger2001short}, but for the ARSPI-Net pipeline where each of 34 electrodes drives its own reservoir, per-channel cost matters. The full embedding pipeline (BSC$_6$ features with PCA-64 reduction and logistic regression readout) was evaluated for $N_{\text{res}} \in \{64, 128, 256, 512\}$.
+
+The fold-safe rerun gives $98.8\%\pm0.8\%$, $99.0\%\pm0.9\%$, $99.5\%\pm0.6\%$, and $99.0\%\pm0.9\%$ for 64, 128, 256, and 512 units, respectively (Figure~\ref{fig:reservoir_size_ablation}). Scaling and PCA were fitted within each training fold. The differences are small for this generator. No valid hypothesis test was performed on the five correlated fold scores, so 256 units is selected as a cost--accuracy compromise rather than as a universal saturation point.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{pictures/chLSMEmbeddings/ablation_reservoir_size.pdf}
+    \caption{Mean held-out-fold accuracy versus reservoir size in the fold-safe rerun. Error bars are standard deviations across five correlated folds, not confidence intervals.}
+    \label{fig:reservoir_size_ablation}
+\end{figure}
+
+
+\section{Quantitative Verification of Separability Enhancement}
+\label{sec:separability}
+
+\subsection{Fisher Discriminant Ratio with Regularization}
+
+The Fisher Discriminant Ratio (FDR $= \text{tr}(\mathbf{S}_W^{-1} \mathbf{S}_B)$) measures the ratio of between-class to within-class scatter \cite{duda_pattern_2001}. For the 1536-dimensional BSC$_6$ vectors with 200 samples per class, $\mathbf{S}_W$ is rank-deficient (rank $\leq 398 < 1536$). Tikhonov regularization was applied: $\mathbf{S}_W \to \mathbf{S}_W + \epsilon \mathbf{I}$ with $\epsilon = 10^{-4} \cdot \text{tr}(\mathbf{S}_W)/d$, applied identically to all three representations for fair comparison.
+
+\subsection{Results and Limits of the FDR Comparison}
+
+The fold-safe rerun gives the following descriptive FDR values (Figure~\ref{fig:fdr_comparison}):
+\begin{itemize}
+    \item Raw input (binned): FDR = 0.13
+    \item Linear filter (5-point moving average + binning): FDR = 0.13
+    \item LSM reservoir (BSC$_6$): FDR = 1158
+\end{itemize}
+
+The numerical ratio is large, but it is not an effect-size ratio or a causal decomposition. The representations have different dimensions and covariance spectra, and the regularized inverse is sensitive to $\epsilon$ in this rank-deficient setting. A single moving-average baseline cannot isolate thresholding, recurrence, and expansion. The comparison therefore shows that this regularized statistic is much larger for BSC$_6$ than for the stated baselines; it does not establish which mechanism caused the difference.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{pictures/chLSMEmbeddings/fdr_three_way_comparison.pdf}
+    \caption{Regularized Fisher ratio for raw binned input, a moving-average baseline, and BSC$_6$. Values are descriptive and sensitive to dimension, covariance rank, and regularization; they do not identify a causal contribution of reservoir components.}
+    \label{fig:fdr_comparison}
+\end{figure}
+
+
+\section{Comparative Analysis of Neural Coding Representations}
+\label{sec:coding_comparison}
+
+\subsection{Design and Results}
+
+Four coding schemes were compared, each evaluated with both logistic regression and SVM-RBF classifiers (Table~\ref{tab:coding_results}, Figure~\ref{fig:coding_comparison}).
+
+\begin{table}[H]
+    \centering
+    \caption{Mean 5-fold CV accuracy (\%) for each coding scheme. MFR performs at chance level ($\sim$50\%) because the equal-energy class design makes the total spike count identical across classes. BSC$_6$ achieves near-perfect accuracy by preserving temporal structure.}
+    \label{tab:coding_results}
+    \begin{tabular}{|l|c|c|}
+        \hline
+        \textbf{Coding Scheme} & \textbf{Logistic Regression} & \textbf{SVM (RBF)} \\
+        \hline
+        Mean Firing Rate (MFR) & $47.5\% \pm 4.1\%$ & $51.2\% \pm 4.9\%$ \\
+        Latency to First Spike (LFS) & $70.0\% \pm 4.4\%$ & $70.8\% \pm 3.3\%$ \\
+        BSC (3 Bins) & $98.3\% \pm 1.3\%$ & $98.3\% \pm 1.3\%$ \\
+        \textbf{BSC (6 Bins)} & $\mathbf{99.5\% \pm 0.6\%}$ & $\mathbf{99.5\% \pm 0.6\%}$ \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{pictures/chLSMEmbeddings/coding_scheme_accuracy_comparison.pdf}
+    \caption{Held-out-fold accuracy by coding scheme and classifier in the fold-safe rerun. BSC$_6$ substantially outperforms MFR on this generator, showing that within-window binning is useful to these readouts; it does not establish that all label information is exclusively temporal.}
+    \label{fig:coding_comparison}
+\end{figure}
+
+An ablation with inter-spike interval histograms and the Victor-Purpura distance metric \cite{victor_purpura_1996} yielded only a marginal improvement ($99.7\%$) at $>$50-fold computational cost, confirming that BSC$_6$ captures the essential temporal structure efficiently.
+
+\subsection{What the Coding Comparison Reveals}
+
+The MFR logistic-regression result is close to chance for this balanced generator. It indicates that the selected linear readout could not use mean-rate features reliably under these splits. It does not establish zero mutual information, and the realized noisy stimuli are not exactly energy matched.
+
+The BSC$_6$ result shows that six 10-step counts make the generated early-versus-late pattern highly accessible to both selected readouts. Relative to MFR, the representation retains coarse ordering within the 60-step window. The comparison does not exclude contributions from realized amplitude, timing, or noise differences.
+
+The LFS result ($70.0\%$) occupies an intermediate position. First-spike latency captures something about the temporal structure, neurons driven by a strong early pulse fire sooner than those driven by a weak early pulse, but it discards all subsequent spiking activity, missing the later phases where the class difference is largest.
+
+The $\sim$50 percentage-point gap between MFR and BSC is not a modest quantitative improvement. It is a qualitative regime change: the difference between a representation that is informationally blind to the classification target and one that captures nearly all of the discriminative structure. For the ARSPI-Net architecture, this means that the choice of coding scheme is as consequential as the choice of classifier or graph architecture.
+
+The BSC$_6$ representation is also the more temporally traceable coding scheme. Each of the six bins corresponds to a specific $10$-step interval of the reservoir's post-stimulus response. When a downstream model relies on a particular bin, the contributing response interval is directly readable from the bin index. By contrast, mean firing rate collapses all temporal information into a single scalar. BSC$_6$ therefore preserves task-relevant temporal structure while keeping its alignment to the reservoir response explicit and inspectable.
+
+
+\section{Dimensionality Reduction, Representational Geometry, and Robustness}
+\label{sec:pca_robustness}
+
+\subsection{PCA Compression}
+
+For any linear compressor $P\in\mathbb{R}^{m\times d}$, perturbations obey
+\begin{equation}
+\|Pz-Pz'\|_2\le \|P\|_2\,\|z-z'\|_2.
+\label{eq:linear_compressor_stability}
+\end{equation}
+This follows directly from the definition of the induced spectral norm. For an
+orthogonal PCA projection, $\|P\|_2=1$, so projection cannot increase Euclidean
+perturbations, although discarding components can reduce class margins.
+
+The corrected real-data analysis in Chapter~\ref{chap:arspi_net} uses a fixed
+sparse random projection rather than a data-fitted PCA basis. The finite-set
+Johnson--Lindenstrauss result states that, for $n$ fixed points and
+$0<\varepsilon<1$, an isotropically scaled sub-Gaussian or suitable sparse random
+projection into $m=O(\varepsilon^{-2}\log(n/\delta))$ dimensions preserves all
+pairwise squared distances within multiplicative factor $1\pm\varepsilon$ with
+probability at least $1-\delta$ \cite{achlioptas2003}. The result justifies random
+projection as a geometry-preserving construction in principle. It does not imply
+that $m=64$ meets a prespecified uniform distortion bound for every pair in the
+SHAPE sample; the dissertation evaluates the chosen dimension empirically.
+
+PCA was applied to the 1536-dimensional BSC$_6$ vectors. The explained-variance curve (Figure~\ref{fig:pca_variance}) showed that 64 principal components capture 50.5\% of the total variance while retaining $98.3\% \pm 1.3\%$ classification accuracy. Notably, even 5 components (15.4\% of variance) achieved $99.5\%$ accuracy, indicating that the class-discriminative structure lives in an extremely low-dimensional subspace, the two classes are separated by only a handful of principal directions in the 1536-dimensional BSC$_6$ space.
+
+The explained-variance curve's steep initial segment and long tail confirm that the discriminative structure is concentrated in the first few components while the bulk of the variance corresponds to within-class variability (noise and biological nuisance variation). This geometric picture supports the use of aggressive PCA compression for the downstream graph model.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{pictures/chLSMEmbeddings/pca_explained_variance.pdf}
+    \caption{Cumulative explained variance versus number of PCA components. The class-discriminative structure is concentrated in the first few components. Even 5 components suffice for near-perfect classification.}
+    \label{fig:pca_variance}
+\end{figure}
+
+\subsection{Interpretation of Principal Component Structure}
+
+The loading vectors of the top four principal components were reconstructed into their temporal representation (Figure~\ref{fig:pca_components}). PC1 loaded heavily on the onset bins common to both classes, capturing shared response dynamics. PC2 and PC3 captured the differential activity in later temporal phases, these are the primary class-discriminating directions, encoding the early-versus-late asymmetry that defines the two stimulus classes. PC4 encoded relative timing between response phases.
+
+The profiles show that the leading components mix contributions from several time bins. They may help inspect the compression globally, but individual PCA coordinates should not be assigned fixed semantic labels such as onset or relative timing without stability and loading-level analyses. The downstream model receives numerical coordinates, not guaranteed disentangled concepts.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{pictures/chLSMEmbeddings/pca_component_visualization.pdf}
+    \caption{Exploratory temporal profiles of four principal components, computed by averaging signed loadings across neurons within each bin. Component signs are arbitrary and the averages do not provide functional labels.}
+    \label{fig:pca_components}
+\end{figure}
+
+\subsection{Cross-Initialization Robustness}
+
+Across 10 reservoir initializations, the fold-safe rerun gives BSC$_6$+PCA-64 accuracy of $99.3\%\pm0.3\%$ across seeds, while MFR gives $50.8\%\pm2.7\%$ (Figure~\ref{fig:robustness}). These standard deviations describe the tested seeds, not uncertainty for an unrestricted population of reservoirs.
+
+The seed sweep shows stable task accuracy for the synthetic generator. It does \emph{not} show that independently initialized reservoirs or separately fitted PCA bases produce coordinate-wise comparable node features. The corrected downstream specification therefore uses one saved reservoir across channels and one common PCA basis fitted inside each training fold.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\textwidth]{pictures/chLSMEmbeddings/cross_initialization_robustness.pdf}
+    \caption{Fold-averaged accuracy across 10 reservoir initializations. Each dot is one seed; stability of accuracy does not imply alignment of feature coordinates across seeds.}
+    \label{fig:robustness}
+\end{figure}
+
+\subsection{Parameter Sensitivity}
+
+The pipeline was tested across $\beta \in [0.03, 0.08]$ and $M_{\text{th}} \in [0.3, 0.7]$ (Figure~\ref{fig:sensitivity}). All parameter combinations achieved $\geq 97\%$ accuracy, confirming a broad, stable performance plateau centered on the validated operating point. This robustness is important for the transfer to real EEG, where the effective operating point may shift due to differences in input statistics.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{pictures/chLSMEmbeddings/parameter_sensitivity_heatmap.pdf}
+    \caption{BSC$_6$+PCA-64 accuracy across $\beta$ and $M_{\text{th}}$ parameter space. The broad plateau ($\geq 97\%$ throughout) demonstrates robustness to parameter variation.}
+    \label{fig:sensitivity}
+\end{figure}
+
+
+\section{Chapter Synthesis: The Complete ARSPI-Net Embedding Specification}
+\label{sec:ch4_synthesis}
+
+\subsection{Summary of Findings}
+
+This chapter resolves the reservoir-to-graph representation problem through a systematic design process whose results establish the second stage of ARSPI-Net's intrinsic interpretability chain:
+
+\begin{enumerate}
+    \item \textbf{The reservoir's nonlinearity matters}: The FDR analysis shows an $8{,}900\times$ separability improvement over the raw input, with a linear filter providing zero additional benefit. The spiking nonlinearity and recurrent dynamics, not temporal smoothing alone, are responsible for the representational transformation.
+
+    \item \textbf{Temporal coding preserves hidden structure that rate coding destroys}: The 50 percentage-point gap between MFR ($47.5\%$, chance) and BSC$_6$ ($99.5\%$) demonstrates that the reservoir encodes task-relevant information in the temporal distribution of its spiking response. Rate coding is informationally blind to the class structure when classes differ in temporal profile rather than total energy. BSC$_6$ preserves this temporal structure in an interpretable format: each bin maps to a specific temporal window of the reservoir's response.
+
+    \item \textbf{Compression preserves both discriminative structure and interpretability}: PCA compresses the 1536-dimensional BSC$_6$ vector to 64 dimensions with negligible accuracy loss. The principal components form an interpretable basis aligned with the functional phases of the driven response, onset (PC1), class-discriminating temporal asymmetry (PC2--3), and relative timing (PC4). These semantically meaningful dimensions preserve the traceability from embedding back to input ERP temporal structure.
+
+    \item \textbf{The pipeline is robust}: BSC$_6$+PCA-64 achieves $98.8\% \pm 0.6\%$ across 10 random initializations and $\geq 97\%$ across the full $\beta$--$M_{\text{th}}$ parameter grid.
+\end{enumerate}
+
+\subsection{Final Embedding Specification}
+
+\begin{table}[H]
+    \centering
+    \caption{Audited specification for a corrected real-data rerun. Scaling and one common PCA basis must be fitted on training data only.}
+    \label{tab:final_embedding_spec}
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{|l|p{8cm}|}
+        \hline
+        \textbf{Parameter} & \textbf{Specification} \\
+        \hline
+        Reservoir size ($N_{\text{res}}$) & 256 neurons \\
+        Membrane decay ($\beta$) & 0.05 \\
+        Firing threshold ($M_{\text{th}}$) & 0.5 \\
+        Feature window & Time steps 10--70 post-stimulus \\
+        Coding scheme & BSC$_6$ (6 bins $\times$ 10 steps each) \\
+        Dimensionality reduction & PCA, 64 components \\
+        Evaluation rule & Fit scaling and one common PCA basis on each training fold; transform held-out data without refitting \\
+        \textbf{Output} & $\mathbf{h}_v^{(0)} \in \mathbb{R}^{64}$ per channel index \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Scope and Transfer Considerations}
+
+The pipeline was selected on synthetic stimuli. The audit found three mismatches in the archived SHAPE workflow. PCA was fitted globally and, in some scripts, separately by channel. The primary Chapter~5 extractor divided the full 256-sample epoch into six 42-sample bins and dropped four samples rather than using steps 10--70. Finally, it initialized different random reservoir weights for each channel. Equal-numbered neuron features therefore did not share a common transformation across graph nodes. The corrected code uses one saved reservoir across channels, steps 10--70, fold-local standardization, and one common PCA basis per training fold. Raw SHAPE inputs were not included in the package, so the corrected real-data analysis could not be rerun; archived numerical results remain descriptive.
+
+\subsection{Level~1 Interpretability Validation: Temporal Traceability}
+\label{sec:ch4_temporal_traceability}
+
+The BSC$_6$ coding scheme was selected for classification performance (Section~\ref{sec:coding_comparison}). This subsection evaluates a distinct property: temporal traceability, defined here as measurable correspondence between the coding output and conventional ERP component summaries. This is the first of four interpretability levels defined in the taxonomy of Section~\ref{sec:interp_taxonomy}.
+
+Per-channel mean amplitudes were computed in six temporal windows aligned with the BSC$_6$ bin structure (39--78, 78--117, 117--156, 156--195, 195--234, 234--273~ms post-stimulus) from centered ERP data ($N = 211$ subjects, $633$ observations). The Pearson correlation between the grand-average temporal bin representation and P300 amplitude (mean in 250--500~ms window) is $r = 0.65$, and the correlation with Late Positive Potential amplitude (mean in 500--800~ms window) is $|r| = 0.82$. At the per-channel level, the strongest alignment occurs at Channel~31 ($r = 0.837$ with LPP amplitude).
+
+These are aggregate-profile correlations, not subject-level recovery statistics. The early BSC intervals overlap only the beginning of the stated P300 window and do not overlap the 500--800~ms LPP window. The associations may share condition or channel structure and cannot establish direct temporal recovery of either component or clinical utility \cite{nelson_hajcak_2017}.
+
+A temporal resolution sweep characterizes the information-bottleneck operating point for temporal traceability:
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Bins} & \textbf{Resolution} & \textbf{Accuracy} & \textbf{Peak Bin} & \textbf{Peak Acc.} \\
+\midrule
+6 & 39.1~ms & $67.0\% \pm 5.4\%$ & Bin 6 (234--273~ms) & $68.1\%$ \\
+12 & 19.5~ms & $65.9\% \pm 3.3\%$ & Bin 10 (176--195~ms) & $66.8\%$ \\
+24 & 7.8~ms & $63.5\% \pm 5.5\%$ & Bin 23 (172--180~ms) & $64.3\%$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Accuracy is lower at finer resolutions in this finite archived sweep. Because only three resolutions were tested and no information-bottleneck quantity was estimated, the result does not identify a compression--relevance frontier or an optimal resolution \cite{tishby_deep_2015}.
+
+The archived PCA-64 features yield negative out-of-sample $R^2$ values for the reported ERP-scalar regressions and chance three-class accuracy after panel centering. A principal-angle calculation returned zero-degree angles in the retained PCA coordinates. Because PCA was fitted globally on uncentered data and the compared subspaces may span the same retained ambient coordinates, that result does not prove that subject and condition effects are biologically identical or that centering necessarily destroys signal. A corrected conclusion requires fold-fitted PCA.
+
+ARSPI-Net provides Level~1 temporal traceability in the operational sense used here: each bin maps to a fixed response interval, and the aggregate bin profile corresponds to conventional ERP summaries with $r = 0.65$ for P300 and $|r| = 0.82$ for LPP. This differs from NeuCube's epoch-specific analysis \cite{kasabov_neucube_2014}, where Doborjeh et al.\ \cite{doborjeh_explainable_2021} evaluated learned SNN connectivity in relation to P3b responses. ARSPI-Net's alignment is generated by a fixed coding scheme rather than STDP-modified connectivity. ProtoPMed-EEG \cite{barnett_protopmed_2024} operates on prototype similarity without temporal decomposition, while SHAP provides post-hoc temporal attribution to a learned model.
+
+\subsection{Place in the Dissertation}
+
+This chapter specifies the per-channel temporal encoding stage of ARSPI-Net. Each uncompressed BSC$_6$ bin maps to a fixed response interval by construction. PCA components are data-dependent mixtures and do not map one-to-one onto functional phases. Recording the computational ancestry makes the transform auditable, but it does not by itself give the coordinates physiological meaning or show what a downstream model uses.
+
+The embedding specification in Table~\ref{tab:final_embedding_spec} is the pivot point connecting three downstream analyses. Chapter~\ref{chap:arspi_net} takes these embeddings, one per electrode per trial, and assembles them into a graph for multichannel relational inference, producing the discriminative representation layer of ARSPI-Net. Chapter~\ref{chap:dynamics} takes the same reservoir trajectories and extracts dynamical descriptors that characterize the reservoir's internal state, producing the dynamical response layer. Chapter~\ref{chap:synthesis} then measures the coupling between these two layers across the electrode array. The BSC$_6 \to$ PCA-64 embedding is the common substrate from which all three response layers are derived, and from which every downstream output can be traced back to the input signal.
