@@ -3,7 +3,7 @@
 
 Experiments B and C execute against the committed CSV outputs from Experiment A.
 Experiments A, D, and E require restricted or external inputs and therefore
-receive syntax and inventory checks only.
+receive syntax and inventory checks only. The suite contains exactly 38 checks.
 """
 
 import ast
@@ -11,8 +11,6 @@ import os
 import re
 import subprocess
 import sys
-
-import numpy as np
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -157,30 +155,52 @@ def main():
         f"exit code {result_b.returncode}",
     )
 
-    match = re.search(r"V_subj:\s+([\d.]+)%", output_b)
-    if match:
-        value = float(match.group(1))
-        check("V_subj ~ 29% (within 5pp)", abs(value - 29.2) < 5.0, f"got {value}%")
+    subject_match = re.search(r"V_subj:\s+([\d.]+)%", output_b)
+    residual_match = re.search(r"V_resid:\s+([\d.]+)%", output_b)
+    variance_ok = bool(subject_match and residual_match)
+    variance_detail = "variance components not found"
+    if variance_ok:
+        subject_value = float(subject_match.group(1))
+        residual_value = float(residual_match.group(1))
+        variance_ok = (
+            abs(subject_value - 29.2) < 5.0
+            and abs(residual_value - 70.1) < 5.0
+        )
+        variance_detail = (
+            f"V_subj={subject_value:.1f}%, V_resid={residual_value:.1f}%"
+        )
+    check(
+        "Variance partition matches the archived estimate",
+        variance_ok,
+        variance_detail,
+    )
 
-    match = re.search(r"V_resid:\s+([\d.]+)%", output_b)
-    if match:
-        value = float(match.group(1))
-        check("V_resid ~ 70% (within 5pp)", abs(value - 70.1) < 5.0, f"got {value}%")
+    icc_match = re.search(r"ICC\(3,1\).*?:\s+([\d.]+)", output_b)
+    icc_ok = bool(icc_match)
+    icc_detail = "ICC output not found"
+    if icc_ok:
+        icc_value = float(icc_match.group(1))
+        icc_ok = abs(icc_value - 0.059) < 0.02
+        icc_detail = f"got {icc_value}"
+    check("ICC(3,1) ~ 0.059 (within 0.02)", icc_ok, icc_detail)
 
-    match = re.search(r"ICC\(3,1\).*?:\s+([\d.]+)", output_b)
-    if match:
-        value = float(match.group(1))
-        check("ICC(3,1) ~ 0.059 (within 0.02)", abs(value - 0.059) < 0.02, f"got {value}")
+    cute_match = re.search(r"Cute - Erotic:.*?p = ([\d.e+-]+)", output_b)
+    cute_ok = bool(cute_match)
+    cute_detail = "Cute-Erotic result not found"
+    if cute_ok:
+        cute_p = float(cute_match.group(1))
+        cute_ok = cute_p < 0.05
+        cute_detail = f"got p={cute_p}"
+    check("Cute-Erotic p < 0.05", cute_ok, cute_detail)
 
-    match = re.search(r"Cute - Erotic:.*?p = ([\d.e+-]+)", output_b)
-    if match:
-        value = float(match.group(1))
-        check("Cute-Erotic p < 0.05", value < 0.05, f"got p={value}")
-
-    match = re.search(r"Threat - Mutilation:.*?p = ([\d.e+-]+)", output_b)
-    if match:
-        value = float(match.group(1))
-        check("Threat-Mutilation p > 0.05 (null)", value > 0.05, f"got p={value}")
+    threat_match = re.search(r"Threat - Mutilation:.*?p = ([\d.e+-]+)", output_b)
+    threat_ok = bool(threat_match)
+    threat_detail = "Threat-Mutilation result not found"
+    if threat_ok:
+        threat_p = float(threat_match.group(1))
+        threat_ok = threat_p > 0.05
+        threat_detail = f"got p={threat_p}"
+    check("Threat-Mutilation p > 0.05 (null)", threat_ok, threat_detail)
 
     figure_dir = os.path.join(repo_root, "pictures", "chSynthesis")
     for filename in [
@@ -213,25 +233,22 @@ def main():
         f"exit code {result_c.returncode}",
     )
 
-    match_cute = re.search(
-        r"Cute.*?Significant cells.*?(\d+)/14", output_c
-    )
-    if match_cute:
-        check(
-            "Cute-Erotic: 0/14 Bonferroni-significant",
-            int(match_cute.group(1)) == 0,
-            f"got {match_cute.group(1)}/14",
+    cute_cells = re.search(r"Cute.*?Significant cells.*?(\d+)/14", output_c)
+    threat_cells = re.search(r"Threat.*?Significant cells.*?(\d+)/14", output_c)
+    significance_ok = bool(cute_cells and threat_cells)
+    significance_detail = "one or both significance summaries are absent"
+    if significance_ok:
+        cute_count = int(cute_cells.group(1))
+        threat_count = int(threat_cells.group(1))
+        significance_ok = cute_count == 0 and threat_count == 0
+        significance_detail = (
+            f"Cute-Erotic={cute_count}/14, Threat-Mutilation={threat_count}/14"
         )
-
-    match_threat = re.search(
-        r"Threat.*?Significant cells.*?(\d+)/14", output_c
+    check(
+        "Both contrasts have 0/14 Bonferroni-significant cells",
+        significance_ok,
+        significance_detail,
     )
-    if match_threat:
-        check(
-            "Threat-Mutilation: 0/14 Bonferroni-significant",
-            int(match_threat.group(1)) == 0,
-            f"got {match_threat.group(1)}/14",
-        )
 
     tau_effects = re.findall(r"tau_ac\s+\w+\s+[\d.-]+\s+([\d.-]+)", output_c)
     other_effects = re.findall(
@@ -239,14 +256,14 @@ def main():
         r"\s+\w+\s+[\d.-]+\s+([\d.-]+)",
         output_c,
     )
-    if tau_effects and other_effects:
+    tau_ok = bool(tau_effects and other_effects)
+    tau_detail = "effect-size rows not found"
+    if tau_ok:
         maximum_tau = max(abs(float(value)) for value in tau_effects[:4])
         maximum_other = max(abs(float(value)) for _, value in other_effects[:8])
-        check(
-            "tau_ac has larger |d_z| than amplitude metrics",
-            maximum_tau > maximum_other,
-            f"tau_ac={maximum_tau:.3f}, other={maximum_other:.3f}",
-        )
+        tau_ok = maximum_tau > maximum_other
+        tau_detail = f"tau_ac={maximum_tau:.3f}, other={maximum_other:.3f}"
+    check("tau_ac has larger |d_z| than amplitude metrics", tau_ok, tau_detail)
 
     for filename in [
         "fig7_C1_category_C_matrices.pdf",
