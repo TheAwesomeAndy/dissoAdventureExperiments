@@ -464,7 +464,7 @@ def experiment_and_plot_robustness(X_list, y, n_seeds=10):
 
     data = [results["mfr"] * 100, results["bsc3"] * 100, results["bsc6"] * 100]
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    ax.boxplot(data, labels=["MFR", "BSC$_3$", "BSC$_6$+PCA-64"], patch_artist=True, widths=0.4)
+    ax.boxplot(data, tick_labels=["MFR", "BSC$_3$", "BSC$_6$+PCA-64"], patch_artist=True, widths=0.4)
     for index, values in enumerate(data):
         jitter = np.random.RandomState(0).uniform(-0.08, 0.08, len(values))
         ax.scatter(np.ones(len(values)) * (index + 1) + jitter, values, s=20, alpha=0.7)
