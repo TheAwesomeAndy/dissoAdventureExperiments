@@ -1,65 +1,73 @@
 # Confirmatory validation pipeline
 
-This directory contains the canonical, committed pipeline that generates the
-**corrected confirmatory** classification results reported in the dissertation
-(`dissertation/chgraph.tex`, abstract in `dissertation/main.tex`). It closes
-the reproducibility gap noted in earlier revisions, where the headline numbers
-were documented but had no generating code.
+This directory contains the canonical pipeline for the corrected confirmatory
+classification results reported in `dissertation/chgraph.tex` and the abstract
+of `dissertation/main.tex`.
 
-## Protocol (exactly what the dissertation describes)
+## Protocol
 
-- Five repeats of five-fold **participant-grouped** cross-validation
-  (`StratifiedGroupKFold`); every participant's full condition panel stays in
+- Five repeats of five-fold participant-grouped cross-validation with
+  `StratifiedGroupKFold`. A participant's complete condition panel remains in
   one fold.
-- **Fold-local** preprocessing: `StandardScaler` fitted on training
-  participants only.
-- A fixed **SRP-64** projection (`SparseRandomProjection`, prespecified seed,
-  shared across electrodes). It is **data-independent** — its matrix depends
-  only on the seed and dimensionality, never on the observations — which is
-  the correction that replaces the archived globally fitted PCA-64.
-- `LogisticRegression` readout for accuracy; a separate deterministic
-  `RidgeClassifier` for within-participant label permutation.
-- Participant-bootstrap 95% intervals.
-- Mechanistic destruction controls (temporal-bin shuffle, temporal collapse,
-  electrode shuffle), three reservoir seeds (7, 42, 99), and temporal-window
-  ablations.
-- Three-condition and four-category granularities.
+- Raw-epoch reconstruction removes samples 0–204, anti-alias decimates samples
+  205–1228 by four to 256 samples, and z-scores each epoch and channel.
+- Subject 127 is excluded from both granularities. Subject 195 is additionally
+  excluded from the four-category stream.
+- `StandardScaler` and the linear readout are fitted on training participants
+  only within each fold.
+- BSC6 is compressed by a fixed, data-independent SRP-64 projection generated
+  from a prespecified seed and shared across electrodes. The projection does not
+  estimate a basis from the observations.
+- `LogisticRegression` produces the point estimates. A deterministic
+  `RidgeClassifier` is used for within-participant label permutations.
+- Participant-cluster bootstrap intervals pool the out-of-fold predictions from
+  all five repeats. Representation differences use paired participant-cluster
+  bootstrap intervals.
+- Mechanistic controls destroy temporal-bin order, temporal resolution, or
+  electrode identity while preserving the remaining representation structure.
+- Reservoir-seed and temporal-window analyses characterize operating-point
+  sensitivity.
 
-The reservoir and BSC₆ encoder are imported from the already-validated
-`chapter5Experiments/experiment_zero.py`, so this pipeline uses the exact same
-operators the rest of the repository is verified against.
+The reservoir and BSC6 encoder are imported from
+`chapter5Experiments/experiment_zero.py`; the corrected runner replaces the
+legacy epoch slicing and globally fitted PCA stream.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `confirmatory_pipeline.py` | Library: SRP-64, fold-local CV, bootstrap CI, permutation, controls, windows |
-| `run_confirmatory_validation.py` | Real-data runner → writes `confirmatory_results.json` |
-| `verify_confirmatory.py` | Synthetic-data verification of the machinery (**no SHAPE data needed**) |
-| `check_against_manifest.py` | Compares produced results to `results_manifest.json`; schema-only mode in CI |
+| `confirmatory_pipeline.py` | SRP-64, grouped cross-validation, pooled OOF predictions, bootstrap estimators, permutation test, and controls |
+| `run_confirmatory_validation.py` | Authorized-data reconstruction and `confirmatory_results.json` generation |
+| `verify_confirmatory.py` | Synthetic verification of code behavior and preprocessing boundaries |
+| `check_against_manifest.py` | Schema validation in CI and complete confirmatory-result comparison after an authorized run |
 
 ## Running
 
-**Verify the machinery (no data, CI-safe):**
-```
-python verify_confirmatory.py
-python check_against_manifest.py            # schema-only: manifest provenance
+Data-independent verification:
+
+```text
+python experiments/confirmatory/verify_confirmatory.py
+python experiments/confirmatory/check_against_manifest.py
 ```
 
-**Regenerate the headline numbers (requires authorized SHAPE data):**
-```
-python run_confirmatory_validation.py --data3 ./batch_data --data4 ./categories \
+Authorized-data reconstruction:
+
+```text
+python experiments/confirmatory/run_confirmatory_validation.py \
+    --data3 ./batch_data \
+    --data4 ./categories \
     --out confirmatory_results.json
-python check_against_manifest.py confirmatory_results.json --tol 1.5
+
+python experiments/confirmatory/check_against_manifest.py \
+    confirmatory_results.json --tol 1.5
 ```
 
-## Important scope note
+## Scope
 
-`verify_confirmatory.py` proves **code behavior and the preprocessing
-boundary** (SRP data-independence, fold-local fitting, participant grouping,
-determinism, output schema). It does **not** establish the scientific findings.
-The SHAPE dataset is restricted (https://lab-can.com/shape/) and is not shipped
-in this repository; reproducing the exact 60.6% / 53.2% headline values
-requires feeding the authorized data to the runner. This separation — verified
-machinery here, numbers regenerated from authorized data — is the honest
-reproducibility contract for a restricted-data study.
+The synthetic verification establishes implementation behavior, including the
+participant-group boundary, data-independent projection, repeated-prediction
+pooling, bootstrap pairing, destruction operators, and raw-epoch preprocessing.
+It does not establish the empirical SHAPE findings. Exact agreement with the
+reported 60.6% and 53.2% estimates must be checked by running the committed
+pipeline on the authorized restricted dataset and comparing the generated JSON
+against `results_manifest.json`.
