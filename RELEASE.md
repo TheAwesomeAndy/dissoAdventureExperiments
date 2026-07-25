@@ -9,7 +9,7 @@ This file is the checklist. Two steps (tagging, and minting the DOI on Zenodo) r
 ## Pre-freeze verification (do this first)
 
 1. **Confirm the README, `docs/REPRODUCTION_MAP.md`, and `results_manifest.json` agree** on every headline number and its tier (confirmatory / exploratory / archived).
-2. **Run the full verification suite** and confirm 435/435 pass:
+2. **Run the full verification suite** and confirm 453/453 pass:
    ```
    python chapter4Experiments/verify_chapter4.py
    python chapter5Experiments/verify_chapter5.py
@@ -24,9 +24,16 @@ This file is the checklist. Two steps (tagging, and minting the DOI on Zenodo) r
    python experiments/ch6_ch7_3class/verify_ch6_ch7_3class.py
    python experiments/ablation/verify_ablation.py
    python validation/verify_validators.py
+   python experiments/confirmatory/verify_confirmatory.py
    ```
    Remember: a green run verifies **code behavior, not scientific validity** (see `docs/VERIFICATION_METHODOLOGY.md`). It is a precondition for freezing, not a warrant for the claims.
-3. **Resolve or explicitly document open reproduction gaps.** The confirmatory pipeline (SRP-64 + `RepeatedStratifiedGroupKFold` + fold-local preprocessing) that regenerates the headline 60.6% / 53.2% numbers is **not yet committed**; `results_manifest.json` marks those rows `"script": null`. Either commit that script before freezing, or state in the release notes that the confirmatory numbers are reported from `dissertation/chgraph.tex` and the regeneration script is a known follow-up.
+3. **Regenerate the confirmatory numbers from authorized data (if available).** The confirmatory pipeline (SRP-64 + participant-grouped `StratifiedGroupKFold` + fold-local preprocessing) that produces the headline 60.6% / 53.2% numbers is committed at `experiments/confirmatory/run_confirmatory_validation.py`; `results_manifest.json` now points every confirmatory row at it. If you hold the authorized SHAPE data, run it and confirm agreement before freezing:
+   ```
+   python experiments/confirmatory/run_confirmatory_validation.py \
+       --data3 ./batch_data --data4 ./categories --out confirmatory_results.json
+   python experiments/confirmatory/check_against_manifest.py confirmatory_results.json --tol 1.5
+   ```
+   The SHAPE data is restricted and not shipped, so if you are freezing without it, state in the release notes that the confirmatory numbers were last regenerated on the authorized data and that CI verifies the pipeline machinery (not the numbers) via `verify_confirmatory.py`.
 
 ## Tag the frozen release **[owner action]**
 
@@ -41,7 +48,7 @@ Then draft a GitHub Release from that tag. Suggested release notes:
 
 - One-line summary: corrected confirmatory results (SRP-64, 5×5-fold participant-grouped, fold-local).
 - Link to `results_manifest.json` and `docs/REPRODUCTION_MAP.md`.
-- The verification statement: 435/435 tests pass; tests verify code behavior, not scientific validity.
+- The verification statement: 453/453 tests pass; tests verify code behavior, not scientific validity.
 - Known gap: confirmatory regeneration script pending (if not yet committed).
 
 ## Mint a DOI on Zenodo **[owner action]**
