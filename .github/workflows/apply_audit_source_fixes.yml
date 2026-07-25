@@ -9,12 +9,12 @@ permissions:
 
 jobs:
   patch:
-    if: github.event.pull_request.head.ref == 'fix/ci-and-confirmatory-audit' && github.actor != 'github-actions[bot]'
+    if: github.event.pull_request.head.ref == 'fix/confirmatory-reproduction-final' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: fix/ci-and-confirmatory-audit
+          ref: fix/confirmatory-reproduction-final
           fetch-depth: 0
 
       - name: Apply exact source corrections
@@ -93,4 +93,4 @@ jobs:
                   chapter7Experiments/run_chapter7_experiment_C.py \
                   chapter7Experiments/verify_chapter7.py
           git commit -m "fix: repair Chapter 4 summary and portable Chapter 7 outputs"
-          git push origin HEAD:fix/ci-and-confirmatory-audit
+          git push origin HEAD:fix/confirmatory-reproduction-final
