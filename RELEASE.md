@@ -35,6 +35,21 @@ This file is the checklist. Two steps (tagging, and minting the DOI on Zenodo) r
    ```
    The SHAPE data is restricted and not shipped, so if you are freezing without it, state in the release notes that the confirmatory numbers were last regenerated on the authorized data and that CI verifies the pipeline machinery (not the numbers) via `verify_confirmatory.py`.
 
+## Bind the artifacts with a release manifest
+
+On the exact commit you are about to tag, generate the integrity manifest that
+binds the dissertation source, PDF, results manifest, and full figure set to
+that commit, and commit it:
+
+```
+python scripts/make_release_manifest.py --pdf ARSPI-Net_Defense.pdf --out RELEASE_MANIFEST.json
+git add RELEASE_MANIFEST.json && git commit -m "chore: release manifest for vX.Y.Z"
+```
+
+Re-running on the same commit reproduces byte-identical checksums, so anyone
+can verify the archived state. (This checks integrity, not scientific
+validity.)
+
 ## Tag the frozen release **[owner action]**
 
 Choose a semantic version (e.g. `v1.0.0` for the submitted/defended version) and tag the exact commit:

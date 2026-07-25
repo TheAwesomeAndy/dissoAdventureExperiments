@@ -1,5 +1,9 @@
 # ARSPI-Net: An Interpretable Neuromorphic Framework for Clinical EEG Analysis
 
+[![verify](https://github.com/TheAwesomeAndy/dissoAdventureExperiments/actions/workflows/verify.yml/badge.svg)](https://github.com/TheAwesomeAndy/dissoAdventureExperiments/actions/workflows/verify.yml)
+[![License: MIT](https://img.shields.io/badge/code%20license-MIT-blue.svg)](LICENSE)
+<!-- DOI badge added at release time — see RELEASE.md -->
+
 **Dissertation:** Lane, A. A. (2026). *Affective Reservoir-Spike Processing and Inference Network (ARSPI-Net): A Four-Level Interpretable Neuromorphic Framework for Clinical EEG Analysis.* PhD Dissertation, Department of Electrical and Computer Engineering, Stony Brook University.
 
 ARSPI-Net is a neuromorphic EEG framework that transforms multichannel EEG into an explicit hierarchy of temporal, dynamical, and graph-organized representations, keeping the intermediate quantities available as named, independently inspectable variables. A fixed-weight leaky integrate-and-fire (LIF) reservoir converts continuous EEG into spike trains; a six-bin spike-count code (BSC₆) discretizes the response; a fixed data-independent projection compresses it; and electrode-resolved embeddings, dynamical descriptors, and structure–function coupling summarize the spatial organization. Membrane trajectories, spike rasters, temporal codes, graph measures, and cross-scale coupling remain available as named intermediate quantities throughout the analysis.
