@@ -1,14 +1,15 @@
 name: apply-audit-source-fixes
 
 on:
-  push:
-    branches: ["fix/ci-and-confirmatory-audit"]
+  pull_request:
+    branches: ["main"]
 
 permissions:
   contents: write
 
 jobs:
   patch:
+    if: github.event.pull_request.head.ref == 'fix/ci-and-confirmatory-audit' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
