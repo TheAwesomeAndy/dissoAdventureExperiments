@@ -31,50 +31,143 @@ jobs:
           pip install "numpy>=2.0" "scipy>=1.13" "scikit-learn>=1.5" \
                       "pandas>=2.2.3" "matplotlib>=3.9"
 
+      - name: Prepare verifier logs
+        run: mkdir -p ci-logs
+
       - name: Verify Chapter 4 core
-        run: python chapter4Experiments/verify_chapter4.py
+        id: ch4
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter4Experiments/verify_chapter4.py 2>&1 | tee ci-logs/ch4.log
 
       - name: Verify Chapter 5 core
-        run: python chapter5Experiments/verify_chapter5.py
+        id: ch5
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter5Experiments/verify_chapter5.py 2>&1 | tee ci-logs/ch5.log
 
       - name: Verify Chapter 5 experiment zero
-        run: python chapter5Experiments/verify_experiment_zero.py
+        id: ch5zero
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter5Experiments/verify_experiment_zero.py 2>&1 | tee ci-logs/ch5zero.log
 
       - name: Verify Chapter 5 reproduction
-        run: python chapter5Experiments/verify_reproduce_chapter5.py
+        id: ch5repro
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter5Experiments/verify_reproduce_chapter5.py 2>&1 | tee ci-logs/ch5repro.log
 
       - name: Verify Chapter 5 baselines
-        run: python chapter5Experiments/verify_baselines.py
+        id: ch5base
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter5Experiments/verify_baselines.py 2>&1 | tee ci-logs/ch5base.log
 
       - name: Verify Chapter 6 core
-        run: python chapter6Experiments/verify_chapter6.py
+        id: ch6
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter6Experiments/verify_chapter6.py 2>&1 | tee ci-logs/ch6.log
 
       - name: Verify Chapter 6 reproduction
-        run: python chapter6Experiments/verify_reproduce_chapter6.py
+        id: ch6repro
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter6Experiments/verify_reproduce_chapter6.py 2>&1 | tee ci-logs/ch6repro.log
 
       - name: Verify Chapter 7 experiments
-        run: python chapter7Experiments/verify_chapter7.py
+        id: ch7
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter7Experiments/verify_chapter7.py 2>&1 | tee ci-logs/ch7.log
 
       - name: Verify Chapter 7 utilities
-        run: python chapter7Experiments/verify_extract_utilities.py
+        id: ch7util
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter7Experiments/verify_extract_utilities.py 2>&1 | tee ci-logs/ch7util.log
 
       - name: Verify four-category extension
-        run: python experiments/ch5_4class/verify_ch5_4class.py
+        id: fourcat
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/ch5_4class/verify_ch5_4class.py 2>&1 | tee ci-logs/fourcat.log
 
       - name: Verify three-condition Chapter 6/7 extension
-        run: python experiments/ch6_ch7_3class/verify_ch6_ch7_3class.py
+        id: threecond
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/ch6_ch7_3class/verify_ch6_ch7_3class.py 2>&1 | tee ci-logs/threecond.log
 
       - name: Verify ablation pipeline
-        run: python experiments/ablation/verify_ablation.py
+        id: ablation
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/ablation/verify_ablation.py 2>&1 | tee ci-logs/ablation.log
 
       - name: Verify validators
-        run: python validation/verify_validators.py
+        id: validators
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python validation/verify_validators.py 2>&1 | tee ci-logs/validators.log
 
       - name: Verify confirmatory pipeline
-        run: python experiments/confirmatory/verify_confirmatory.py
+        id: confirmatory
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/confirmatory/verify_confirmatory.py 2>&1 | tee ci-logs/confirmatory.log
 
       - name: Check confirmatory manifest provenance
-        run: python experiments/confirmatory/check_against_manifest.py
+        id: manifest
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/confirmatory/check_against_manifest.py 2>&1 | tee ci-logs/manifest.log
 
       - name: Check repository and dissertation consistency
-        run: python validation/validate_dissertation_claims.py
+        id: claims
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python validation/validate_dissertation_claims.py 2>&1 | tee ci-logs/claims.log
+
+      - name: Upload verifier logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verifier-logs
+          path: ci-logs/
+          if-no-files-found: error
+
+      - name: Require every verifier to pass
+        if: always()
+        run: |
+          outcomes=(
+            "${{ steps.ch4.outcome }}" "${{ steps.ch5.outcome }}"
+            "${{ steps.ch5zero.outcome }}" "${{ steps.ch5repro.outcome }}"
+            "${{ steps.ch5base.outcome }}" "${{ steps.ch6.outcome }}"
+            "${{ steps.ch6repro.outcome }}" "${{ steps.ch7.outcome }}"
+            "${{ steps.ch7util.outcome }}" "${{ steps.fourcat.outcome }}"
+            "${{ steps.threecond.outcome }}" "${{ steps.ablation.outcome }}"
+            "${{ steps.validators.outcome }}" "${{ steps.confirmatory.outcome }}"
+            "${{ steps.manifest.outcome }}" "${{ steps.claims.outcome }}"
+          )
+          printf 'Verifier outcomes: %s\n' "${outcomes[*]}"
+          for outcome in "${outcomes[@]}"; do
+            test "$outcome" = "success" || exit 1
+          done
