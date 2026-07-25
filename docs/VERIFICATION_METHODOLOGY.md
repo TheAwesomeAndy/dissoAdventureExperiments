@@ -39,6 +39,20 @@ The verification scripts do **not** test:
 
 These limitations are by design. The tests validate that the *machinery* is correct; the *findings* depend on the data, which is separately validated by the `validation/` scripts.
 
+### Passing tests verify code behavior, not scientific validity
+
+This distinction is important enough to state plainly, because it is the single most common way a green test suite is over-read:
+
+> **The 435 passing tests establish that the code behaves as written. They do not establish that any scientific claim is true.**
+
+Concretely, a fully passing run says **nothing** about whether:
+
+- **the estimand is the right one** — e.g. whether balanced accuracy under participant-grouped cross-validation, rather than a subject-mean-centered transductive estimate, is what a generalization claim requires;
+- **the preprocessing boundary is leak-free** — e.g. whether PCA and standardization were fitted inside each fold on training participants only (fold-local), or globally on all data including held-out participants;
+- **the generalization claim holds** — whether a result obtained on this cohort transfers to unseen participants, sites, or acquisition conditions.
+
+Those are properties of the **study design and the data**, argued at explicitly bounded scope in the dissertation itself. They are exactly the properties that separate a *confirmatory* result from an *archived* one in [`REPRODUCTION_MAP.md`](REPRODUCTION_MAP.md) and [`../results_manifest.json`](../results_manifest.json) — and every result in all three tiers is backed by passing tests. Test status and scientific tier are orthogonal. A reviewer should therefore read a green test run as *"the machinery is correct"* and look to the manifest, the split strategy, and the preprocessing scope for whether a number is a defensible estimate.
+
 ---
 
 ## Verification Coverage Map

@@ -1,143 +1,133 @@
 # Reproduction Map: Script → Dissertation Table/Figure
 
-This document maps every table, figure, and statistical result in the ARSPI-Net dissertation to the specific script that produces it. Any reader can verify any claim by running the corresponding script.
+This document maps the tables, figures, and statistical results in the ARSPI-Net dissertation to the scripts that produce them, organized into three tiers so a reader can tell what the corrected primary inference rests on versus what is retained for provenance.
 
-**Important:** The dissertation's final results for Chapters 6 and 7 use the **3-class** design (Negative / Neutral / Pleasant). The original 4-class experiments in `chapter6Experiments/` and `chapter7Experiments/` represent the initial exploration and are retained for completeness. The 3-class scripts under `experiments/ch6_ch7_3class/` produce the numbers reported in the final dissertation.
+- **Confirmatory** — the corrected estimates the dissertation reports as its primary inference: five repeats of five-fold participant-grouped cross-validation, fold-local preprocessing, and a data-independent SRP-64 projection.
+- **Exploratory** — analyses that generate hypotheses (3-class dynamical/coupling pipeline, 4-class extensions).
+- **Archived** — legacy pipelines (globally fitted PCA, transductive subject-centering, message-passing GNN sweep, original 4-class experiments) retained for provenance and as prespecified replication targets. These are **descriptive**, not prospective, and are **not** used for the primary inference.
+
+Every number is also indexed, with full provenance fields, in the machine-readable manifest [`../results_manifest.json`](../results_manifest.json).
+
+> **Important scope note.** Passing verification tests establish code behavior, not scientific validity (see [`VERIFICATION_METHODOLOGY.md`](VERIFICATION_METHODOLOGY.md)). The tier of a result — confirmatory vs. archived — is a statement about its study design and preprocessing boundary, not about whether its test suite passes. All 435 tests pass regardless of tier.
 
 ---
 
-## Chapter 4: Spike-to-Embedding Pipeline (Synthetic + EEG)
+## TIER 1 — CONFIRMATORY (primary inference)
+
+**Protocol.** Five repeats of five-fold participant-grouped cross-validation; every participant's full condition panel stays in one fold. Per-feature standardization and the linear logistic readout are fitted on training participants only (fold-local). BSC₆ is compressed 1,536→64 with a fixed sparse random projection (SRP-64) from a prespecified seed. Intervals are participant-bootstrap 95% intervals; a deterministic ridge readout drives 100 within-participant label permutations.
+
+**Samples.** 211 participants / 633 observations (three conditions: Negative, Neutral, Pleasant); 210 participants / 840 observations (four categories: Threat, Mutilation, Cute, Erotic).
+
+| Dissertation Element | Value | Script |
+|---|---|---|
+| Table (corrected validation): BSC₆/SRP-64 | 60.6% [57.8, 63.4] (3-cond); 53.2% [50.6, 55.8] (4-cat) | *not yet committed — see note* |
+| Raw ERP-16 reference | 68.1% [65.1, 71.1] (3-cond); 60.5% [57.9, 63.0] (4-cat) | *not yet committed* |
+| Conventional spectral/Hjorth baseline | 49.4% (3-cond); 36.7% (4-cat) | *not yet committed* |
+| Fusion (BSC₆/SRP-64 + conventional) | 62.0% (3-cond); 53.5% (4-cat) | *not yet committed* |
+| Advantage over conventional | +11.3 pp [7.9, 14.7] (3-cond); +16.5 pp [13.3, 19.8] (4-cat) | *not yet committed* |
+| Participant-label permutation (ridge) | p = 0.0099 (both granularities) | *not yet committed* |
+| Destruction controls (temporal-bin shuffle / collapse / electrode shuffle) | −7.4/−4.9/−13.9 pp (3-cond); −12.9/−8.6/−20.1 pp (4-cat) | *not yet committed* |
+| Seed robustness (7, 42, 99) | 60.5–62.1%; full window 63.3% (3-cond) | *not yet committed* |
+
+> **Confirmatory-pipeline gap.** These corrected numbers are reported in `dissertation/chgraph.tex` and `dissertation/main.tex`, but a committed end-to-end script that regenerates them from the SHAPE data is **not yet in this repository**. The manifest marks these rows `"script": null`. This gap is stated explicitly rather than papered over with the archived scripts, which produce the descriptive legacy estimates below, not the confirmatory ones. Committing that pipeline (a `SparseRandomProjection`-based `RepeatedStratifiedGroupKFold` runner with fold-local standardization) is the top reproduction to-do.
+
+---
+
+## TIER 2 — EXPLORATORY (hypothesis-generating)
+
+### Chapter 6: Dynamical Characterization — 3-class
 
 | Dissertation Element | Script | Output |
 |---|---|---|
-| Table 4.1: Reservoir size ablation | `chapter4Experiments/run_chapter4_experiments.py` | Exp 1 results + `ablation_reservoir_size.pdf` |
-| Table 4.2: Coding scheme comparison | `chapter4Experiments/run_chapter4_experiments.py` | Exp 3 results + `coding_scheme_accuracy_comparison.pdf` |
-| Figure 4.1: FDR three-way comparison | `chapter4Experiments/run_chapter4_experiments.py` | `fdr_three_way_comparison.pdf` |
-| Figure 4.2: PCA explained variance | `chapter4Experiments/run_chapter4_experiments.py` | `pca_explained_variance.pdf` |
-| Figure 4.3: Cross-seed robustness | `chapter4Experiments/run_chapter4_experiments.py` | `cross_initialization_robustness.pdf` |
-| Figure 4.4: Parameter sensitivity | `chapter4Experiments/run_chapter4_experiments.py` | `parameter_sensitivity_heatmap.pdf` |
-| Figures 4.5–4.10: Raw observations | `chapter4Experiments/run_chapter4_observations.py` | `obs01` through `obs06` PDFs |
+| All Ch6 3-class experiments | `experiments/ch6_ch7_3class/ch6_03_experiments.py` | 7/7 condition-sensitive, 0/49 clinical significant |
+| 3-class features | `experiments/ch6_ch7_3class/ch6_ch7_01_feature_extraction.py` | `ch6_ch7_3class_features.pkl` |
+| 3-class observations | `experiments/ch6_ch7_3class/ch6_ch7_02_raw_observations.py` | 8 observation PDFs |
+
+### Chapter 7: Structure-Function Coupling — 3-class
+
+| Dissertation Element | Script | Output |
+|---|---|---|
+| All Ch7 3-class experiments | `experiments/ch6_ch7_3class/ch7_04_experiments.py` | median κ ≈ 0.22, p < 0.001 |
+
+### Extended 4-class classification
+
+| Dissertation Element | Script | Output |
+|---|---|---|
+| 4-class features | `experiments/ch5_4class/ch5_4class_01_feature_extraction.py` | `shape_features_4class.pkl` |
+| 4-class observations | `experiments/ch5_4class/ch5_4class_02_raw_observations.py` | 7 observation PDFs |
+| 4-class classification | `experiments/ch5_4class/ch5_4class_03_classification_full.py` | 52.0% centered, 40.4% raw (archived preprocessing) |
+
+### Chapter 3: LIF Reservoir Characterization (synthetic)
+
+| Dissertation Element | Script | Output |
+|---|---|---|
+| Membrane dynamics, separation, fading memory, spectral radius, kernel quality, cross-seed | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Exp 1–6 |
+
+### Chapter 4: Spike-to-Embedding Pipeline (synthetic + EEG)
+
+| Dissertation Element | Script | Output |
+|---|---|---|
+| Table 4.1: Reservoir size ablation | `chapter4Experiments/run_chapter4_experiments.py` | Exp 1 + `ablation_reservoir_size.pdf` |
+| Table 4.2: Coding scheme comparison | `chapter4Experiments/run_chapter4_experiments.py` | Exp 3 + `coding_scheme_accuracy_comparison.pdf` |
+| Figures 4.1–4.4 | `chapter4Experiments/run_chapter4_experiments.py` | FDR, PCA variance, robustness, sensitivity |
+| Figures 4.5–4.10: Raw observations | `chapter4Experiments/run_chapter4_observations.py` | `obs01`–`obs06` PDFs |
+
+### Interpretability validation (four-level audit framework)
+
+| Dissertation Element | Script | Output |
+|---|---|---|
+| Level 1: LPP recovery (post-reservoir \|r\| ≈ 0.23) | `experiments/interpretability/run_level1_temporal_traceability.py` | Per-channel correlation + PDF |
+| Level 3: Descriptor-ERP alignment (amp \|r\| = 0.82, spike \|r\| = 0.23) | `experiments/interpretability/run_level3_descriptor_erp_alignment.py` | Per-channel correlation table + PDF |
+| EEGNet saliency peaks (402–691 ms) | `experiments/interpretability/run_eegnet_saliency_comparison.py` | Saliency profile + PDF |
+| Attention-prototype readout (66.7%, p = 0.634, not significant) | `experiments/interpretability/run_arspinet_v2_attention_prototype.py` | Readout comparison + PDF |
 
 ---
 
-## Chapter 5: Clinical EEG Classification + Baselines
+## TIER 3 — ARCHIVED (descriptive / provenance only)
 
-### PRIMARY: Complete Centered Baseline Table (Dissertation Table 5.X)
+These use the archived input pickle, globally fitted PCA, and — in centered columns — the complete held-out participant panel (transductive). They are **not** prospective performance and are **not** used for the primary inference. Retained to motivate follow-up and define replication targets.
 
-**The dissertation's headline 7-row centered baseline table is assembled from multiple scripts; no single script produces all 7 rows.**
+### Archived baseline / centered comparison
 
-| Dissertation Row | Uncentered → Centered | Script |
+| Dissertation Row | Uncentered → Centered (transductive) | Script |
 |---|---|---|
 | EEGNet (Lawhern 2018) | 72.0% → 89.1% | `chapter5Experiments/canonical_pytorch_baselines.py` |
 | GRU (2-layer bidir) | 59.9% → 78.4% | `chapter5Experiments/canonical_pytorch_baselines.py` |
 | LSTM (2-layer bidir) | 58.0% → 71.1% | `chapter5Experiments/canonical_pytorch_baselines.py` |
 | Raw EEG + LogReg | 70.5% → 88.4% | `chapter5Experiments/experiment_zero.py` |
 | ARSPI-Net reservoir + LogReg | 59.4% → 78.8% | `chapter5Experiments/experiment_zero.py` |
-| PCA-200 + LogReg | 64.9% → 86.4% | (not in repo — see note below) |
+| PCA-200 + LogReg | 64.9% → 86.4% | (not committed — run `sklearn_baselines.py` on the PCA-200 stack) |
 | Band Power + SVM | 47.7% → 61.0% | `chapter5Experiments/sklearn_baselines.py` |
 
-**Note on PCA-200:** The dissertation reports 64.9% → 86.4% for PCA-200 + LogReg, but no committed script currently produces this row. The result was computed during Chapter 5 development and the number has been retained as an uncommitted intermediate. Running `sklearn_baselines.py` with the PCA-200 feature stack as input is the intended reproduction path.
+> **Why archived.** The centered columns compute the subject mean using held-out data (transductive), which inflates apparent accuracy relative to a prospective setting. The uncentered columns use a globally fitted PCA basis. Neither matches the corrected fold-local / SRP-64 specification, so these values are descriptive legacy estimates.
 
-| Supporting Analysis | Script | Output |
+Supporting archived analyses: variance decomposition (62.6% subject, 8.7% condition, 28.7% residual, ρ = 7.2×) via `canonical_pytorch_baselines.py --centered`; Experiment Zero disambiguation (confirms 70.5% is uncentered) via `experiment_zero.py`.
+
+### Archived message-passing GNN sweep
+
+| Architecture | Bal. Acc. | Script |
 |---|---|---|
-| Variance decomposition (ρ = 7.2×) | `chapter5Experiments/canonical_pytorch_baselines.py` (`--centered` flag run) | 62.6% subject, 8.7% condition, 28.7% residual |
-| Experiment Zero disambiguation | `chapter5Experiments/experiment_zero.py` | Confirms 70.5% is uncentered; centered Raw EEG = 88.4% |
+| PCA-64 concat + SVM (non-propagated) | 63.4% ± 4.4% (MCC 0.457) | `chapter5Experiments/run_chapter5_experiments.py` |
+| GIN (5-seed) | 49.8% ± 3.7% | `chapter5Experiments/run_chapter5_experiments.py` |
+| GCN (5-seed) | 56.4% ± 4.3% | `chapter5Experiments/run_chapter5_experiments.py` |
+| EdgeConv (5-seed) | 48.5% ± 5.1% | `chapter5Experiments/run_chapter5_experiments.py` |
+| Over-smoothing mechanism (Dirichlet energy, cosine sim) | 33% inter-channel variance drop at K=2 | `chapter5Experiments/graph_diffusion_oversmoothing.py` |
 
-### Supporting: GNN Ablation Tables and Alternative Readouts
+Global preprocessing and dependent cross-validation folds mean this sweep cannot establish a universal graph operating boundary.
+
+### Archived 4-class Ch6/Ch7 exploration
 
 | Dissertation Element | Script | Output |
 |---|---|---|
-| Table 5.1: GNN ablation (7 architecture variants — NOT the headline baseline table above) | `chapter5Experiments/run_chapter5_experiments.py` | 7 rows: BandPower+LogReg, BandPower+MLP, LSM+PCA+MLP, BandPower+GAT(spat), ARSPI-Net (full), ARSPI-Net (func), LSM-MFR+GAT(spat) |
-| Table 5.2: GNN architecture comparison | `chapter5Experiments/run_chapter5_experiments.py` | Experiment 2 |
-| Table 5.3: Graph sparsity sweep | `chapter5Experiments/run_chapter5_experiments.py` | Experiment 3 |
-| Table 5.4: Conventional sklearn baselines | `chapter5Experiments/sklearn_baselines.py` | 8 classifier results |
-| Table 5.5: Deep baselines (NumPy reference, superseded) | `chapter5Experiments/deprecated/eegnet_gru_lstm_baselines.py` | NumPy implementations (see note) |
-| Figure 5.1: Confusion matrix | `chapter5Experiments/run_chapter5_experiments.py` | `confusion_matrix.pdf` |
-| Full reproducibility | `chapter5Experiments/reproduce_chapter5.py` | All Ch5 figures |
+| Ch6 ESP / reliability / surrogate / value-add / dissociation / interaction / temporal | `chapter6Experiments/run_chapter6_exp*.py` | Original 4-class exploration |
+| Ch7 coupling A–E | `chapter7Experiments/run_chapter7_experiment_*.py` | Original 4-class exploration |
+| Layer ablation matrix (A1–A9, C1–C6) | `experiments/ablation/layer_ablation.py` | Full ablation (near-chance clinical readouts) |
 
-**Note:** `deprecated/eegnet_gru_lstm_baselines.py` contains simplified NumPy reference implementations retained for reproducibility. The canonical results use `canonical_pytorch_baselines.py` with full end-to-end PyTorch training.
+The layer-specific clinical screens are exploratory and cohort-level. They yield nominal candidates but no validated biomarkers.
 
----
+### Deprecated NumPy baselines
 
-## Chapter 6: Dynamical Characterization — PRIMARY: 3-Class
-
-| Dissertation Element | Script | Output |
-|---|---|---|
-| **All Ch6 3-class experiments** | **`experiments/ch6_ch7_3class/ch6_03_experiments.py`** | **7/7 condition-sensitive, 0/49 clinical** |
-| 3-class features | `experiments/ch6_ch7_3class/ch6_ch7_01_feature_extraction.py` | `ch6_ch7_3class_features.pkl` |
-| 3-class observations | `experiments/ch6_ch7_3class/ch6_ch7_02_raw_observations.py` | 8 observation PDFs |
-
-### Exploratory: 4-Class (Original)
-
-| Dissertation Element | Script | Output |
-|---|---|---|
-| ESP verification | `chapter6Experiments/run_chapter6_exp1_esp.py` | lambda_1 values |
-| Cross-seed reliability (ICC) | `chapter6Experiments/run_chapter6_exp2_reliability.py` | ICC per metric |
-| Surrogate sensitivity | `chapter6Experiments/run_chapter6_exp3_surrogate.py` | Significance per metric |
-| Value-add vs raw EEG | `chapter6Experiments/run_chapter6_exp3_valueadd.py` | Ratio comparisons |
-| Subcategory dissociation | `chapter6Experiments/run_chapter6_exp4_dissociation.py` | Within-valence d_z values |
-| Diagnosis × category interaction | `chapter6Experiments/run_chapter6_exp5_interaction.py` | SUD/ADHD effects |
-| Temporal localization | `chapter6Experiments/run_chapter6_exp6_temporal.py` | Peak at 708 ms |
-
----
-
-## Chapter 7: Structure-Function Coupling — PRIMARY: 3-Class
-
-| Dissertation Element | Script | Output |
-|---|---|---|
-| **All Ch7 3-class experiments** | **`experiments/ch6_ch7_3class/ch7_04_experiments.py`** | **κ = 0.22, p < 0.001** |
-
-### Exploratory: 4-Class (Original)
-
-| Dissertation Element | Script | Output |
-|---|---|---|
-| Coupling existence | `chapter7Experiments/run_chapter7_experiment_A.py` | d_z = 1.063 |
-| Variance decomposition | `chapter7Experiments/run_chapter7_experiment_B.py` | 29% subject, 1% category |
-| Category-conditioned coupling | `chapter7Experiments/run_chapter7_experiment_C.py` | tau_AC × clustering |
-| Diagnosis coupling differences | `chapter7Experiments/run_chapter7_experiment_D.py` | Clean null (all d < 0.12) |
-| Augmentation ablation | `chapter7Experiments/run_chapter7_experiment_E.py` | ADHD D-only AUC 0.622 |
-
----
-
-## Layer Ablation (Keystone Experiment)
-
-| Dissertation Element | Script | Output |
-|---|---|---|
-| Ablation matrix (A1–A9, C1–C6) | `experiments/ablation/layer_ablation.py` | Full ablation results |
-
----
-
-## Chapter 3: LIF Reservoir Characterization (Synthetic)
-
-| Dissertation Element | Script | Output |
-|---|---|---|
-| Membrane dynamics verification | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Exp 1: leak, fire, reset checks |
-| Separation property (Maass 2002) | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Exp 2: input–state distance correlation |
-| Fading memory decay | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Exp 3: τ decay constant |
-| Spectral radius sweep | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Exp 4: accuracy vs ρ |
-| Kernel quality | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Exp 5: effective rank |
-| Cross-seed robustness | `experiments/chapter3/run_chapter3_lsm_characterization.py` | Exp 6: 10 seeds |
-
----
-
-## Interpretability Validation (Four-Level Taxonomy)
-
-| Dissertation Element | Script | Output |
-|---|---|---|
-| Level 1: LPP recovery (r ≈ 0.23 post-reservoir) | `experiments/interpretability/run_level1_temporal_traceability.py` | Per-channel correlation + PDF |
-| Level 3: Descriptor-ERP alignment (\|r\| = 0.82 LPP, r = 0.837 Ch31) | `experiments/interpretability/run_level3_descriptor_erp_alignment.py` | Per-channel correlation table + PDF |
-| EEGNet saliency peaks (402–691 ms) | `experiments/interpretability/run_eegnet_saliency_comparison.py` | Saliency profile + PDF |
-| Attention-prototype readout (66.7%, p = 0.634) | `experiments/interpretability/run_arspinet_v2_attention_prototype.py` | Readout comparison + PDF |
-
----
-
-## Extended: 4-Class Classification
-
-| Dissertation Element | Script | Output |
-|---|---|---|
-| 4-class features | `experiments/ch5_4class/ch5_4class_01_feature_extraction.py` | `shape_features_4class.pkl` |
-| 4-class observations | `experiments/ch5_4class/ch5_4class_02_raw_observations.py` | 7 observation PDFs |
-| 4-class classification | `experiments/ch5_4class/ch5_4class_03_classification_full.py` | 52.0% centered, 40.4% raw |
+`chapter5Experiments/deprecated/eegnet_gru_lstm_baselines.py` contains simplified NumPy reference implementations (EEGNet trains only the FC layer; GRU/LSTM use fixed random recurrent weights). Retained for provenance only; superseded by `canonical_pytorch_baselines.py`.
 
 ---
 
@@ -147,6 +137,7 @@ This document maps every table, figure, and statistical result in the ARSPI-Net 
 |---|---|
 | 3-class EEG QC (10 checks) | `validation/validate_shape_data.py` |
 | 4-class subcategory QC (12 checks) | `validation/validate_subcategory_data.py` |
+| Repo↔dissertation consistency checker | `validation/validate_dissertation_claims.py` |
 | Validator meta-verification | `validation/verify_validators.py` |
 
 ---
