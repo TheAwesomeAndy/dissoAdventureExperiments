@@ -12,7 +12,7 @@ Scientific code must be transparent. A reader encountering this repository shoul
 2. **Does the code compute what it claims?** A function named `permutation_entropy` should actually compute permutation entropy, not something else.
 3. **Are the results trustworthy?** The pipeline should produce consistent, deterministic outputs that match the claimed methodology.
 
-The 435 automated tests across 13 verification scripts answer all three questions without requiring the proprietary [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/) EEG dataset.
+The 453 automated tests across 14 verification scripts answer all three questions without requiring the proprietary [Stress, Health, and the Psychophysiology of Emotion (SHAPE) project](https://lab-can.com/shape/) EEG dataset.
 
 ---
 
@@ -43,7 +43,7 @@ These limitations are by design. The tests validate that the *machinery* is corr
 
 This distinction is important enough to state plainly, because it is the single most common way a green test suite is over-read:
 
-> **The 435 passing tests establish that the code behaves as written. They do not establish that any scientific claim is true.**
+> **The 453 passing tests establish that the code behaves as written. They do not establish that any scientific claim is true.**
 
 Concretely, a fully passing run says **nothing** about whether:
 
@@ -247,8 +247,8 @@ Chapter 6 has an additional layer of verification: `CHAPTER6_VERIFICATION_REPORT
 | Metric | Value |
 |--------|-------|
 | Total verification scripts | 13 |
-| Total automated tests | 435 |
-| Pass rate | 100% (435/435) |
+| Total automated tests | 453 |
+| Pass rate | 100% (453/453) |
 | Scripts with zero coverage | 0 |
 | External data required | None |
 | Runtime | < 2 minutes |

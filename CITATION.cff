@@ -25,7 +25,7 @@ keywords:
   - EEG
   - interpretability
   - affective computing
-license: "See repository LICENSE"
+license: MIT  # software only; see LICENSES.md for text/figures/data terms
 # --- Fill these in when minting the frozen publication release (see RELEASE.md) ---
 version: "0.0.0-unreleased"
 date-released: "2026-01-01"
