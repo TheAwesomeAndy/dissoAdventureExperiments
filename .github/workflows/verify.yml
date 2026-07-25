@@ -14,6 +14,9 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      PYTHONUTF8: "1"
+      MPLBACKEND: "Agg"
     steps:
       - uses: actions/checkout@v4
 
@@ -28,29 +31,50 @@ jobs:
           pip install "numpy>=2.0" "scipy>=1.13" "scikit-learn>=1.5" \
                       "pandas>=2.2.3" "matplotlib>=3.9"
 
-      - name: Run verification suite
-        env:
-          PYTHONUTF8: "1"
-          MPLBACKEND: "Agg"
-        run: |
-          set -e
-          python chapter4Experiments/verify_chapter4.py
-          python chapter5Experiments/verify_chapter5.py
-          python chapter5Experiments/verify_experiment_zero.py
-          python chapter5Experiments/verify_reproduce_chapter5.py
-          python chapter5Experiments/verify_baselines.py
-          python chapter6Experiments/verify_chapter6.py
-          python chapter6Experiments/verify_reproduce_chapter6.py
-          python chapter7Experiments/verify_chapter7.py
-          python chapter7Experiments/verify_extract_utilities.py
-          python experiments/ch5_4class/verify_ch5_4class.py
-          python experiments/ch6_ch7_3class/verify_ch6_ch7_3class.py
-          python experiments/ablation/verify_ablation.py
-          python validation/verify_validators.py
-          python experiments/confirmatory/verify_confirmatory.py
+      - name: Verify Chapter 4 core
+        run: python chapter4Experiments/verify_chapter4.py
 
-      - name: Check manifest provenance and repo/dissertation consistency
-        run: |
-          set -e
-          python experiments/confirmatory/check_against_manifest.py
-          python validation/validate_dissertation_claims.py
+      - name: Verify Chapter 5 core
+        run: python chapter5Experiments/verify_chapter5.py
+
+      - name: Verify Chapter 5 experiment zero
+        run: python chapter5Experiments/verify_experiment_zero.py
+
+      - name: Verify Chapter 5 reproduction
+        run: python chapter5Experiments/verify_reproduce_chapter5.py
+
+      - name: Verify Chapter 5 baselines
+        run: python chapter5Experiments/verify_baselines.py
+
+      - name: Verify Chapter 6 core
+        run: python chapter6Experiments/verify_chapter6.py
+
+      - name: Verify Chapter 6 reproduction
+        run: python chapter6Experiments/verify_reproduce_chapter6.py
+
+      - name: Verify Chapter 7 experiments
+        run: python chapter7Experiments/verify_chapter7.py
+
+      - name: Verify Chapter 7 utilities
+        run: python chapter7Experiments/verify_extract_utilities.py
+
+      - name: Verify four-category extension
+        run: python experiments/ch5_4class/verify_ch5_4class.py
+
+      - name: Verify three-condition Chapter 6/7 extension
+        run: python experiments/ch6_ch7_3class/verify_ch6_ch7_3class.py
+
+      - name: Verify ablation pipeline
+        run: python experiments/ablation/verify_ablation.py
+
+      - name: Verify validators
+        run: python validation/verify_validators.py
+
+      - name: Verify confirmatory pipeline
+        run: python experiments/confirmatory/verify_confirmatory.py
+
+      - name: Check confirmatory manifest provenance
+        run: python experiments/confirmatory/check_against_manifest.py
+
+      - name: Check repository and dissertation consistency
+        run: python validation/validate_dissertation_claims.py
