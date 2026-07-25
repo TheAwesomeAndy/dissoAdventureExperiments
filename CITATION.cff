@@ -1,0 +1,46 @@
+cff-version: 1.2.0
+message: "If you use this software or its results, please cite the dissertation and the archived software release."
+title: "ARSPI-Net: An Interpretable Neuromorphic Framework for Clinical EEG Analysis"
+authors:
+  - family-names: Lane
+    given-names: Andrew A.
+type: software
+repository-code: "https://github.com/TheAwesomeAndy/dissoAdventureExperiments"
+url: "https://github.com/TheAwesomeAndy/dissoAdventureExperiments"
+abstract: >-
+  Software and experiments accompanying the PhD dissertation "Affective
+  Reservoir-Spike Processing and Inference Network (ARSPI-Net): A Four-Level
+  Interpretable Neuromorphic Framework for Clinical EEG Analysis." ARSPI-Net
+  transforms multichannel EEG into an explicit hierarchy of temporal,
+  dynamical, and graph-organized representations whose intermediate quantities
+  remain inspectable. Headline classification results are corrected
+  confirmatory estimates (five repeats of five-fold participant-grouped
+  cross-validation, fold-local preprocessing, data-independent SRP-64
+  projection). Passing unit tests verify code behavior, not scientific
+  validity.
+keywords:
+  - neuromorphic computing
+  - spiking neural networks
+  - reservoir computing
+  - EEG
+  - interpretability
+  - affective computing
+license: "See repository LICENSE"
+# --- Fill these in when minting the frozen publication release (see RELEASE.md) ---
+version: "0.0.0-unreleased"
+date-released: "2026-01-01"
+# doi: "10.5281/zenodo.XXXXXXX"   # <-- Zenodo-minted DOI for the frozen release; uncomment and set
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.XXXXXXX"
+    description: "Placeholder — replace with the Zenodo DOI minted for the frozen publication release."
+preferred-citation:
+  type: thesis
+  title: "Affective Reservoir-Spike Processing and Inference Network (ARSPI-Net): A Four-Level Interpretable Neuromorphic Framework for Clinical EEG Analysis"
+  authors:
+    - family-names: Lane
+      given-names: Andrew A.
+  year: 2026
+  institution:
+    name: "Stony Brook University, Department of Electrical and Computer Engineering"
+  thesis-type: "PhD Dissertation"

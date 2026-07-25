@@ -320,10 +320,13 @@ def test_consistency():
     print("SECTION 7: Dissertation-Repo Numerical Consistency")
     print("=" * 70)
 
+    # Corrected dissertation LaTeX source lives in dissertation/ (authoritative).
+    tex_dir = REPO_ROOT / 'dissertation'
+
     # Check that R^2 = 0.661 is NOT in the dissertation .tex files
     tex_files_to_check = ['main.tex', 'ch2.tex', 'chDynamics.tex', 'chConclusion.tex']
     for fname in tex_files_to_check:
-        fpath = REPO_ROOT / 'latex' / fname
+        fpath = tex_dir / fname
         if fpath.exists():
             with open(fpath, encoding='utf-8') as f:
                 content = f.read()
@@ -333,7 +336,7 @@ def test_consistency():
             warn(f"{fname} not found")
 
     # Check that ANDREW tags are stripped
-    all_tex = list((REPO_ROOT / 'latex').glob('*.tex'))
+    all_tex = list(tex_dir.glob('*.tex'))
     for fpath in all_tex:
         with open(fpath, encoding='utf-8') as f:
             content = f.read()
@@ -351,14 +354,16 @@ def test_consistency():
             check(not has_claim,
                   f"No active R^2=0.661 claim in {fname}")
 
-    # Check that Level 3 in README matches dissertation
+    # Check that Level 3 in README matches the corrected dissertation framing:
+    # amplitude-domain |r| = 0.82 paired with the weak post-reservoir spike-domain
+    # |r| = 0.23, so the correspondence is stated at both bounds and not overstated.
     readme = REPO_ROOT / 'README.md'
     if readme.exists():
         with open(readme, encoding='utf-8') as f:
             content = f.read()
-        has_l3_update = '0.82' in content and 'Ch31' in content or '0.837' in content
+        has_l3_update = '0.82' in content and '0.23' in content
         check(has_l3_update,
-              "README Level 3 updated to per-channel correlations")
+              "README Level 3 states corrected amp |r|=0.82 and spike |r|=0.23 correspondence")
 
     # Check that the Level 3 script exists
     l3_script = REPO_ROOT / 'experiments/interpretability/run_level3_descriptor_erp_alignment.py'
