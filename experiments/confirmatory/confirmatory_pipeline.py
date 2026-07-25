@@ -1,287 +1,308 @@
 #!/usr/bin/env python3
 """
-ARSPI-Net -- Canonical Confirmatory Pipeline (library)
-======================================================
+ARSPI-Net canonical confirmatory pipeline.
 
-This module is the single source of truth for the corrected *confirmatory*
-classification results reported in the dissertation (chgraph.tex, main.tex
-abstract). It implements exactly the protocol the dissertation describes and
-nothing that would leak held-out information:
+The module implements the corrected participant-grouped protocol used by the
+confirmatory runner:
 
-  * Five repeats of five-fold PARTICIPANT-GROUPED cross-validation. Every
-    participant's complete condition panel stays inside one fold.
-  * FOLD-LOCAL preprocessing: per-feature standardization is fitted on the
-    training participants of each fold only.
-  * A fixed, DATA-INDEPENDENT sparse random projection (SRP-64) shared across
-    electrodes, generated from a prespecified seed. It never estimates a basis
-    from the observations, so held-out participants cannot influence it. This
-    is the correction that replaces the archived globally fitted PCA-64.
-  * A linear logistic-regression readout for accuracy.
-  * A separate deterministic ridge readout for within-participant label
-    permutation tests.
-  * Participant-bootstrap 95% intervals over the repeated out-of-fold
-    predictions.
-  * Mechanistic destruction controls (temporal-bin shuffle, temporal collapse,
-    electrode-identity shuffle).
-  * Robustness across three reservoir seeds and temporal-window ablations.
+* five repeats of five-fold participant-grouped cross-validation;
+* fold-local feature standardization and linear readout fitting;
+* a fixed, data-independent SRP-64 projection shared across electrodes;
+* participant-cluster bootstrap intervals over all repeated out-of-fold
+  predictions;
+* paired participant-bootstrap intervals for representation contrasts;
+* within-participant permutation testing; and
+* temporal and electrode destruction controls.
 
-The reservoir, BSC6 encoder, and data loaders are imported from the already
-validated scripts so this pipeline uses the exact same operators the rest of
-the repository is verified against -- it does not re-implement them.
-
-The numeric outputs are written as machine-readable JSON and can be compared
-automatically against results_manifest.json by check_against_manifest.py.
-
-NOTE ON DATA. The SHAPE dataset is restricted and is not part of this
-repository. The real-data entry point is run_confirmatory_validation.py. The
-methodological correctness of everything in this module (SRP data-independence,
-fold-local fitting, participant grouping, determinism, output schema) is
-verified WITHOUT the dataset by verify_confirmatory.py on synthetic data, so
-the machinery is testable in CI. Reproducing the exact headline numbers
-requires feeding the authorized SHAPE data to the runner.
+The SHAPE data are restricted and are not distributed with the repository.
+Synthetic verification is provided by verify_confirmatory.py. Exact numerical
+reproduction requires authorized data supplied to run_confirmatory_validation.py.
 """
 
 import os
 import sys
+
 import numpy as np
-
-from sklearn.random_projection import SparseRandomProjection
-from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
-from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.metrics import balanced_accuracy_score
+from sklearn.model_selection import StratifiedGroupKFold
+from sklearn.preprocessing import StandardScaler
+from sklearn.random_projection import SparseRandomProjection
 
-# --- Canonical operators reused from the validated scripts -----------------
-# We add the sibling experiment directories to sys.path and import the exact
-# reservoir + BSC6 + loaders used elsewhere in the repo.
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO = os.path.abspath(os.path.join(_HERE, "..", ".."))
-for _p in (
+for _path in (
     os.path.join(_REPO, "chapter5Experiments"),
     os.path.join(_REPO, "experiments", "ch5_4class"),
 ):
-    if _p not in sys.path:
-        sys.path.insert(0, _p)
+    if _path not in sys.path:
+        sys.path.insert(0, _path)
 
-
-# ============================================================================
-# Protocol constants (match the dissertation and the rest of the repo)
-# ============================================================================
-N_RES = 256          # reservoir size (Ch4 validated operating point)
-N_BINS = 6           # BSC6 temporal bins
-N_SRP = 64           # SRP output dimension per electrode
-N_REPEATS = 5        # 5 repeats ...
-N_FOLDS = 5          # ... of 5-fold participant-grouped CV
-RESERVOIR_SEEDS = (7, 42, 99)   # robustness seed set
-SRP_SEED = 20240517  # prespecified SRP seed (data-independent)
+N_RES = 256
+N_BINS = 6
+N_SRP = 64
+N_REPEATS = 5
+N_FOLDS = 5
+RESERVOIR_SEEDS = (7, 42, 99)
+SRP_SEED = 20240517
 BOOTSTRAP_SEED = 12345
 N_BOOTSTRAP = 2000
 N_PERMUTATIONS = 100
-CENTER_WINDOW = None  # temporal-window ablation handled explicitly
 
 
-# ============================================================================
-# Fixed, data-independent SRP-64 (shared across electrodes)
-# ============================================================================
 def make_srp(n_features_per_electrode, seed=SRP_SEED, n_components=N_SRP):
-    """Return a *fixed* SparseRandomProjection.
-
-    The projection is fitted on a synthetic all-ones marker of the correct
-    width so scikit-learn allocates the sparse matrix, but its entries depend
-    ONLY on `seed` and the dimensionality -- never on the observations. The
-    same projection is applied to every electrode. Because it is seeded and
-    data-independent, held-out participants cannot influence it, which is the
-    property the corrected protocol requires.
-    """
+    """Construct the fixed data-independent sparse random projection."""
+    if n_features_per_electrode <= 0:
+        raise ValueError("n_features_per_electrode must be positive")
+    if n_components <= 0:
+        raise ValueError("n_components must be positive")
     srp = SparseRandomProjection(n_components=n_components, random_state=seed)
-    # `fit` on a shape-only marker: SparseRandomProjection.fit uses only
-    # n_features and random_state to build the matrix; the values of X are
-    # ignored. We pass a 2-row marker to satisfy the API.
     marker = np.ones((2, n_features_per_electrode), dtype=np.float64)
     srp.fit(marker)
     return srp
 
 
 def project_bsc(bsc_per_electrode, srp):
-    """Project (N, n_ch, 1536) BSC6 features to (N, n_ch*64) via shared SRP.
-
-    Applies the SAME fixed projection to each electrode, then concatenates,
-    preserving electrode identity (so the electrode-shuffle control is
-    meaningful).
-    """
-    N, n_ch, d = bsc_per_electrode.shape
-    out = np.zeros((N, n_ch, srp.n_components), dtype=np.float64)
+    """Apply one shared SRP to each electrode and concatenate the blocks."""
+    bsc = np.asarray(bsc_per_electrode, dtype=np.float64)
+    if bsc.ndim != 3:
+        raise ValueError("bsc_per_electrode must have shape (N, channels, features)")
+    n_obs, n_ch, _ = bsc.shape
+    out = np.empty((n_obs, n_ch, srp.n_components), dtype=np.float64)
     for ch in range(n_ch):
-        out[:, ch, :] = srp.transform(bsc_per_electrode[:, ch, :])
-    return out.reshape(N, n_ch * srp.n_components)
+        out[:, ch, :] = srp.transform(bsc[:, ch, :])
+    return out.reshape(n_obs, n_ch * srp.n_components)
 
 
-# ============================================================================
-# Reservoir + BSC6 feature construction
-# ============================================================================
 def build_bsc_features(raw_data, reservoir_seed):
-    """Drive the validated LIF reservoir on (N, T, n_ch) EEG and return
-    per-electrode BSC6 features of shape (N, n_ch, N_BINS*N_RES).
+    """Generate electrode-resolved BSC6 features with the validated LIF operator."""
+    from experiment_zero import LIFReservoir, bsc6_encode
 
-    Uses the exact LIFReservoir + bsc6_encode from experiment_zero.py so the
-    operators are identical to the verified ones. One reservoir per channel,
-    seeded deterministically from `reservoir_seed`.
-    """
-    from experiment_zero import LIFReservoir, bsc6_encode  # canonical operators
-
-    N, T, n_ch = raw_data.shape
-    reservoirs = {ch: LIFReservoir(seed=reservoir_seed + ch * 17)
-                  for ch in range(n_ch)}
-    bsc = np.zeros((N, n_ch, N_BINS * N_RES), dtype=np.float64)
-    for i in range(N):
+    raw = np.asarray(raw_data, dtype=np.float64)
+    if raw.ndim != 3:
+        raise ValueError("raw_data must have shape (observations, time, channels)")
+    n_obs, _, n_ch = raw.shape
+    reservoirs = {
+        ch: LIFReservoir(seed=reservoir_seed + ch * 17) for ch in range(n_ch)
+    }
+    bsc = np.empty((n_obs, n_ch, N_BINS * N_RES), dtype=np.float64)
+    for i in range(n_obs):
         for ch in range(n_ch):
-            spikes = reservoirs[ch].forward(raw_data[i, :, ch])  # (T, N_RES)
+            spikes = reservoirs[ch].forward(raw[i, :, ch])
             bsc[i, ch, :] = bsc6_encode(spikes, n_bins=N_BINS)
     return bsc
 
 
-# ============================================================================
-# Cross-validated evaluation (fold-local, participant-grouped)
-# ============================================================================
-def evaluate_features(X, y, groups, n_repeats=N_REPEATS, n_folds=N_FOLDS,
-                      base_seed=0):
-    """Return pooled out-of-fold (balanced accuracy, per-repeat list, oof
-    predictions/labels/groups) under fold-local standardization + logistic
-    readout, with 5x5 participant-grouped CV.
-
-    Standardization is fitted on the training split ONLY inside each fold,
-    which is the fold-local preprocessing boundary the corrected protocol
-    requires. `groups` are participant ids; StratifiedGroupKFold keeps a
-    participant entirely on one side of every split.
-    """
+def _validate_evaluation_inputs(X, y, groups, n_folds):
+    X = np.asarray(X, dtype=np.float64)
     y = np.asarray(y)
     groups = np.asarray(groups)
+    if X.ndim != 2:
+        raise ValueError("X must be a two-dimensional feature matrix")
+    if not (len(X) == len(y) == len(groups)):
+        raise ValueError("X, y, and groups must contain the same number of rows")
+    if len(np.unique(groups)) < n_folds:
+        raise ValueError("number of participant groups is smaller than n_folds")
+    if not np.all(np.isfinite(X)):
+        raise ValueError("X contains non-finite values")
+    return X, y, groups
+
+
+def evaluate_features(
+    X,
+    y,
+    groups,
+    n_repeats=N_REPEATS,
+    n_folds=N_FOLDS,
+    base_seed=0,
+):
+    """Evaluate features with repeated participant-grouped fold-local CV.
+
+    The returned out-of-fold arrays contain every observation once per repeat.
+    This implements the dissertation's pooled repeated-prediction estimand rather
+    than retaining a single representative repeat.
+    """
+    X, y, groups = _validate_evaluation_inputs(X, y, groups, n_folds)
+    if n_repeats <= 0:
+        raise ValueError("n_repeats must be positive")
+
     per_repeat = []
-    oof_pred = np.full(len(y), -1, dtype=int)
-    oof_true = y.copy()
-    oof_group = groups.copy()
-    for r in range(n_repeats):
-        sgkf = StratifiedGroupKFold(n_splits=n_folds, shuffle=True,
-                                    random_state=base_seed + r)
+    pooled_pred = []
+    for repeat in range(n_repeats):
+        splitter = StratifiedGroupKFold(
+            n_splits=n_folds,
+            shuffle=True,
+            random_state=base_seed + repeat,
+        )
         fold_pred = np.full(len(y), -1, dtype=int)
-        for tr, te in sgkf.split(X, y, groups):
-            scaler = StandardScaler().fit(X[tr])           # fold-local fit
-            clf = LogisticRegression(max_iter=2000, C=1.0)
-            clf.fit(scaler.transform(X[tr]), y[tr])
-            fold_pred[te] = clf.predict(scaler.transform(X[te]))
-        per_repeat.append(balanced_accuracy_score(y, fold_pred))
-        if r == 0:
-            oof_pred = fold_pred  # representative repeat for bootstrap pooling
-    mean_ba = float(np.mean(per_repeat))
+        for train_idx, test_idx in splitter.split(X, y, groups):
+            scaler = StandardScaler().fit(X[train_idx])
+            classifier = LogisticRegression(
+                max_iter=2000,
+                C=1.0,
+                random_state=base_seed + repeat,
+            )
+            classifier.fit(scaler.transform(X[train_idx]), y[train_idx])
+            fold_pred[test_idx] = classifier.predict(scaler.transform(X[test_idx]))
+        if np.any(fold_pred < 0):
+            raise RuntimeError("at least one observation did not receive an OOF prediction")
+        per_repeat.append(float(balanced_accuracy_score(y, fold_pred)))
+        pooled_pred.append(fold_pred)
+
+    oof_pred = np.concatenate(pooled_pred)
+    oof_true = np.tile(y, n_repeats)
+    oof_group = np.tile(groups, n_repeats)
     return {
-        "balanced_accuracy": mean_ba,
-        "per_repeat": [float(v) for v in per_repeat],
+        "balanced_accuracy": float(np.mean(per_repeat)),
+        "per_repeat": per_repeat,
         "oof_pred": oof_pred,
         "oof_true": oof_true,
         "oof_group": oof_group,
+        "n_repeats": int(n_repeats),
     }
 
 
-def participant_bootstrap_ci(oof_true, oof_pred, oof_group,
-                             n_boot=N_BOOTSTRAP, seed=BOOTSTRAP_SEED,
-                             alpha=0.05):
-    """Participant-bootstrap 95% interval for balanced accuracy: resample
-    PARTICIPANTS (not observations) with replacement and recompute."""
-    rng = np.random.RandomState(seed)
-    uniq = np.unique(oof_group)
-    # index lists per participant
-    idx_by_group = {g: np.where(oof_group == g)[0] for g in uniq}
-    stats = []
-    for _ in range(n_boot):
-        chosen = rng.choice(uniq, size=len(uniq), replace=True)
-        idx = np.concatenate([idx_by_group[g] for g in chosen])
-        try:
-            stats.append(balanced_accuracy_score(oof_true[idx], oof_pred[idx]))
-        except ValueError:
-            continue
-    lo = float(np.percentile(stats, 100 * (alpha / 2)))
-    hi = float(np.percentile(stats, 100 * (1 - alpha / 2)))
-    return [round(lo, 4), round(hi, 4)]
-
-
-def permutation_test(X, y, groups, n_perm=N_PERMUTATIONS,
-                     n_repeats=2, n_folds=N_FOLDS, seed=0):
-    """Within-participant label-permutation test using a DETERMINISTIC ridge
-    readout (separate from the logistic readout used for point estimates).
-
-    Returns the one-sided p-value that observed balanced accuracy exceeds the
-    permuted null. Labels are permuted WITHIN each participant, preserving the
-    participant grouping.
-    """
-    y = np.asarray(y)
+def _participant_bootstrap_indices(groups, n_boot, seed):
     groups = np.asarray(groups)
+    unique_groups = np.unique(groups)
+    if unique_groups.size == 0:
+        raise ValueError("groups cannot be empty")
+    indices_by_group = {g: np.flatnonzero(groups == g) for g in unique_groups}
+    rng = np.random.RandomState(seed)
+    for _ in range(n_boot):
+        sampled = rng.choice(unique_groups, size=len(unique_groups), replace=True)
+        yield np.concatenate([indices_by_group[g] for g in sampled])
 
-    def _ridge_ba(labels):
-        per = []
-        for r in range(n_repeats):
-            sgkf = StratifiedGroupKFold(n_splits=n_folds, shuffle=True,
-                                        random_state=seed + r)
+
+def participant_bootstrap_ci(
+    oof_true,
+    oof_pred,
+    oof_group,
+    n_boot=N_BOOTSTRAP,
+    seed=BOOTSTRAP_SEED,
+    alpha=0.05,
+):
+    """Participant-cluster bootstrap interval for balanced accuracy."""
+    true = np.asarray(oof_true)
+    pred = np.asarray(oof_pred)
+    groups = np.asarray(oof_group)
+    if not (len(true) == len(pred) == len(groups)):
+        raise ValueError("bootstrap arrays must be aligned")
+    stats = [
+        balanced_accuracy_score(true[idx], pred[idx])
+        for idx in _participant_bootstrap_indices(groups, n_boot, seed)
+    ]
+    return [
+        float(np.percentile(stats, 100 * alpha / 2)),
+        float(np.percentile(stats, 100 * (1 - alpha / 2))),
+    ]
+
+
+def participant_bootstrap_difference_ci(
+    oof_true,
+    oof_pred_a,
+    oof_pred_b,
+    oof_group,
+    n_boot=N_BOOTSTRAP,
+    seed=BOOTSTRAP_SEED,
+    alpha=0.05,
+):
+    """Paired participant-bootstrap interval for BA(A) minus BA(B)."""
+    true = np.asarray(oof_true)
+    pred_a = np.asarray(oof_pred_a)
+    pred_b = np.asarray(oof_pred_b)
+    groups = np.asarray(oof_group)
+    if not (len(true) == len(pred_a) == len(pred_b) == len(groups)):
+        raise ValueError("paired bootstrap arrays must be aligned")
+    stats = []
+    for idx in _participant_bootstrap_indices(groups, n_boot, seed):
+        stats.append(
+            balanced_accuracy_score(true[idx], pred_a[idx])
+            - balanced_accuracy_score(true[idx], pred_b[idx])
+        )
+    return [
+        float(np.percentile(stats, 100 * alpha / 2)),
+        float(np.percentile(stats, 100 * (1 - alpha / 2))),
+    ]
+
+
+def permutation_test(
+    X,
+    y,
+    groups,
+    n_perm=N_PERMUTATIONS,
+    n_repeats=2,
+    n_folds=N_FOLDS,
+    seed=0,
+):
+    """Within-participant label permutation test with a deterministic ridge readout."""
+    X, y, groups = _validate_evaluation_inputs(X, y, groups, n_folds)
+
+    def ridge_ba(labels):
+        repeat_scores = []
+        for repeat in range(n_repeats):
+            splitter = StratifiedGroupKFold(
+                n_splits=n_folds,
+                shuffle=True,
+                random_state=seed + repeat,
+            )
             pred = np.full(len(labels), -1, dtype=int)
-            for tr, te in sgkf.split(X, labels, groups):
-                scaler = StandardScaler().fit(X[tr])
-                clf = RidgeClassifier()
-                clf.fit(scaler.transform(X[tr]), labels[tr])
-                pred[te] = clf.predict(scaler.transform(X[te]))
-            per.append(balanced_accuracy_score(labels, pred))
-        return float(np.mean(per))
+            for train_idx, test_idx in splitter.split(X, labels, groups):
+                scaler = StandardScaler().fit(X[train_idx])
+                classifier = RidgeClassifier()
+                classifier.fit(scaler.transform(X[train_idx]), labels[train_idx])
+                pred[test_idx] = classifier.predict(scaler.transform(X[test_idx]))
+            repeat_scores.append(balanced_accuracy_score(labels, pred))
+        return float(np.mean(repeat_scores))
 
-    observed = _ridge_ba(y)
+    observed = ridge_ba(y)
     rng = np.random.RandomState(seed + 777)
-    uniq = np.unique(groups)
-    count = 0
+    unique_groups = np.unique(groups)
+    exceedances = 0
     for _ in range(n_perm):
-        perm = y.copy()
-        for g in uniq:
-            gi = np.where(groups == g)[0]
-            perm[gi] = rng.permutation(y[gi])
-        if _ridge_ba(perm) >= observed:
-            count += 1
-    p = (1 + count) / (1 + n_perm)
-    return {"observed_balanced_accuracy": observed, "p_value": float(p),
-            "n_permutations": n_perm}
+        permuted = y.copy()
+        for group in unique_groups:
+            idx = np.flatnonzero(groups == group)
+            permuted[idx] = rng.permutation(y[idx])
+        if ridge_ba(permuted) >= observed:
+            exceedances += 1
+    return {
+        "observed_balanced_accuracy": observed,
+        "p_value": float((1 + exceedances) / (1 + n_perm)),
+        "n_permutations": int(n_perm),
+    }
 
 
-# ============================================================================
-# Destruction controls
-# ============================================================================
 def destroy_temporal_bin_order(bsc, rng):
-    """Independently shuffle the six temporal bins within each observation and
-    electrode. bsc: (N, n_ch, N_BINS*N_RES) laid out as [bin0..bin5] blocks of
-    N_RES."""
-    N, n_ch, d = bsc.shape
-    out = bsc.reshape(N, n_ch, N_BINS, N_RES).copy()
-    for i in range(N):
+    """Shuffle the six temporal-bin blocks within each observation and electrode."""
+    bsc = np.asarray(bsc)
+    n_obs, n_ch, feature_dim = bsc.shape
+    out = bsc.reshape(n_obs, n_ch, N_BINS, N_RES).copy()
+    for i in range(n_obs):
         for ch in range(n_ch):
             out[i, ch] = out[i, ch][rng.permutation(N_BINS)]
-    return out.reshape(N, n_ch, d)
+    return out.reshape(n_obs, n_ch, feature_dim)
 
 
 def destroy_temporal_collapse(bsc):
-    """Collapse time: replace all six bins with the per-neuron mean across
-    bins (removes temporal ordering AND resolution, keeps totals)."""
-    N, n_ch, d = bsc.shape
-    blk = bsc.reshape(N, n_ch, N_BINS, N_RES)
-    mean = blk.mean(axis=2, keepdims=True)
-    return np.repeat(mean, N_BINS, axis=2).reshape(N, n_ch, d)
+    """Replace each temporal bin by the per-neuron mean across bins."""
+    bsc = np.asarray(bsc)
+    n_obs, n_ch, feature_dim = bsc.shape
+    blocks = bsc.reshape(n_obs, n_ch, N_BINS, N_RES)
+    mean_block = blocks.mean(axis=2, keepdims=True)
+    return np.repeat(mean_block, N_BINS, axis=2).reshape(n_obs, n_ch, feature_dim)
 
 
 def destroy_electrode_identity(bsc, rng):
-    """Independently shuffle electrode order within each observation."""
-    N, n_ch, d = bsc.shape
+    """Shuffle electrode blocks independently within each observation."""
+    bsc = np.asarray(bsc)
+    n_obs, n_ch, _ = bsc.shape
     out = bsc.copy()
-    for i in range(N):
+    for i in range(n_obs):
         out[i] = out[i][rng.permutation(n_ch)]
     return out
 
 
-# ============================================================================
-# Temporal-window ablation
-# ============================================================================
 TEMPORAL_WINDOWS = {
     "39-273ms": (0.00, 0.25),
     "273-508ms": (0.25, 0.50),
@@ -292,8 +313,12 @@ TEMPORAL_WINDOWS = {
 
 
 def window_slice(raw_data, frac_lo, frac_hi):
-    """Return the time-window slice of (N, T, n_ch) between fractional bounds."""
-    T = raw_data.shape[1]
-    lo, hi = int(round(frac_lo * T)), int(round(frac_hi * T))
-    hi = max(hi, lo + N_BINS)  # ensure at least one sample per bin
-    return raw_data[:, lo:hi, :]
+    """Extract a fractional temporal window while retaining at least six samples."""
+    raw = np.asarray(raw_data)
+    if not (0.0 <= frac_lo < frac_hi <= 1.0):
+        raise ValueError("window fractions must satisfy 0 <= lo < hi <= 1")
+    time_steps = raw.shape[1]
+    lo = int(round(frac_lo * time_steps))
+    hi = int(round(frac_hi * time_steps))
+    hi = max(hi, lo + N_BINS)
+    return raw[:, lo:hi, :]

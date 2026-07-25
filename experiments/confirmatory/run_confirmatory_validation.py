@@ -1,23 +1,17 @@
 #!/usr/bin/env python3
 """
-ARSPI-Net -- Confirmatory Validation Runner (real data)
-=======================================================
+ARSPI-Net confirmatory validation runner.
 
-Regenerates the corrected confirmatory classification results reported in the
-dissertation and writes them as machine-readable JSON. Run this against the
-authorized SHAPE data to reproduce every headline number and control:
+The runner reconstructs the corrected three-condition and four-category
+confirmatory streams from authorized SHAPE text files. It implements the
+preprocessing stated in the corrected dissertation: remove the first 205
+prestimulus samples, anti-alias decimate the remaining 1024 samples by four,
+retain 256 samples, and z-score each epoch and channel. Subject 127 is excluded
+from both granularities; Subject 195 is additionally excluded from the
+four-category stream.
 
-    python run_confirmatory_validation.py \
-        --data3 ./batch_data --data4 ./categories \
-        --out confirmatory_results.json
-
-The pipeline itself lives in confirmatory_pipeline.py and is verified without
-data by verify_confirmatory.py. The output JSON can be checked automatically
-against ../../results_manifest.json with check_against_manifest.py.
-
-The SHAPE dataset is restricted (https://lab-can.com/shape/) and is NOT part of
-this repository. Without it, use verify_confirmatory.py to confirm the
-machinery; this runner needs the data to produce the numbers.
+The restricted SHAPE data are not distributed with this repository. Synthetic
+verification of the machinery is provided by verify_confirmatory.py.
 """
 
 import argparse
@@ -27,233 +21,431 @@ import re
 import sys
 
 import numpy as np
-from scipy.signal import decimate, butter, filtfilt
+from scipy.signal import butter, decimate, filtfilt
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO = os.path.abspath(os.path.join(_HERE, "..", ".."))
-sys.path.insert(0, os.path.join(_REPO, "chapter5Experiments"))
+sys.path.insert(0, _HERE)
 
 import confirmatory_pipeline as cp
 
+PRESTIMULUS_SAMPLES = 205
+DOWNSAMPLE_FACTOR = 4
+TARGET_TIMESTEPS = 256
+EXPECTED_CHANNELS = 34
 
-# ============================================================================
-# Data loading
-# ============================================================================
-def load_3class(data_dir):
-    """(N, 256, 34) z-scored EEG, y in {0,1,2}, participant ids -- reuses the
-    validated experiment_zero loader."""
-    from experiment_zero import load_shape_3class
-    raw, y, subjects = load_shape_3class(data_dir)
-    groups = np.array([int(s) for s in subjects])
-    return raw, np.asarray(y), groups
-
-
+_COND3 = ("Neg", "Neu", "Pos")
+_COND3_MAP = {"Neg": 0, "Neu": 1, "Pos": 2}
 _CAT4 = {"Threat": 0, "Mutilation": 1, "Cute": 2, "Erotic": 3}
 
 
-def load_4class(data_dir, target_T=256, exclude=(127,)):
-    """Self-contained 4-class loader matching the documented format:
-    categoriesbatch{1-4}/SHAPE_Community_<id>_IAPS<val>_<Category>_BC.txt,
-    preprocessed identically to the 3-class path (decimate to 256, z-score)."""
+def preprocess_epoch(
+    raw,
+    prestimulus_samples=PRESTIMULUS_SAMPLES,
+    downsample_factor=DOWNSAMPLE_FACTOR,
+    target_timesteps=TARGET_TIMESTEPS,
+):
+    """Apply the audited SHAPE epoch preprocessing exactly."""
+    x = np.asarray(raw, dtype=np.float64)
+    if x.ndim != 2:
+        raise ValueError("raw epoch must be a two-dimensional array")
+    if x.shape[1] != EXPECTED_CHANNELS:
+        raise ValueError(
+            f"expected {EXPECTED_CHANNELS} channels, received {x.shape[1]}"
+        )
+    required = prestimulus_samples + downsample_factor * target_timesteps
+    if x.shape[0] < required:
+        raise ValueError(
+            f"epoch has {x.shape[0]} samples; at least {required} are required"
+        )
+
+    poststimulus = x[prestimulus_samples:required, :]
+    downsampled = np.column_stack(
+        [
+            decimate(
+                poststimulus[:, ch],
+                downsample_factor,
+                zero_phase=True,
+            )
+            for ch in range(x.shape[1])
+        ]
+    )
+    if downsampled.shape != (target_timesteps, EXPECTED_CHANNELS):
+        raise RuntimeError(
+            "audited preprocessing produced unexpected shape "
+            f"{downsampled.shape}"
+        )
+
+    mean = downsampled.mean(axis=0, keepdims=True)
+    std = downsampled.std(axis=0, keepdims=True)
+    if np.any(std <= 0):
+        bad = np.flatnonzero(std.ravel() <= 0).tolist()
+        raise ValueError(f"constant channel(s) after preprocessing: {bad}")
+    normalized = (downsampled - mean) / std
+    if not np.all(np.isfinite(normalized)):
+        raise ValueError("preprocessed epoch contains non-finite values")
+    return normalized
+
+
+def _complete_panels(found, labels, excluded, expected_participants, name):
+    subjects = sorted({sid for sid, label in found if sid not in excluded})
+    incomplete = {
+        sid: [label for label in labels if (sid, label) not in found]
+        for sid in subjects
+    }
+    incomplete = {sid: missing for sid, missing in incomplete.items() if missing}
+    if incomplete:
+        preview = list(incomplete.items())[:10]
+        raise ValueError(f"{name} contains incomplete participant panels: {preview}")
+    if expected_participants is not None and len(subjects) != expected_participants:
+        raise ValueError(
+            f"{name} expected {expected_participants} participants after exclusions, "
+            f"found {len(subjects)}"
+        )
+    return subjects
+
+
+def load_3class(data_dir, validate_cohort=True):
+    """Load the corrected three-condition cohort from SHAPE text files."""
     pattern = re.compile(
-        r"SHAPE_Community_(\d+)_IAPS[A-Za-z]+_(Threat|Mutilation|Cute|Erotic)_BC\.txt$")
+        r"SHAPE_Community_(\d+)_IAPS(Neg|Neu|Pos)_BC\.txt$"
+    )
     found = {}
-    for root, _dirs, fnames in os.walk(data_dir):
-        for fn in fnames:
-            m = pattern.search(fn)
-            if not m:
+    for root, _dirs, filenames in os.walk(data_dir):
+        for filename in filenames:
+            match = pattern.search(filename)
+            if not match:
                 continue
-            sid, cat = int(m.group(1)), m.group(2)
-            if sid in exclude:
+            sid, condition = int(match.group(1)), match.group(2)
+            key = (sid, condition)
+            if key in found:
+                raise ValueError(f"duplicate three-condition file for {key}")
+            found[key] = os.path.join(root, filename)
+
+    excluded = {127}
+    subjects = _complete_panels(
+        found,
+        _COND3,
+        excluded,
+        211 if validate_cohort else None,
+        "three-condition cohort",
+    )
+    raw_list, labels, groups = [], [], []
+    for sid in subjects:
+        for condition in _COND3:
+            raw_list.append(preprocess_epoch(np.loadtxt(found[(sid, condition)])))
+            labels.append(_COND3_MAP[condition])
+            groups.append(sid)
+
+    raw = np.asarray(raw_list)
+    y = np.asarray(labels, dtype=int)
+    groups = np.asarray(groups, dtype=int)
+    if validate_cohort and (raw.shape[0] != 633 or len(np.unique(groups)) != 211):
+        raise RuntimeError("three-condition cohort does not equal 211/633")
+    return raw, y, groups
+
+
+def load_4class(data_dir, validate_cohort=True):
+    """Load the corrected four-category cohort from SHAPE text files."""
+    pattern = re.compile(
+        r"SHAPE_Community_(\d+)_IAPS(?:Neg|Pos)_"
+        r"(Threat|Mutilation|Cute|Erotic)_BC\.txt$"
+    )
+    found = {}
+    for root, _dirs, filenames in os.walk(data_dir):
+        for filename in filenames:
+            match = pattern.search(filename)
+            if not match:
                 continue
-            found[(sid, cat)] = os.path.join(root, fn)
+            sid, category = int(match.group(1)), match.group(2)
+            key = (sid, category)
+            if key in found:
+                raise ValueError(f"duplicate four-category file for {key}")
+            found[key] = os.path.join(root, filename)
 
-    raw_list, y_list, grp_list = [], [], []
-    for (sid, cat), path in sorted(found.items()):
-        X = np.loadtxt(path)
-        T0, n_ch = X.shape
-        if T0 > 300:
-            factor = max(1, T0 // target_T)
-            Xds = np.zeros((T0 // factor, n_ch))
-            for ch in range(n_ch):
-                d = decimate(X[:, ch], factor)
-                Xds[:, ch] = d[:Xds.shape[0]]
-            Xds = Xds[:target_T]
-        else:
-            Xds = X[:target_T]
-        for ch in range(n_ch):
-            mu, sd = Xds[:, ch].mean(), Xds[:, ch].std()
-            Xds[:, ch] = (Xds[:, ch] - mu) / sd if sd > 0 else 0.0
-        raw_list.append(Xds)
-        y_list.append(_CAT4[cat])
-        grp_list.append(sid)
-    return np.array(raw_list), np.array(y_list), np.array(grp_list)
+    excluded = {127, 195}
+    categories = tuple(_CAT4.keys())
+    subjects = _complete_panels(
+        found,
+        categories,
+        excluded,
+        210 if validate_cohort else None,
+        "four-category cohort",
+    )
+    raw_list, labels, groups = [], [], []
+    for sid in subjects:
+        for category in categories:
+            raw_list.append(preprocess_epoch(np.loadtxt(found[(sid, category)])))
+            labels.append(_CAT4[category])
+            groups.append(sid)
+
+    raw = np.asarray(raw_list)
+    y = np.asarray(labels, dtype=int)
+    groups = np.asarray(groups, dtype=int)
+    if validate_cohort and (raw.shape[0] != 840 or len(np.unique(groups)) != 210):
+        raise RuntimeError("four-category cohort does not equal 210/840")
+    return raw, y, groups
 
 
-# ============================================================================
-# Representation builders
-# ============================================================================
 def raw_erp_bins(raw_data, n_bins=16):
-    """Raw ERP reference: mean amplitude in n_bins temporal bins per channel."""
-    N, T, n_ch = raw_data.shape
-    edges = np.linspace(0, T, n_bins + 1).astype(int)
-    feats = np.zeros((N, n_ch * n_bins))
-    for i in range(N):
-        col = 0
-        for ch in range(n_ch):
-            for b in range(n_bins):
-                feats[i, col] = raw_data[i, edges[b]:edges[b + 1], ch].mean()
-                col += 1
-    return feats
+    """Mean amplitude in temporal bins for every channel."""
+    raw = np.asarray(raw_data)
+    n_obs, time_steps, n_ch = raw.shape
+    edges = np.linspace(0, time_steps, n_bins + 1, dtype=int)
+    features = np.empty((n_obs, n_ch * n_bins), dtype=np.float64)
+    column = 0
+    for ch in range(n_ch):
+        for bin_index in range(n_bins):
+            features[:, column] = raw[
+                :, edges[bin_index] : edges[bin_index + 1], ch
+            ].mean(axis=1)
+            column += 1
+    return features
 
 
 def conventional_features(raw_data, fs=256.0):
-    """Conventional band-power + Hjorth features per channel (the matched
-    non-neuromorphic baseline family)."""
-    bands = [(1, 4), (4, 8), (8, 13), (13, 30), (30, 45)]
-    N, T, n_ch = raw_data.shape
-    nyq = fs / 2.0
-    filters = [butter(3, [lo / nyq, hi / nyq], btype="band") for lo, hi in bands]
-    feats = np.zeros((N, n_ch * (len(bands) + 3)))
-    for i in range(N):
-        col = 0
-        for ch in range(n_ch):
-            x = raw_data[i, :, ch]
-            for (b, a) in filters:
-                feats[i, col] = np.mean(filtfilt(b, a, x) ** 2)
-                col += 1
-            # Hjorth activity, mobility, complexity
-            dx = np.diff(x)
-            ddx = np.diff(dx)
-            var0 = np.var(x) + 1e-12
-            var1 = np.var(dx) + 1e-12
-            var2 = np.var(ddx) + 1e-12
-            activity = var0
-            mobility = np.sqrt(var1 / var0)
-            complexity = np.sqrt(var2 / var1) / (mobility + 1e-12)
-            feats[i, col:col + 3] = [activity, mobility, complexity]
-            col += 3
-    return feats
+    """Five-band power plus Hjorth activity, mobility, and complexity."""
+    raw = np.asarray(raw_data)
+    bands = ((1, 4), (4, 8), (8, 13), (13, 30), (30, 45))
+    nyquist = fs / 2.0
+    filters = [butter(3, [lo / nyquist, hi / nyquist], btype="band") for lo, hi in bands]
+    n_obs, _, n_ch = raw.shape
+    features = np.empty((n_obs, n_ch * (len(bands) + 3)), dtype=np.float64)
+    column = 0
+    for ch in range(n_ch):
+        channel = raw[:, :, ch]
+        for b, a in filters:
+            filtered = filtfilt(b, a, channel, axis=1)
+            features[:, column] = np.mean(filtered**2, axis=1)
+            column += 1
+        first = np.diff(channel, axis=1)
+        second = np.diff(first, axis=1)
+        var0 = np.var(channel, axis=1) + 1e-12
+        var1 = np.var(first, axis=1) + 1e-12
+        var2 = np.var(second, axis=1) + 1e-12
+        mobility = np.sqrt(var1 / var0)
+        complexity = np.sqrt(var2 / var1) / (mobility + 1e-12)
+        features[:, column] = var0
+        features[:, column + 1] = mobility
+        features[:, column + 2] = complexity
+        column += 3
+    return features
 
 
-def pp(x):
-    """percentage-point helper (round)."""
-    return round(float(x) * 100, 4)
+def percent(value):
+    return round(float(value) * 100.0, 4)
 
 
-# ============================================================================
-# Orchestration for one granularity
-# ============================================================================
+def _representation_record(result):
+    ci = cp.participant_bootstrap_ci(
+        result["oof_true"],
+        result["oof_pred"],
+        result["oof_group"],
+    )
+    return {
+        "balanced_accuracy_percent": percent(result["balanced_accuracy"]),
+        "ci95_percent": [percent(ci[0]), percent(ci[1])],
+        "per_repeat_percent": [percent(value) for value in result["per_repeat"]],
+    }
+
+
+def _paired_difference_record(result_a, result_b, seed):
+    ci = cp.participant_bootstrap_difference_ci(
+        result_a["oof_true"],
+        result_a["oof_pred"],
+        result_b["oof_pred"],
+        result_a["oof_group"],
+        seed=seed,
+    )
+    point = result_a["balanced_accuracy"] - result_b["balanced_accuracy"]
+    return {
+        "difference_pp": percent(point),
+        "ci95_pp": [percent(ci[0]), percent(ci[1])],
+    }
+
+
 def run_granularity(name, raw_data, y, groups, base_seed):
-    print(f"\n=== {name}: N={len(y)} obs, {len(np.unique(groups))} participants ===")
+    """Run all confirmatory representations and controls for one granularity."""
+    print(
+        f"\n=== {name}: {len(y)} observations, "
+        f"{len(np.unique(groups))} participants ==="
+    )
     srp = cp.make_srp(cp.N_BINS * cp.N_RES)
-
-    # BSC6 at the primary reservoir seed (42) -> SRP-64 features
     bsc = cp.build_bsc_features(raw_data, reservoir_seed=42)
-    Xsrp = cp.project_bsc(bsc, srp)
+    projected = cp.project_bsc(bsc, srp)
+    raw_reference = raw_erp_bins(raw_data, n_bins=16)
+    conventional = conventional_features(raw_data)
+    fusion = np.concatenate([projected, conventional], axis=1)
 
-    Xraw = raw_erp_bins(raw_data, n_bins=16)
-    Xconv = conventional_features(raw_data)
-    Xfuse = np.concatenate([Xsrp, Xconv], axis=1)
+    matrices = {
+        "raw_erp16": raw_reference,
+        "conventional": conventional,
+        "bsc6_srp64": projected,
+        "bsc6_srp64_plus_conv": fusion,
+    }
+    evaluations = {
+        key: cp.evaluate_features(X, y, groups, base_seed=base_seed)
+        for key, X in matrices.items()
+    }
+    representations = {
+        key: _representation_record(result)
+        for key, result in evaluations.items()
+    }
+    for key, record in representations.items():
+        print(
+            f"  {key:24s} {record['balanced_accuracy_percent']:.1f}% "
+            f"{record['ci95_percent']}"
+        )
 
-    reps = {}
-    for rep_name, X in [("raw_erp16", Xraw), ("conventional", Xconv),
-                        ("bsc6_srp64", Xsrp), ("bsc6_srp64_plus_conv", Xfuse)]:
-        res = cp.evaluate_features(X, y, groups, base_seed=base_seed)
-        ci = cp.participant_bootstrap_ci(res["oof_true"], res["oof_pred"],
-                                         res["oof_group"])
-        reps[rep_name] = {"balanced_accuracy": pp(res["balanced_accuracy"]),
-                          "ci95": [pp(ci[0] / 100), pp(ci[1] / 100)]}
-        print(f"  {rep_name:24s} {reps[rep_name]['balanced_accuracy']:.1f}% "
-              f"{reps[rep_name]['ci95']}")
+    contrasts = {
+        "bsc6_minus_conventional": _paired_difference_record(
+            evaluations["bsc6_srp64"], evaluations["conventional"], base_seed + 201
+        ),
+        "fusion_minus_bsc6": _paired_difference_record(
+            evaluations["bsc6_srp64_plus_conv"],
+            evaluations["bsc6_srp64"],
+            base_seed + 202,
+        ),
+        "raw_erp16_minus_bsc6": _paired_difference_record(
+            evaluations["raw_erp16"], evaluations["bsc6_srp64"], base_seed + 203
+        ),
+    }
 
-    advantage = reps["bsc6_srp64"]["balanced_accuracy"] - \
-        reps["conventional"]["balanced_accuracy"]
+    permutation = cp.permutation_test(projected, y, groups, seed=base_seed)
 
-    perm = cp.permutation_test(Xsrp, y, groups, seed=base_seed)
-
-    # Destruction controls (drop vs intact BSC6/SRP-64)
     rng = np.random.RandomState(base_seed + 101)
-    intact = reps["bsc6_srp64"]["balanced_accuracy"]
+    control_features = {
+        "temporal_bin_shuffle": cp.destroy_temporal_bin_order(bsc, rng),
+        "temporal_collapse": cp.destroy_temporal_collapse(bsc),
+        "electrode_shuffle": cp.destroy_electrode_identity(bsc, rng),
+    }
     controls = {}
-    for cname, dbsc in [
-        ("temporal_bin_shuffle", cp.destroy_temporal_bin_order(bsc, rng)),
-        ("temporal_collapse", cp.destroy_temporal_collapse(bsc)),
-        ("electrode_shuffle", cp.destroy_electrode_identity(bsc, rng)),
-    ]:
-        Xd = cp.project_bsc(dbsc, srp)
-        rd = cp.evaluate_features(Xd, y, groups, base_seed=base_seed)
-        controls[cname] = round(pp(rd["balanced_accuracy"]) - intact, 4)
-        print(f"  control {cname:22s} {controls[cname]:+.1f} pp")
+    intact = evaluations["bsc6_srp64"]
+    for control_name, destroyed_bsc in control_features.items():
+        destroyed = cp.evaluate_features(
+            cp.project_bsc(destroyed_bsc, srp),
+            y,
+            groups,
+            base_seed=base_seed,
+        )
+        controls[control_name] = _paired_difference_record(
+            destroyed,
+            intact,
+            base_seed + 300 + len(controls),
+        )
+        print(
+            f"  control {control_name:22s} "
+            f"{controls[control_name]['difference_pp']:+.1f} pp"
+        )
 
-    # Seed robustness
-    seed_acc = {}
-    for rs in cp.RESERVOIR_SEEDS:
-        b = cp.build_bsc_features(raw_data, reservoir_seed=rs)
-        rr = cp.evaluate_features(cp.project_bsc(b, srp), y, groups,
-                                  base_seed=base_seed)
-        seed_acc[str(rs)] = pp(rr["balanced_accuracy"])
+    seed_accuracy = {}
+    for reservoir_seed in cp.RESERVOIR_SEEDS:
+        seeded_bsc = cp.build_bsc_features(raw_data, reservoir_seed=reservoir_seed)
+        result = cp.evaluate_features(
+            cp.project_bsc(seeded_bsc, srp),
+            y,
+            groups,
+            base_seed=base_seed,
+        )
+        seed_accuracy[str(reservoir_seed)] = percent(result["balanced_accuracy"])
 
-    # Temporal-window ablation
-    windows = {}
-    for wname, (lo, hi) in cp.TEMPORAL_WINDOWS.items():
-        rw = raw_data if (lo, hi) == (0.0, 1.0) else cp.window_slice(raw_data, lo, hi)
-        bw = cp.build_bsc_features(rw, reservoir_seed=42)
-        rr = cp.evaluate_features(cp.project_bsc(bw, srp), y, groups,
-                                  base_seed=base_seed)
-        windows[wname] = pp(rr["balanced_accuracy"])
+    temporal_windows = {}
+    for window_name, (lo, hi) in cp.TEMPORAL_WINDOWS.items():
+        windowed = (
+            raw_data
+            if (lo, hi) == (0.0, 1.0)
+            else cp.window_slice(raw_data, lo, hi)
+        )
+        window_bsc = cp.build_bsc_features(windowed, reservoir_seed=42)
+        result = cp.evaluate_features(
+            cp.project_bsc(window_bsc, srp),
+            y,
+            groups,
+            base_seed=base_seed,
+        )
+        temporal_windows[window_name] = percent(result["balanced_accuracy"])
 
     return {
         "n_participants": int(len(np.unique(groups))),
         "n_observations": int(len(y)),
-        "representations": reps,
-        "advantage_over_conventional_pp": round(advantage, 4),
-        "permutation": {"p_value": perm["p_value"],
-                        "n_permutations": perm["n_permutations"]},
-        "destruction_controls_pp": controls,
-        "seed_robustness": seed_acc,
-        "temporal_windows": windows,
+        "representations": representations,
+        "contrasts": contrasts,
+        "permutation": {
+            "observed_balanced_accuracy_percent": percent(
+                permutation["observed_balanced_accuracy"]
+            ),
+            "p_value": permutation["p_value"],
+            "n_permutations": permutation["n_permutations"],
+        },
+        "destruction_controls": controls,
+        "seed_robustness_percent": seed_accuracy,
+        "temporal_windows_percent": temporal_windows,
     }
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--data3", default="./batch_data",
-                    help="3-class SHAPE directory (batch_data/)")
-    ap.add_argument("--data4", default="./categories",
-                    help="4-class SHAPE directory (categories/)")
-    ap.add_argument("--out", default="confirmatory_results.json")
-    ap.add_argument("--skip4", action="store_true",
-                    help="run only the three-condition granularity")
-    args = ap.parse_args()
-
-    results = {"protocol": {
-        "cv": "5 repeats x 5-fold participant-grouped (StratifiedGroupKFold)",
-        "preprocessing": "fold-local StandardScaler on training participants only",
-        "compression": f"fixed SparseRandomProjection {cp.N_BINS*cp.N_RES}->{cp.N_SRP}, "
-                       f"seed={cp.SRP_SEED}, shared across electrodes (data-independent)",
-        "readout": "LogisticRegression (accuracy); RidgeClassifier (permutation)",
-        "reservoir": f"N={cp.N_RES}, beta=0.05, theta=0.5, seeds={cp.RESERVOIR_SEEDS}",
-        "intervals": "participant-bootstrap 95%",
-    }, "granularities": {}}
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data3", default="./batch_data")
+    parser.add_argument("--data4", default="./categories")
+    parser.add_argument("--out", default="confirmatory_results.json")
+    parser.add_argument("--skip4", action="store_true")
+    args = parser.parse_args()
 
     if not os.path.isdir(args.data3):
-        print(f"[error] 3-class data dir not found: {args.data3}\n"
-              f"        SHAPE data is restricted and not shipped. See README.",
-              file=sys.stderr)
-        sys.exit(2)
+        parser.error(
+            f"three-condition data directory not found: {args.data3}; "
+            "the restricted SHAPE data are not shipped with the repository"
+        )
+    if not args.skip4 and not os.path.isdir(args.data4):
+        parser.error(
+            f"four-category data directory not found: {args.data4}; "
+            "use --skip4 to run the three-condition stream alone"
+        )
 
-    raw3, y3, g3 = load_3class(args.data3)
+    results = {
+        "schema_version": "2.0.0",
+        "protocol": {
+            "cv": "5 repeats x 5-fold participant-grouped StratifiedGroupKFold",
+            "preprocessing": (
+                "remove samples 0-204; anti-alias decimate samples 205-1228 "
+                "by 4 to 256 samples; per-epoch/channel z-score; fold-local "
+                "StandardScaler on training participants"
+            ),
+            "compression": (
+                f"fixed data-independent SparseRandomProjection "
+                f"{cp.N_BINS * cp.N_RES}->{cp.N_SRP}, seed={cp.SRP_SEED}, "
+                "shared across electrodes"
+            ),
+            "readout": "LogisticRegression; RidgeClassifier for permutation",
+            "reservoir": (
+                f"N={cp.N_RES}, beta=0.05, threshold=0.5, "
+                f"seeds={cp.RESERVOIR_SEEDS}"
+            ),
+            "intervals": (
+                "participant-cluster bootstrap over predictions pooled from all "
+                "five CV repeats; paired bootstrap for contrasts"
+            ),
+            "exclusions": {
+                "three_condition": [127],
+                "four_category": [127, 195],
+            },
+        },
+        "granularities": {},
+    }
+
+    raw3, y3, groups3 = load_3class(args.data3)
     results["granularities"]["three_condition"] = run_granularity(
-        "three_condition", raw3, y3, g3, base_seed=0)
+        "three_condition", raw3, y3, groups3, base_seed=0
+    )
 
-    if not args.skip4 and os.path.isdir(args.data4):
-        raw4, y4, g4 = load_4class(args.data4)
+    if not args.skip4:
+        raw4, y4, groups4 = load_4class(args.data4)
         results["granularities"]["four_category"] = run_granularity(
-            "four_category", raw4, y4, g4, base_seed=100)
+            "four_category", raw4, y4, groups4, base_seed=100
+        )
 
-    with open(args.out, "w") as f:
-        json.dump(results, f, indent=2)
+    with open(args.out, "w", encoding="utf-8") as handle:
+        json.dump(results, handle, indent=2, sort_keys=True)
     print(f"\nWrote {args.out}")
 
 

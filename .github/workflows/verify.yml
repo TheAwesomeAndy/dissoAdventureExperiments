@@ -1,9 +1,7 @@
 name: verify
 
-# Runs the data-independent verification suite on every push, pull request,
-# and release tag, so the exact archived commit carries a visible green check.
-# None of these tests require the restricted SHAPE dataset.
-
+# Data-independent verification for every branch, pull request, and release tag.
+# Restricted SHAPE data are not required by this workflow.
 on:
   push:
     branches: ["**"]
@@ -11,9 +9,16 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      PYTHONUTF8: "1"
+      MPLBACKEND: "Agg"
     steps:
       - uses: actions/checkout@v4
 
@@ -28,29 +33,143 @@ jobs:
           pip install "numpy>=2.0" "scipy>=1.13" "scikit-learn>=1.5" \
                       "pandas>=2.2.3" "matplotlib>=3.9"
 
-      - name: Run verification suite
-        env:
-          PYTHONUTF8: "1"
-          MPLBACKEND: "Agg"
-        run: |
-          set -e
-          python chapter4Experiments/verify_chapter4.py
-          python chapter5Experiments/verify_chapter5.py
-          python chapter5Experiments/verify_experiment_zero.py
-          python chapter5Experiments/verify_reproduce_chapter5.py
-          python chapter5Experiments/verify_baselines.py
-          python chapter6Experiments/verify_chapter6.py
-          python chapter6Experiments/verify_reproduce_chapter6.py
-          python chapter7Experiments/verify_chapter7.py
-          python chapter7Experiments/verify_extract_utilities.py
-          python experiments/ch5_4class/verify_ch5_4class.py
-          python experiments/ch6_ch7_3class/verify_ch6_ch7_3class.py
-          python experiments/ablation/verify_ablation.py
-          python validation/verify_validators.py
-          python experiments/confirmatory/verify_confirmatory.py
+      - name: Prepare verifier logs
+        run: mkdir -p ci-logs
 
-      - name: Check manifest provenance and repo/dissertation consistency
+      - name: Verify Chapter 4 core
+        id: ch4
+        continue-on-error: true
         run: |
-          set -e
-          python experiments/confirmatory/check_against_manifest.py
-          python validation/validate_dissertation_claims.py
+          set -o pipefail
+          python chapter4Experiments/verify_chapter4.py 2>&1 | tee ci-logs/ch4.log
+
+      - name: Verify Chapter 5 core
+        id: ch5
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter5Experiments/verify_chapter5.py 2>&1 | tee ci-logs/ch5.log
+
+      - name: Verify Chapter 5 experiment zero
+        id: ch5zero
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter5Experiments/verify_experiment_zero.py 2>&1 | tee ci-logs/ch5zero.log
+
+      - name: Verify Chapter 5 reproduction
+        id: ch5repro
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter5Experiments/verify_reproduce_chapter5.py 2>&1 | tee ci-logs/ch5repro.log
+
+      - name: Verify Chapter 5 baselines
+        id: ch5base
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter5Experiments/verify_baselines.py 2>&1 | tee ci-logs/ch5base.log
+
+      - name: Verify Chapter 6 core
+        id: ch6
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter6Experiments/verify_chapter6.py 2>&1 | tee ci-logs/ch6.log
+
+      - name: Verify Chapter 6 reproduction
+        id: ch6repro
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter6Experiments/verify_reproduce_chapter6.py 2>&1 | tee ci-logs/ch6repro.log
+
+      - name: Verify Chapter 7 experiments
+        id: ch7
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter7Experiments/verify_chapter7.py 2>&1 | tee ci-logs/ch7.log
+
+      - name: Verify Chapter 7 utilities
+        id: ch7util
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python chapter7Experiments/verify_extract_utilities.py 2>&1 | tee ci-logs/ch7util.log
+
+      - name: Verify four-category extension
+        id: fourcat
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/ch5_4class/verify_ch5_4class.py 2>&1 | tee ci-logs/fourcat.log
+
+      - name: Verify three-condition Chapter 6/7 extension
+        id: threecond
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/ch6_ch7_3class/verify_ch6_ch7_3class.py 2>&1 | tee ci-logs/threecond.log
+
+      - name: Verify ablation pipeline
+        id: ablation
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/ablation/verify_ablation.py 2>&1 | tee ci-logs/ablation.log
+
+      - name: Verify validators
+        id: validators
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python validation/verify_validators.py 2>&1 | tee ci-logs/validators.log
+
+      - name: Verify confirmatory pipeline
+        id: confirmatory
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/confirmatory/verify_confirmatory.py 2>&1 | tee ci-logs/confirmatory.log
+
+      - name: Check confirmatory manifest provenance
+        id: manifest
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/confirmatory/check_against_manifest.py 2>&1 | tee ci-logs/manifest.log
+
+      - name: Check repository and dissertation consistency
+        id: claims
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python validation/validate_dissertation_claims.py 2>&1 | tee ci-logs/claims.log
+
+      - name: Upload verifier logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verifier-logs
+          path: ci-logs/
+          if-no-files-found: error
+
+      - name: Require every verifier to pass
+        if: always()
+        run: |
+          outcomes=(
+            "${{ steps.ch4.outcome }}" "${{ steps.ch5.outcome }}"
+            "${{ steps.ch5zero.outcome }}" "${{ steps.ch5repro.outcome }}"
+            "${{ steps.ch5base.outcome }}" "${{ steps.ch6.outcome }}"
+            "${{ steps.ch6repro.outcome }}" "${{ steps.ch7.outcome }}"
+            "${{ steps.ch7util.outcome }}" "${{ steps.fourcat.outcome }}"
+            "${{ steps.threecond.outcome }}" "${{ steps.ablation.outcome }}"
+            "${{ steps.validators.outcome }}" "${{ steps.confirmatory.outcome }}"
+            "${{ steps.manifest.outcome }}" "${{ steps.claims.outcome }}"
+          )
+          printf 'Verifier outcomes: %s\n' "${outcomes[*]}"
+          for outcome in "${outcomes[@]}"; do
+            test "$outcome" = "success" || exit 1
+          done
