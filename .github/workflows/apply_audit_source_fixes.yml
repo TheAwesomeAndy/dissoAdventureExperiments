@@ -9,7 +9,6 @@ permissions:
 
 jobs:
   patch:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,6 +24,8 @@ jobs:
           def replace(path, old, new):
               p = Path(path)
               text = p.read_text(encoding="utf-8")
+              if new in text:
+                  return
               if old not in text:
                   raise SystemExit(f"Expected source fragment not found in {path}: {old[:80]!r}")
               p.write_text(text.replace(old, new, 1), encoding="utf-8")
@@ -80,6 +81,10 @@ jobs:
 
       - name: Commit source corrections
         run: |
+          if git diff --quiet; then
+            echo "Source corrections already applied."
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add chapter4Experiments/run_chapter4_experiments.py \
