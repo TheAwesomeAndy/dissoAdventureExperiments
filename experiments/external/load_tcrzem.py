@@ -21,6 +21,7 @@ import os
 import re
 
 import numpy as np
+from scipy.signal import resample
 
 SEGMENT_POINTS = 1792  # per-epoch samples declared in the BrainVision headers
 VALENCE = {"Neg": 0, "Neu": 1, "Pos": 2}
@@ -104,3 +105,66 @@ def load_trials(data_dir, subjects=None, min_trials_per_valence=4):
     if not epochs:
         raise RuntimeError(f"no complete-panel subjects found in {data_dir}")
     return np.asarray(epochs), np.asarray(conds), np.asarray(subs)
+
+
+def load_averaged_erps(data_dir, subjects=None, target_t=256,
+                       min_trials_per_valence=4, zscore=True):
+    """Memory-safe path: stream per subject, trial-average each valence, resample
+    to `target_t`, and discard single trials. Returns the canonical
+    (raw, y, groups) the replication consumes directly -- one ERP per
+    (subject, Negative/Neutral/Positive) -- without ever holding all trials in
+    RAM.
+    """
+    dats = sorted(glob.glob(os.path.join(data_dir, "*_Mastoid_*_*.dat")))
+    by_subject = {}
+    for dat in dats:
+        m = _FNAME.search(os.path.basename(dat))
+        if not m:
+            continue
+        subj, valence = m.group(1), m.group(2).capitalize()
+        if subjects is not None and subj not in subjects:
+            continue
+        by_subject.setdefault(subj, {}).setdefault(valence, []).append(dat)
+
+    raw, y, groups = [], [], []
+    for subj in sorted(by_subject):
+        vmap = by_subject[subj]
+        if not all(v in vmap for v in ("Neg", "Neu", "Pos")):
+            continue
+        erps, ok = {}, True
+        for v in ("Neg", "Neu", "Pos"):
+            summ, n = None, 0
+            n_ch_seen = set()
+            for dat in vmap[v]:
+                vhdr = dat[:-4] + ".vhdr"
+                if not os.path.exists(vhdr):
+                    continue
+                n_ch = _n_channels(vhdr)
+                n_ch_seen.add(n_ch)
+                trials = _read_dat(dat, n_ch)          # (n_seg, 1792, n_ch)
+                s = trials.sum(axis=0)                  # accumulate, discard trials
+                summ = s if summ is None else summ + s
+                n += trials.shape[0]
+            if summ is None or n < min_trials_per_valence or len(n_ch_seen) != 1:
+                ok = False
+                break
+            erps[v] = summ / n                          # trial-averaged ERP
+        if not ok:
+            continue
+        ch_counts = {e.shape[1] for e in erps.values()}
+        if len(ch_counts) != 1:
+            continue
+        for v in ("Neg", "Neu", "Pos"):
+            erp = erps[v]
+            if erp.shape[0] != target_t:
+                erp = resample(erp, target_t, axis=0)
+            if zscore:
+                mu = erp.mean(axis=0, keepdims=True)
+                sd = erp.std(axis=0, keepdims=True)
+                erp = np.divide(erp - mu, sd, out=np.zeros_like(erp), where=sd > 0)
+            raw.append(erp)
+            y.append(VALENCE[v])
+            groups.append(subj)
+    if not raw:
+        raise RuntimeError(f"no complete-panel subjects found in {data_dir}")
+    return np.asarray(raw), np.asarray(y), np.asarray(groups, dtype=object)

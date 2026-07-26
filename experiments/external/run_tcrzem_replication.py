@@ -44,10 +44,10 @@ def main():
                         for p in glob.glob(os.path.join(args.data, "*_Mastoid_*.dat"))})
         subjects = set(found[: args.max_subjects])
 
-    epochs, cond, subj = lt.load_trials(args.data, subjects=subjects)
-    log(f"loaded {epochs.shape[0]} trials, {epochs.shape[2]} channels")
-    raw, y, groups = ext.prepare_epochs(epochs, cond, subj)
-    log(f"prepared {raw.shape[0]} ERPs / {len(set(groups.tolist()))} participants")
+    # memory-safe: trial-average per subject x valence while streaming
+    raw, y, groups = lt.load_averaged_erps(args.data, subjects=subjects)
+    log(f"prepared {raw.shape[0]} ERPs / {len(set(groups.tolist()))} participants, "
+        f"{raw.shape[2]} channels")
 
     dims = tuple(int(d) for d in args.dims.split(","))
     res = ext.replicate(raw, y, groups, dims=dims)
