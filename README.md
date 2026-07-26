@@ -48,33 +48,33 @@ The corrected LaTeX source is under `dissertation/`. The authoritative files are
 
 Every indexed numerical result is recorded in `results_manifest.json`. The script-to-result mapping and inferential tiers are documented in `docs/REPRODUCTION_MAP.md`.
 
-## Corrected confirmatory estimands
-
-The corrected dissertation reports the following estimates.
+## Confirmatory estimands (reproduced vs dissertation-reported)
 
 **Protocol:** five repeats of five-fold participant-grouped cross-validation. Each participant’s complete condition panel remains in one fold. Per-feature standardization and the linear readout are fitted on training participants only. BSC6 is compressed from 1,536 to 64 coordinates with a fixed `SparseRandomProjection` generated from a prespecified seed. Reported intervals are participant-cluster bootstrap intervals over repeated out-of-fold predictions. A separate deterministic ridge readout is used for 100 within-participant label permutations.
 
 **Cohorts:** 211 participants and 633 observations for Negative, Neutral, and Pleasant; 210 participants and 840 observations for Threat, Mutilation, Cute, and Erotic.
 
-| Representation | Three conditions | Four categories |
+> **Reproduction note (important).** The numbers below are what the **committed pipeline** (`experiments/confirmatory/run_confirmatory_validation.py`) actually produces on the authorized SHAPE data, recorded in `experiments/confirmatory/confirmatory_results.json` and checked into `results_manifest.json` (`check_against_manifest.py --tol 1.5` passes). The **dissertation reports different figures** (e.g. BSC6/SRP-64 60.6% / 53.2%), preserved in the manifest under `dissertation_reported`. The committed pipeline is an **independent reconstruction**: it matches the dissertation on the raw-ERP and conventional rows (within ~1 pp) but runs **~1.4–3.7 pp higher on the BSC6/SRP-64 and fusion rows** and gives markedly larger destruction-control drops, because the original analysis code is not in this repository and the SRP/reservoir path is reimplemented. Where this README states a confirmatory number, it is the reproduced value; the dissertation value is given in parentheses.
+
+| Representation | Three conditions (dissertation) | Four categories (dissertation) |
 |---|---:|---:|
-| Raw ERP, 16 temporal bins | 68.1% [65.1, 71.1] | 60.5% [57.9, 63.0] |
-| Conventional spectral and Hjorth features | 49.4% [46.8, 51.9] | 36.7% [34.6, 38.9] |
-| **BSC6 / SRP-64** | **60.6% [57.8, 63.4]** | **53.2% [50.6, 55.8]** |
-| BSC6 / SRP-64 plus conventional features | 62.0% [59.1, 64.8] | 53.5% [50.8, 56.3] |
+| Raw ERP, 16 temporal bins | 69.6% [66.5, 72.5] (68.1) | 60.6% [57.9, 63.1] (60.5) |
+| Conventional spectral and Hjorth features | 48.7% [45.9, 51.5] (49.4) | 36.1% [33.9, 38.4] (36.7) |
+| **BSC6 / SRP-64** | **64.3% [61.1, 67.2]** (60.6) | **54.6% [51.9, 57.3]** (53.2) |
+| BSC6 / SRP-64 plus conventional features | 65.1% [61.9, 68.0] (62.0) | 55.0% [52.1, 57.8] (53.5) |
 | Chance | 33.3% | 25.0% |
 
-The reported BSC6/SRP-64 advantage over the conventional baseline is +11.3 percentage points [7.9, 14.7] for three conditions and +16.5 percentage points [13.3, 19.8] for four categories. The reported participant-label permutation result is p = 0.0099 at both granularities.
+Reproduced BSC6/SRP-64 advantage over the conventional baseline: +15.7 pp [11.9, 19.5] for three conditions (dissertation +11.3) and +18.5 pp [15.2, 21.7] for four categories (dissertation +16.5). The participant-label permutation result **reproduces exactly**: p = 0.0099 at both granularities.
 
-### Mechanistic destruction controls
+### Mechanistic destruction controls (reproduced; dissertation in parentheses)
 
 | Control | Three conditions | Four categories |
 |---|---:|---:|
-| Shuffle temporal-bin order within observation and electrode | -7.4 pp [-11.1, -3.7] | -12.9 pp [-16.0, -9.9] |
-| Collapse temporal resolution | -4.9 pp | -8.6 pp |
-| Shuffle electrode identity | -13.9 pp | -20.1 pp |
+| Shuffle temporal-bin order within observation and electrode | -24.8 pp [-28.8, -21.1] (-7.4) | -27.8 pp [-31.1, -24.4] (-12.9) |
+| Collapse temporal resolution | -17.6 pp (-4.9) | -22.4 pp (-8.6) |
+| Shuffle electrode identity | -24.1 pp (-13.9) | -22.0 pp (-20.1) |
 
-These measurements indicate that ordered temporal structure and stable electrode identity contribute to the reported held-out discrimination. They do not establish an anatomical interpretation for unlabeled channel identities.
+Ordered temporal structure and stable electrode identity contribute to held-out discrimination (every destruction reduces accuracy). The reproduced drops are substantially larger than the dissertation-reported ones; the two use different control implementations. These do not establish an anatomical interpretation for unlabeled channel identities.
 
 ## Confirmatory reproduction status
 

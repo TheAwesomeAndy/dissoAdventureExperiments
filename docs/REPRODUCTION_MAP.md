@@ -60,7 +60,7 @@ confirmatory manifest estimand against that file.
 
 | Dissertation element | Reported value | Generating script |
 |---|---|---|
-| BSC6/SRP-64 | 60.6% [57.8, 63.4] (3-condition); 53.2% [50.6, 55.8] (4-category) | `run_confirmatory_validation.py` |
+| BSC6/SRP-64 (reproduced; dissertation in parens) | 64.3% [61.1, 67.2] (60.6) 3-cond; 54.6% [51.9, 57.3] (53.2) 4-cat | `run_confirmatory_validation.py` |
 | Raw ERP-16 reference | 68.1% [65.1, 71.1]; 60.5% [57.9, 63.0] | `run_confirmatory_validation.py` |
 | Conventional spectral/Hjorth baseline | 49.4% [46.8, 51.9]; 36.7% [34.6, 38.9] | `run_confirmatory_validation.py` |
 | BSC6/SRP-64 plus conventional | 62.0% [59.1, 64.8]; 53.5% | `run_confirmatory_validation.py` |

@@ -1,0 +1,272 @@
+{
+  "granularities": {
+    "four_category": {
+      "contrasts": {
+        "bsc6_minus_conventional": {
+          "ci95_pp": [
+            15.1905,
+            21.6679
+          ],
+          "difference_pp": 18.5
+        },
+        "fusion_minus_bsc6": {
+          "ci95_pp": [
+            -0.8333,
+            1.5244
+          ],
+          "difference_pp": 0.3333
+        },
+        "raw_erp16_minus_bsc6": {
+          "ci95_pp": [
+            3.2137,
+            8.6435
+          ],
+          "difference_pp": 5.9286
+        }
+      },
+      "destruction_controls": {
+        "electrode_shuffle": {
+          "ci95_pp": [
+            -25.5958,
+            -18.594
+          ],
+          "difference_pp": -22.0476
+        },
+        "temporal_bin_shuffle": {
+          "ci95_pp": [
+            -31.119,
+            -24.3554
+          ],
+          "difference_pp": -27.7619
+        },
+        "temporal_collapse": {
+          "ci95_pp": [
+            -25.8101,
+            -19.0476
+          ],
+          "difference_pp": -22.4048
+        }
+      },
+      "n_observations": 840,
+      "n_participants": 210,
+      "permutation": {
+        "n_permutations": 100,
+        "observed_balanced_accuracy_percent": 47.0238,
+        "p_value": 0.009900990099009901
+      },
+      "representations": {
+        "bsc6_srp64": {
+          "balanced_accuracy_percent": 54.6429,
+          "ci95_percent": [
+            51.9042,
+            57.3333
+          ],
+          "per_repeat_percent": [
+            53.9286,
+            54.5238,
+            55.119,
+            54.4048,
+            55.2381
+          ]
+        },
+        "bsc6_srp64_plus_conv": {
+          "balanced_accuracy_percent": 54.9762,
+          "ci95_percent": [
+            52.0952,
+            57.8095
+          ],
+          "per_repeat_percent": [
+            55.0,
+            54.2857,
+            54.1667,
+            56.1905,
+            55.2381
+          ]
+        },
+        "conventional": {
+          "balanced_accuracy_percent": 36.1429,
+          "ci95_percent": [
+            33.881,
+            38.4054
+          ],
+          "per_repeat_percent": [
+            35.5952,
+            37.7381,
+            36.0714,
+            35.0,
+            36.3095
+          ]
+        },
+        "raw_erp16": {
+          "balanced_accuracy_percent": 60.5714,
+          "ci95_percent": [
+            57.9048,
+            63.119
+          ],
+          "per_repeat_percent": [
+            59.2857,
+            60.7143,
+            61.4286,
+            60.4762,
+            60.9524
+          ]
+        }
+      },
+      "seed_robustness_percent": {
+        "42": 54.6429,
+        "7": 54.7381,
+        "99": 53.3333
+      },
+      "temporal_windows_percent": {
+        "273-508ms": 45.3095,
+        "39-273ms": 49.2857,
+        "39-977ms_full": 54.6429,
+        "508-742ms": 43.119,
+        "742-977ms": 33.9048
+      }
+    },
+    "three_condition": {
+      "contrasts": {
+        "bsc6_minus_conventional": {
+          "ci95_pp": [
+            11.8799,
+            19.4637
+          ],
+          "difference_pp": 15.6714
+        },
+        "fusion_minus_bsc6": {
+          "ci95_pp": [
+            -0.5055,
+            1.8325
+          ],
+          "difference_pp": 0.7267
+        },
+        "raw_erp16_minus_bsc6": {
+          "ci95_pp": [
+            2.3065,
+            8.2156
+          ],
+          "difference_pp": 5.2765
+        }
+      },
+      "destruction_controls": {
+        "electrode_shuffle": {
+          "ci95_pp": [
+            -27.9629,
+            -20.3791
+          ],
+          "difference_pp": -24.0758
+        },
+        "temporal_bin_shuffle": {
+          "ci95_pp": [
+            -28.752,
+            -21.0735
+          ],
+          "difference_pp": -24.7709
+        },
+        "temporal_collapse": {
+          "ci95_pp": [
+            -21.1382,
+            -14.154
+          ],
+          "difference_pp": -17.5671
+        }
+      },
+      "n_observations": 633,
+      "n_participants": 211,
+      "permutation": {
+        "n_permutations": 100,
+        "observed_balanced_accuracy_percent": 61.0585,
+        "p_value": 0.009900990099009901
+      },
+      "representations": {
+        "bsc6_srp64": {
+          "balanced_accuracy_percent": 64.3286,
+          "ci95_percent": [
+            61.1374,
+            67.2354
+          ],
+          "per_repeat_percent": [
+            64.7709,
+            64.139,
+            64.9289,
+            63.1912,
+            64.613
+          ]
+        },
+        "bsc6_srp64_plus_conv": {
+          "balanced_accuracy_percent": 65.0553,
+          "ci95_percent": [
+            61.9273,
+            67.9621
+          ],
+          "per_repeat_percent": [
+            66.8246,
+            63.5071,
+            65.5608,
+            64.7709,
+            64.613
+          ]
+        },
+        "conventional": {
+          "balanced_accuracy_percent": 48.6572,
+          "ci95_percent": [
+            45.9392,
+            51.4692
+          ],
+          "per_repeat_percent": [
+            48.8152,
+            46.4455,
+            48.6572,
+            49.921,
+            49.4471
+          ]
+        },
+        "raw_erp16": {
+          "balanced_accuracy_percent": 69.6051,
+          "ci95_percent": [
+            66.5079,
+            72.5434
+          ],
+          "per_repeat_percent": [
+            72.0379,
+            69.5103,
+            68.7204,
+            68.4044,
+            69.3523
+          ]
+        }
+      },
+      "seed_robustness_percent": {
+        "42": 64.3286,
+        "7": 64.455,
+        "99": 64.4234
+      },
+      "temporal_windows_percent": {
+        "273-508ms": 54.5024,
+        "39-273ms": 59.4313,
+        "39-977ms_full": 64.3286,
+        "508-742ms": 57.7567,
+        "742-977ms": 46.951
+      }
+    }
+  },
+  "protocol": {
+    "compression": "fixed data-independent SparseRandomProjection 1536->64, seed=20240517, shared across electrodes",
+    "cv": "5 repeats x 5-fold participant-grouped StratifiedGroupKFold",
+    "exclusions": {
+      "four_category": [
+        127,
+        195
+      ],
+      "three_condition": [
+        127
+      ]
+    },
+    "intervals": "participant-cluster bootstrap over predictions pooled from all five CV repeats; paired bootstrap for contrasts",
+    "preprocessing": "remove samples 0-204; anti-alias decimate samples 205-1228 by 4 to 256 samples; per-epoch/channel z-score; fold-local StandardScaler on training participants",
+    "readout": "LogisticRegression; RidgeClassifier for permutation",
+    "reservoir": "N=256, beta=0.05, threshold=0.5, seeds=(7, 42, 99)"
+  },
+  "schema_version": "2.0.0"
+}
