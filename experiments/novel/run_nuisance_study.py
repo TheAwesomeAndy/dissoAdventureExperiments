@@ -91,9 +91,20 @@ def main():
 
         geom = ns.compression_geometry(bsc_flat, y, groups, n_components=64)
         out["components"]["M2_geometry"] = geom
-        log(f"M2 rho ambient={geom['rho_ambient']} pca={geom['rho_pca_compressed']} "
+        log(f"M2 (global) rho ambient={geom['rho_ambient']} pca={geom['rho_pca_compressed']} "
             f"srp={geom['rho_srp_compressed']}; PCA min-angle subj="
             f"{geom['pca_min_angle_to_subject_deg']} cond={geom['pca_min_angle_to_condition_deg']}")
+
+        # Blockwise geometry with the EXACT N1 operator (per-electrode
+        # 1,536 -> 64, concatenated), so the mechanism is measured on the same
+        # linear map whose accuracy gap N1 reports -- closes the operator
+        # mismatch the audit flagged.
+        geom_bw = ns.compression_geometry_blockwise(bsc, y, groups, n_components=64)
+        out["components"]["M2_geometry_blockwise"] = geom_bw
+        log(f"M2 (blockwise, {geom_bw['total_compressed_dims']}d) rho ambient={geom_bw['rho_ambient']} "
+            f"pca={geom_bw['rho_pca_compressed']} srp={geom_bw['rho_srp_compressed']}; "
+            f"PCA min-angle subj={geom_bw['pca_min_angle_to_subject_deg']} "
+            f"cond={geom_bw['pca_min_angle_to_condition_deg']}")
 
         srp64 = cp.make_srp(bsc.shape[2], n_components=cp.N_SRP)
         srp_feat = cp.project_bsc(bsc, srp64)

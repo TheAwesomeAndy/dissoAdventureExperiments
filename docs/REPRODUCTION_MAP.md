@@ -224,9 +224,9 @@ reference implementations. It is retained for provenance and is superseded by
 | Data validators | `validation/verify_validators.py` | 20 |
 | Confirmatory pipeline | `experiments/confirmatory/verify_confirmatory.py` | 18 |
 | Novel compression experiments | `experiments/novel/verify_novel.py` | 13 |
-| Nuisance-alignment study | `experiments/novel/verify_nuisance.py` | 10 |
+| Nuisance-alignment study | `experiments/novel/verify_nuisance.py` | 14 |
 | External-replication harness | `experiments/external/verify_external.py` | 11 |
-| **Total** | | **487** |
+| **Total** | | **491** |
 
 Three additional CI gates compare committed result files against the manifest
 rather than exercising code:

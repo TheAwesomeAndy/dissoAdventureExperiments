@@ -106,11 +106,17 @@ in the dissertation and the IEEE SPL submission.
 ## Positioning for acceptance
 
 - **Lead with N1.** "A parameter-free random projection outperforms data-fitted
-  PCA on grouped clinical EEG, because PCA fits the subject nuisance" is a crisp,
-  general, testable methods claim with a mechanism (N3's ρ) and a leakage-safety
-  argument. It stands independent of ARSPI-Net's absolute accuracy.
-- **N3 supplies the mechanism** for N1 and quantifies interpretability as
-  *necessity*, not saliency.
+  PCA on grouped clinical EEG, on leakage-safety grounds and empirically by
+  +4.36pp" is a crisp, general, testable methods claim. Note the *mechanism*
+  qualifier: the gross "PCA fits the subject nuisance" story holds only under
+  aggressive global compression, **not** under N1's per-electrode operator (see
+  the blockwise M2 result in `NUISANCE_RESULTS.md`), so N1's advantage is
+  presented as a mild-regime + leak-safety result, not as a consequence of gross
+  nuisance alignment. It stands independent of ARSPI-Net's absolute accuracy.
+- **N3 quantifies interpretability as *necessity*** (which structural factors,
+  once destroyed, cost condition accuracy), not saliency. It characterizes the
+  representation's subject/condition entanglement (ρ); it is not claimed to be
+  the causal explanation of the N1 accuracy gap.
 - **N2** is preliminary support only (see the design caveat above); it is not
   yet an established instrument-reproducibility result.
 
@@ -130,6 +136,7 @@ dims 16/32/64, 10 SRP seeds, no dim-128). The four-category cohort **is** run
 obsolete.
 
 Open items: run the full (non-fast) sweep including dim 128; complete the N2
-crossed-design instrument experiment; run the blockwise M2 geometry that matches
-the N1 per-electrode operator (the current M2 uses a global flatten — see the
-mechanism caveat in `NUISANCE_RESULTS.md`).
+crossed-design instrument experiment. The blockwise M2 geometry matching the N1
+per-electrode operator **is now run** (both granularities) and reported in
+`NUISANCE_RESULTS.md`; its verdict is that the gross nuisance-alignment does not
+transfer to N1's operator, so the causal claim is scoped accordingly.

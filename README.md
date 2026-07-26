@@ -185,7 +185,7 @@ torch>=1.12  # canonical PyTorch baselines only
 
 ## Verification
 
-The GitHub Actions workflow runs the 487 declared data-independent checks and uploads per-suite logs. These checks establish that the scripts execute, the operators satisfy their stated implementation contracts, and fixed seeds produce deterministic outputs. They do not establish that an empirical result is true, clinically valid, externally generalizable, or reproduced from restricted data.
+The GitHub Actions workflow runs the 491 declared data-independent checks and uploads per-suite logs. These checks establish that the scripts execute, the operators satisfy their stated implementation contracts, and fixed seeds produce deterministic outputs. They do not establish that an empirical result is true, clinically valid, externally generalizable, or reproduced from restricted data.
 
 | Suite | Checks |
 |---|---:|
@@ -204,9 +204,9 @@ The GitHub Actions workflow runs the 487 declared data-independent checks and up
 | Data validators | 20 |
 | Confirmatory pipeline | 18 |
 | Novel compression experiments | 13 |
-| Nuisance-alignment study | 10 |
+| Nuisance-alignment study | 14 |
 | External-replication harness | 11 |
-| **Total** | **487** |
+| **Total** | **491** |
 
 The workflow additionally runs three consistency gates that compare committed
 result files against `results_manifest.json` rather than exercising code:

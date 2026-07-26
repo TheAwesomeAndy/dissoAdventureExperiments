@@ -25,7 +25,7 @@ agree on:
 
 ## 2. Obtain a green data-independent verification run
 
-Run the complete 487-check suite, preferably through
+Run the complete 491-check suite, preferably through
 `.github/workflows/verify.yml` on the exact candidate commit:
 
 ```text
@@ -110,7 +110,7 @@ Create a GitHub Release from that exact tag. The release notes should identify:
 - the corrected SRP-64 participant-grouped protocol;
 - the authorized-data reproduction record;
 - `results_manifest.json` and `docs/REPRODUCTION_MAP.md`;
-- the 487-check code-verification result; and
+- the 491-check code-verification result; and
 - the distinction between implementation verification and empirical validity.
 
 ## 6. Mint and record the Zenodo DOI **[owner action]**

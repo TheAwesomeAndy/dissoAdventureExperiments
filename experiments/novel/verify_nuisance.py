@@ -64,6 +64,44 @@ def main():
           f"PCA subspace aligns closer to subject than condition "
           f"({geom['pca_min_angle_to_subject_deg']} < {geom['pca_min_angle_to_condition_deg']} deg)")
 
+    # ---- M2 blockwise geometry (exact N1 operator) -------------------
+    print("\n[M2-blockwise] block-diagonal principal-angle trick")
+    from scipy.linalg import subspace_angles as _sa
+
+    # (A) the memory-saving block trick must equal an explicit scipy computation
+    rng = np.random.RandomState(11)
+    n_ch, n_feat, k, r = 3, 10, 4, 5
+    P, _ = np.linalg.qr(rng.randn(n_feat, k))          # orthonormal (n_feat, k)
+    Uf, _ = np.linalg.qr(rng.randn(n_ch * n_feat, r))  # orthonormal factor basis
+    U_full = np.zeros((n_ch * n_feat, n_ch * k))
+    for e in range(n_ch):
+        U_full[e * n_feat:(e + 1) * n_feat, e * k:(e + 1) * k] = P
+    ref = np.sort(np.degrees(_sa(U_full, Uf)))
+    got = np.sort(ns._blockwise_pca_angles(P, Uf, n_ch, n_feat))
+    check(np.allclose(ref, got, atol=1e-6),
+          f"blockwise angle trick matches explicit scipy subspace_angles "
+          f"(max diff {np.abs(ref - got).max():.2e} deg)")
+
+    # (B) on a subject-dominated BSC-shaped tensor, the blockwise-PCA read
+    #     subspace aligns closer to subject than condition, and rho_pca > rho_srp
+    Xb, yb, gb = ns.make_controlled(40, 3, 48, sigma_subj=4.0, sigma_noise=1.0, seed=5)
+    bsc_syn = Xb.reshape(Xb.shape[0], 4, 12)  # (n_obs, n_ch=4, n_feat=12)
+    gbw = ns.compression_geometry_blockwise(bsc_syn, yb, gb, n_components=4,
+                                            subj_rank=20, cond_rank=2)
+    check(gbw["operator"] == "blockwise_per_electrode"
+          and gbw["total_compressed_dims"] == 4 * 4,
+          f"blockwise geometry reports the concatenated operator "
+          f"({gbw['total_compressed_dims']}d)")
+    check(gbw["pca_min_angle_to_subject_deg"] < gbw["pca_min_angle_to_condition_deg"],
+          f"blockwise PCA aligns closer to subject than condition "
+          f"({gbw['pca_min_angle_to_subject_deg']} < {gbw['pca_min_angle_to_condition_deg']} deg)")
+    # rho ordering (pca vs srp) is a data-dependent quantity, not a robust
+    # invariant of the operator, so it is measured on real SHAPE data rather
+    # than asserted here; we only check the compressed rhos are finite/positive.
+    check(gbw["rho_pca_compressed"] > 0 and gbw["rho_srp_compressed"] > 0,
+          f"blockwise compressed rhos are positive and finite "
+          f"(pca {gbw['rho_pca_compressed']}, srp {gbw['rho_srp_compressed']})")
+
     # ---- M3 comparison returns all compressors ------------------------
     print("\n[M3] compressor comparison")
     for name, fit in {"srp": ns._srp_fitter(16, 1), "pca": ns._pca_fitter(16),

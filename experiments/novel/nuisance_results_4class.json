@@ -92,12 +92,24 @@
     },
     "M2_geometry": {
       "rho_ambient": 17.203,
-      "rho_pca_compressed": 31.87,
+      "rho_pca_compressed": 31.798,
       "rho_srp_compressed": 14.149,
-      "pca_min_angle_to_subject_deg": 1.59,
+      "pca_min_angle_to_subject_deg": 1.58,
       "pca_min_angle_to_condition_deg": 5.29,
-      "pca_mean_angle_to_subject_deg": 4.69,
-      "pca_mean_angle_to_condition_deg": 8.22
+      "pca_mean_angle_to_subject_deg": 4.67,
+      "pca_mean_angle_to_condition_deg": 8.21
+    },
+    "M2_geometry_blockwise": {
+      "operator": "blockwise_per_electrode",
+      "n_components_per_electrode": 64,
+      "total_compressed_dims": 2176,
+      "rho_ambient": 17.203,
+      "rho_pca_compressed": 15.528,
+      "rho_srp_compressed": 14.926,
+      "pca_min_angle_to_subject_deg": 23.9,
+      "pca_min_angle_to_condition_deg": 41.51,
+      "pca_mean_angle_to_subject_deg": 51.36,
+      "pca_mean_angle_to_condition_deg": 44.5
     },
     "M5_disentanglement": {
       "raw_erp16_rho": 12.324,
@@ -105,6 +117,5 @@
       "bsc6_srp64_rho": 14.926
     }
   },
-  "granularity": "four_category",
-  "note": "Four-category cohort (210/840), fast mode. Cross-granularity replication of the M2 mechanism and M5 null. Summary statistics only; exploratory."
+  "granularity": "four_category"
 }

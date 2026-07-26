@@ -269,6 +269,85 @@ def compression_geometry(X, y, groups, n_components=64, subj_rank=10,
     }
 
 
+def _blockwise_pca_angles(P, U_factor, n_ch, n_feat):
+    """Principal angles (degrees) between the block-diagonal blockwise-PCA read
+    subspace and an ambient factor subspace, without materialising the full
+    (n_ch*n_feat, n_ch*k) basis.
+
+    The blockwise operator places the SAME orthonormal PCA basis `P`
+    (n_feat, k) on each electrode block and concatenates. Its ambient read
+    subspace therefore has orthonormal columns (P orthonormal on disjoint row
+    blocks). For an orthonormal ambient factor basis `U_factor`
+    (n_ch*n_feat, r), the cosines of the principal angles are the singular
+    values of Q_pca^T U_factor, which is block-computable as
+    einsum('fk,cfr->ckr', P, U_factor.reshape(n_ch, n_feat, r)).
+    """
+    k = P.shape[1]
+    r = U_factor.shape[1]
+    Uf = U_factor.reshape(n_ch, n_feat, r)
+    M = np.einsum("fk,cfr->ckr", P, Uf).reshape(n_ch * k, r)
+    sv = np.linalg.svd(M, compute_uv=False)
+    cos = np.clip(sv, 0.0, 1.0)
+    return np.degrees(np.arccos(cos))
+
+
+def compression_geometry_blockwise(bsc, y, groups, n_components=64,
+                                   subj_rank=10, cond_rank=2, srp_seed=None):
+    """M2 geometry computed with the *exact N1 operator*: a shared per-electrode
+    compression (1,536 -> `n_components` on each of the `n_ch` electrode blocks,
+    concatenated to `n_ch * n_components` coordinates), not the global
+    52,224 -> 64 flatten used by `compression_geometry`.
+
+    This closes the operator-mismatch gap the audit flagged: N1's accuracy gap
+    uses the blockwise operator, so the geometry that would *explain* that gap
+    must use the same operator. Reports the compressed-space subject/condition
+    variance ratio rho and the PCA read-subspace principal angles to the subject
+    and condition subspaces, directly comparable to the global M2 numbers.
+
+    `bsc` is the electrode-resolved (n_obs, n_ch, n_feat) BSC tensor -- the same
+    input N1 consumes. Descriptive geometry on the full matrix (not a CV
+    estimate), matching `compression_geometry`.
+    """
+    bsc = np.asarray(bsc, dtype=np.float64)
+    if bsc.ndim != 3:
+        raise ValueError("bsc must have shape (n_obs, n_ch, n_feat)")
+    n_obs, n_ch, n_feat = bsc.shape
+    srp_seed = cp.SRP_SEED if srp_seed is None else srp_seed
+
+    # Shared per-electrode PCA basis, fitted on all electrode blocks stacked --
+    # identical construction to N1's fold-local PCA, here on the full matrix.
+    k = min(n_components, n_feat, n_obs * n_ch - 1)
+    pca = PCA(n_components=k).fit(bsc.reshape(n_obs * n_ch, n_feat))
+    P = pca.components_.T  # (n_feat, k), orthonormal columns
+    Xpca = (bsc @ P).reshape(n_obs, n_ch * k)
+
+    # Shared per-electrode SRP -- exactly N1's evaluate_srp operator.
+    srp = cp.make_srp(n_feat, seed=srp_seed, n_components=n_components)
+    Xsrp = cp.project_bsc(bsc, srp)
+
+    flat = bsc.reshape(n_obs, n_ch * n_feat)
+    rho_amb = nov.subject_condition_variance_ratio(flat, y, groups)["rho_subject_to_condition"]
+    rho_pca = nov.subject_condition_variance_ratio(Xpca, y, groups)["rho_subject_to_condition"]
+    rho_srp = nov.subject_condition_variance_ratio(Xsrp, y, groups)["rho_subject_to_condition"]
+
+    U_subj = _factor_subspace(flat, groups, subj_rank)
+    U_cond = _factor_subspace(flat, y, cond_rank)
+    ang_subj = _blockwise_pca_angles(P, U_subj, n_ch, n_feat)
+    ang_cond = _blockwise_pca_angles(P, U_cond, n_ch, n_feat)
+    return {
+        "operator": "blockwise_per_electrode",
+        "n_components_per_electrode": int(k),
+        "total_compressed_dims": int(n_ch * k),
+        "rho_ambient": rho_amb,
+        "rho_pca_compressed": rho_pca,
+        "rho_srp_compressed": rho_srp,
+        "pca_min_angle_to_subject_deg": round(float(ang_subj.min()), 2),
+        "pca_min_angle_to_condition_deg": round(float(ang_cond.min()), 2),
+        "pca_mean_angle_to_subject_deg": round(float(ang_subj.mean()), 2),
+        "pca_mean_angle_to_condition_deg": round(float(ang_cond.mean()), 2),
+    }
+
+
 # ===========================================================================
 # M5 -- reservoir disentanglement across representations
 # ===========================================================================

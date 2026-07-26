@@ -78,20 +78,39 @@ def main():
     # --- M2 three-condition (nuisance_results.json) ---
     p = opt(os.path.join(_HERE, "nuisance_results.json"))
     if p:
-        g = load(p)["components"]["M2_geometry"]
+        comp = load(p)["components"]
+        g = comp["M2_geometry"]
         v = entry(m, "novel_m2_pca_nuisance_alignment")
-        cmp("M2/3class angle-subject", g["pca_min_angle_to_subject_deg"],
+        cmp("M2/3class global angle-subject", g["pca_min_angle_to_subject_deg"],
             v["pca_min_angle_to_subject_deg"])
-        cmp("M2/3class rho_pca", g["rho_pca_compressed"], v["rho_pca_compressed"])
+        cmp("M2/3class global rho_pca", g["rho_pca_compressed"], v["rho_pca_compressed"])
+        # blockwise operator matching N1 (audit point #2)
+        b = comp.get("M2_geometry_blockwise")
+        vb = v.get("blockwise_n1_operator") if v else None
+        if b and vb:
+            cmp("M2/3class blockwise angle-subject",
+                b["pca_min_angle_to_subject_deg"],
+                vb["pca_min_angle_to_subject_deg"])
+            cmp("M2/3class blockwise rho_pca", b["rho_pca_compressed"],
+                vb["rho_pca_compressed"])
 
     # --- M2 four-category (nuisance_results_4class.json) ---
     p = opt(os.path.join(_HERE, "nuisance_results_4class.json"))
     if p:
-        g = load(p)["components"]["M2_geometry"]
+        comp = load(p)["components"]
+        g = comp["M2_geometry"]
         v = entry(m, "novel_m2_pca_nuisance_alignment_4class")
         if v:
-            cmp("M2/4class angle-subject", g["pca_min_angle_to_subject_deg"],
+            cmp("M2/4class global angle-subject", g["pca_min_angle_to_subject_deg"],
                 v["pca_min_angle_to_subject_deg"])
+            b = comp.get("M2_geometry_blockwise")
+            vb = v.get("blockwise_n1_operator")
+            if b and vb:
+                cmp("M2/4class blockwise angle-subject",
+                    b["pca_min_angle_to_subject_deg"],
+                    vb["pca_min_angle_to_subject_deg"])
+                cmp("M2/4class blockwise rho_pca", b["rho_pca_compressed"],
+                    vb["rho_pca_compressed"])
 
     # --- External (experiments/external/external_results.json) ---
     p = opt(os.path.join(_REPO, "experiments", "external", "external_results.json"))

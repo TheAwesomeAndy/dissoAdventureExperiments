@@ -860,31 +860,41 @@
     {
       "id": "novel_m2_pca_nuisance_alignment",
       "tier": "exploratory",
-      "description": "M2: PCA-64 aligns to the subject-nuisance subspace (real SHAPE), explaining N1",
+      "description": "M2: PCA nuisance-alignment is operator-dependent -- strong under aggressive GLOBAL compression, absent under the per-electrode operator N1 actually uses (real SHAPE 3-condition)",
       "value": {
-        "pca_min_angle_to_subject_deg": 1.34,
-        "pca_min_angle_to_condition_deg": 3.38,
-        "pca_mean_angle_to_subject_deg": 3.95,
-        "pca_mean_angle_to_condition_deg": 10.19,
+        "pca_min_angle_to_subject_deg": 1.33,
+        "pca_min_angle_to_condition_deg": 3.21,
+        "pca_mean_angle_to_subject_deg": 3.96,
+        "pca_mean_angle_to_condition_deg": 10.17,
         "rho_ambient": 11.407,
-        "rho_pca_compressed": 44.362,
-        "rho_srp_compressed": 7.336
+        "rho_pca_compressed": 43.554,
+        "rho_srp_compressed": 7.336,
+        "blockwise_n1_operator": {
+          "total_compressed_dims": 2176,
+          "pca_min_angle_to_subject_deg": 23.9,
+          "pca_min_angle_to_condition_deg": 28.83,
+          "pca_mean_angle_to_subject_deg": 51.02,
+          "pca_mean_angle_to_condition_deg": 39.29,
+          "rho_ambient": 11.407,
+          "rho_pca_compressed": 7.159,
+          "rho_srp_compressed": 9.816
+        }
       },
-      "data_source": "SHAPE three_condition (211/633), BSC6 flattened (52224-dim)",
+      "data_source": "SHAPE three_condition (211/633), BSC6; global 52224-dim vs per-electrode blockwise (2176-dim)",
       "sample_count": {
         "participants": 211,
         "observations": 633
       },
       "split_strategy": "descriptive geometry on full feature matrix (not a performance estimate)",
-      "preprocessing_scope": "global (geometry characterization); reservoir seed 42",
-      "estimator": "principal angles (scipy.linalg.subspace_angles); subject/condition variance ratio",
+      "preprocessing_scope": "two operators: GLOBAL (flatten 52224 -> 64) and BLOCKWISE (per-electrode 1536 -> 64, concat 2176) matching N1; reservoir seed 42",
+      "estimator": "principal angles (scipy.linalg.subspace_angles / block-diagonal equivalent); subject/condition variance ratio",
       "seed_set": [
         "reservoir seed 42",
         "SRP seed 20240517"
       ],
       "output_table": "experiments/novel/NUISANCE_RESULTS.md M2; nuisance_results.json",
       "script": "experiments/novel/run_nuisance_study.py",
-      "notes": "PCA top-64 near-collinear with subject subspace (1.34 deg), concentrates rho to 44; SRP stays at 7.3 (below ambient 11.4). Mechanism behind N1."
+      "notes": "Global PCA-64 is near-collinear with the subject subspace (1.33 deg) and inflates rho to 43.554. But N1's actual per-electrode operator does NOT: blockwise PCA sits 23.9 deg from subject and its rho (7.159) is BELOW ambient. The gross nuisance-alignment is therefore an aggressive-global-compression phenomenon and does NOT explain the N1 accuracy gap; corrects the earlier 'mechanism behind N1' claim. Accuracy gap itself (SRP 64.329 vs PCA 59.968, +4.36pp) reproduces exactly."
     },
     {
       "id": "novel_m1a_angle_rotation",
@@ -949,13 +959,21 @@
     {
       "id": "novel_m2_pca_nuisance_alignment_4class",
       "tier": "exploratory",
-      "description": "M2 replication on four-category cohort: PCA-64 aligns to subject subspace",
+      "description": "M2 (4-category): PCA nuisance-alignment is operator-dependent -- strong under global compression, absent under N1's per-electrode operator",
       "value": {
-        "pca_min_angle_to_subject_deg": 1.59,
+        "pca_min_angle_to_subject_deg": 1.58,
         "pca_min_angle_to_condition_deg": 5.29,
         "rho_ambient": 17.203,
-        "rho_pca_compressed": 31.87,
-        "rho_srp_compressed": 14.149
+        "rho_pca_compressed": 31.798,
+        "rho_srp_compressed": 14.149,
+        "blockwise_n1_operator": {
+          "total_compressed_dims": 2176,
+          "pca_min_angle_to_subject_deg": 23.9,
+          "pca_min_angle_to_condition_deg": 41.51,
+          "rho_ambient": 17.203,
+          "rho_pca_compressed": 15.528,
+          "rho_srp_compressed": 14.926
+        }
       },
       "data_source": "SHAPE four_category (210/840), BSC6 flattened",
       "sample_count": {
@@ -971,7 +989,7 @@
       ],
       "output_table": "experiments/novel/NUISANCE_RESULTS.md cross-granularity; nuisance_results_4class.json",
       "script": "experiments/novel/run_nuisance_study.py",
-      "notes": "Cross-granularity replication: PCA 1.59 deg to subject (vs 5.29 to condition), rho_pca 31.9 > ambient 17.2 > rho_srp 14.1. Mirrors 3-condition."
+      "notes": "Global PCA 1.58 deg to subject, rho 31.798 (above ambient 17.203); blockwise (N1 operator) 23.9 deg, rho 15.528 (below ambient). Same operator-dependence as 3-condition; gross alignment does not explain the N1 gap on either label set."
     },
     {
       "id": "novel_n1_srp_vs_pca_4class",
