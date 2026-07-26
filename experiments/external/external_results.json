@@ -1,0 +1,50 @@
+{
+  "dataset": "DataVerseNL doi:10.34894/TCRZEM (IAPS passive viewing, Neg/Neu/Pos)",
+  "paradigm": "affective-picture ERP, three valence conditions",
+  "cohort": "external replication of SHAPE three-condition claims",
+  "results": {
+    "n_participants": 228,
+    "n_observations": 684,
+    "n_conditions": 3,
+    "n_channels": 41,
+    "N1_srp_vs_pca": {
+      "16": {
+        "srp_percent": 43.713,
+        "foldlocal_pca_percent": 37.018,
+        "srp_minus_pca_pp": 6.695,
+        "srp_minus_pca_ci95_pp": [
+          3.275,
+          10.175
+        ]
+      },
+      "32": {
+        "srp_percent": 43.684,
+        "foldlocal_pca_percent": 38.099,
+        "srp_minus_pca_pp": 5.585,
+        "srp_minus_pca_ci95_pp": [
+          2.308,
+          8.86
+        ]
+      },
+      "64": {
+        "srp_percent": 45.497,
+        "foldlocal_pca_percent": 40.468,
+        "srp_minus_pca_pp": 5.029,
+        "srp_minus_pca_ci95_pp": [
+          2.047,
+          7.953
+        ]
+      }
+    },
+    "M2_geometry": {
+      "rho_ambient": 111.137,
+      "rho_pca_compressed": 132.776,
+      "rho_srp_compressed": 111.15,
+      "pca_min_angle_to_subject_deg": 0.89,
+      "pca_min_angle_to_condition_deg": 21.15,
+      "pca_mean_angle_to_subject_deg": 3.7,
+      "pca_mean_angle_to_condition_deg": 22.77
+    }
+  },
+  "note": "External replication on an independent IAPS cohort (different lab/hardware). SRP>PCA and PCA-nuisance alignment both replicate; absolute accuracies are lower and near 3-class chance because this cohort is far more subject-dominated (ambient rho ~111 vs SHAPE ~11). Summary statistics only; exploratory."
+}

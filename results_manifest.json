@@ -108,7 +108,7 @@
     {
       "id": "conf_3class_rawerp16",
       "tier": "confirmatory",
-      "description": "Raw ERP (16 temporal bins) reference, three conditions \u2014 outperforms reservoir",
+      "description": "Raw ERP (16 temporal bins) reference, three conditions — outperforms reservoir",
       "value": {
         "balanced_accuracy": 0.69605,
         "ci95": [
@@ -643,7 +643,7 @@
     {
       "id": "arch_baseline_centered_table",
       "tier": "archived",
-      "description": "Baseline / centered comparison table (transductive centering \u2014 descriptive only)",
+      "description": "Baseline / centered comparison table (transductive centering — descriptive only)",
       "value": {
         "BandPower_SVM": {
           "uncentered": 0.477,
@@ -687,7 +687,7 @@
         "observations": 633
       },
       "split_strategy": "cross-validation with global preprocessing; centered columns use complete held-out participant panel (transductive)",
-      "preprocessing_scope": "GLOBAL PCA + TRANSDUCTIVE subject-mean centering \u2014 NOT prospective, NOT fold-local",
+      "preprocessing_scope": "GLOBAL PCA + TRANSDUCTIVE subject-mean centering — NOT prospective, NOT fold-local",
       "estimator": "EEGNet/GRU/LSTM (PyTorch, 5-seed ensembles), LogReg, SVM",
       "seed_set": [
         "5-seed ensembles, majority voting"
@@ -1034,6 +1034,84 @@
       "output_table": "experiments/novel/NOVEL_RESULTS.md cross-granularity; novel_results_4class.json",
       "script": "experiments/novel/run_novel_experiments.py",
       "notes": "Replicates 3-condition: temporal-bin order most necessary (-28.2pp); rho inflates 14.9->70."
+    },
+    {
+      "id": "external_n1_srp_vs_pca_tcrzem",
+      "tier": "exploratory",
+      "description": "External replication (TCRZEM, IAPS, 228 subj): SRP-64 outperforms fold-local PCA-64",
+      "value": {
+        "dim16": {
+          "srp": 43.713,
+          "pca": 37.018,
+          "diff_pp": 6.695,
+          "ci95_pp": [
+            3.275,
+            10.175
+          ]
+        },
+        "dim32": {
+          "srp": 43.684,
+          "pca": 38.099,
+          "diff_pp": 5.585,
+          "ci95_pp": [
+            2.308,
+            8.86
+          ]
+        },
+        "dim64": {
+          "srp": 45.497,
+          "pca": 40.468,
+          "diff_pp": 5.029,
+          "ci95_pp": [
+            2.047,
+            7.953
+          ]
+        }
+      },
+      "data_source": "DataVerseNL doi:10.34894/TCRZEM (Revers et al.), IAPS passive viewing, Neg/Neu/Pos, BioSemi 41ch",
+      "sample_count": {
+        "participants": 228,
+        "observations": 684
+      },
+      "split_strategy": "5x5 participant-grouped fold-local CV; paired participant-cluster bootstrap",
+      "preprocessing_scope": "trial-averaged per subject x valence, resampled to 256, per-channel z-scored; fold-local",
+      "estimator": "LogisticRegression balanced accuracy; SRP data-independent vs fold-local PCA",
+      "seed_set": [
+        "SRP seed 20240517",
+        "reservoir seed 42"
+      ],
+      "output_table": "experiments/external/EXTERNAL_RESULTS.md N1; external_results.json",
+      "script": "experiments/external/run_tcrzem_replication.py",
+      "notes": "External replication: SRP > PCA at all dims, CI excludes zero, larger than SHAPE (+5-6.7pp). Absolute accuracy near 3-class chance because cohort is far more subject-dominated (ambient rho ~111)."
+    },
+    {
+      "id": "external_m2_pca_nuisance_alignment_tcrzem",
+      "tier": "exploratory",
+      "description": "External replication (TCRZEM): PCA-64 aligns to subject-nuisance subspace",
+      "value": {
+        "pca_min_angle_to_subject_deg": 0.89,
+        "pca_min_angle_to_condition_deg": 21.15,
+        "pca_mean_angle_to_subject_deg": 3.7,
+        "pca_mean_angle_to_condition_deg": 22.77,
+        "rho_ambient": 111.137,
+        "rho_pca_compressed": 132.776,
+        "rho_srp_compressed": 111.15
+      },
+      "data_source": "DataVerseNL doi:10.34894/TCRZEM, BSC6 flattened (41ch)",
+      "sample_count": {
+        "participants": 228,
+        "observations": 684
+      },
+      "split_strategy": "descriptive geometry on full feature matrix",
+      "preprocessing_scope": "reservoir seed 42; SRP seed 20240517",
+      "estimator": "principal angles; subject/condition variance ratio",
+      "seed_set": [
+        "reservoir seed 42",
+        "SRP seed 20240517"
+      ],
+      "output_table": "experiments/external/EXTERNAL_RESULTS.md M2; external_results.json",
+      "script": "experiments/external/run_tcrzem_replication.py",
+      "notes": "PCA 0.89 deg to subject (vs 21.15 to condition); even starker than SHAPE (1.32). Mechanism replicates on an independent cohort."
     }
   ],
   "confirmatory_pipeline": {
