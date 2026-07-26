@@ -3,8 +3,8 @@
 A concrete skeleton assembled from the committed results. Target: a methods
 short paper / letter (e.g. *IEEE Signal Processing Letters*, an ML-for-health
 workshop, or a NeurIPS/ICML workshop on trustworthy ML for health). This
-outline reports only what the experiments actually show and flags the one gap
-(external cohort) explicitly.
+outline reports only what the experiments actually show, including the external
+replication (TCRZEM, N=228) and the honest scope of each claim.
 
 **Working title:** *Unsupervised compression aligns to the grouping nuisance:
 why a data-independent random projection outperforms PCA on subject-grouped
@@ -33,16 +33,19 @@ so it is leak-free **and**, under aggressive compression, more discriminative.
   projection (SRP), **fold-local** PCA (leak-free comparator), supervised in-fold
   LDA, random coordinate subsampling.
 
-## 3. Result 1 — accuracy (real, both cohorts)
-- SRP-64 > fold-local PCA-64: **+4.4pp [1.5, 7.2]** (3-cond), **+3.9pp
-  [1.5, 6.4]** (4-cat); interval excludes zero. Advantage present at dims 16/32/64.
-- Figure: dimensionality sweep, SRP vs PCA with bootstrap bands, both cohorts.
+## 3. Result 1 — accuracy (three datasets)
+- SRP-64 > fold-local PCA-64 on SHAPE: **+4.4pp [1.5, 7.2]** (3-cond), **+3.9pp
+  [1.5, 6.4]** (4-cat); and on the **external TCRZEM IAPS cohort (N=228,
+  different lab): +5.0pp [2.0, 8.0]** at dim 64 (+6.7/+5.6 at 16/32). Interval
+  excludes zero in every case, at every dimension.
+- Figure: dimensionality sweep, SRP vs PCA with bootstrap bands, all cohorts.
 - Table: SRP-64 seed-stability (64.0±1.0 / 54.1±1.1) — not a lucky projection.
 
 ## 4. Result 2 — mechanism (real + controlled)
 - **Real:** PCA-64 minimum principal angle to the subject subspace **1.3–1.6°**
-  (vs 3.3–5.3° to condition); compressed subject:condition ρ inflated to 32–44
-  (ambient 11–17) while SRP stays *below* ambient (7–14).
+  on SHAPE and **0.9°** on the external TCRZEM cohort (vs 3.3–21° to condition);
+  compressed subject:condition ρ inflated by PCA (SHAPE 32–44 vs ambient 11–17;
+  TCRZEM 133 vs 111) while SRP stays at/below ambient.
 - **Controlled:** as nuisance grows, the PCA subspace rotates monotonically
   toward subject (26.6°→0.3°) and away from condition (0.7°→29.4°). Dataset-
   independent (PCA maximizes variance = nuisance once nuisance dominates).
@@ -66,15 +69,18 @@ so it is leak-free **and**, under aggressive compression, more discriminative.
   realistic aggressive compression, improves grouped accuracy.
 
 ## 7. Limitations (state plainly)
-- **Single dataset.** The accuracy consequence is shown on one cohort (two
-  labellings). The mechanism is dataset-independent (controlled demo), but the
-  accuracy claim needs an **external cohort** (DEAP/SEED) — the one open
-  experiment. Flagged, not hidden.
+- **External replication done; absolute accuracy is dataset-specific.** The
+  central claims replicate on an independent IAPS cohort (TCRZEM, N=228,
+  different lab): SRP > PCA (+5–6.7 pp, CI excludes zero) and PCA→subject angle
+  0.9°. But absolute valence-decoding accuracy there is near three-class chance
+  (SRP 45.5%), because that cohort is far more subject-dominated (ambient ρ≈111
+  vs SHAPE's ≈11). The *comparative* compression result and the *mechanism* are
+  what generalize; absolute affect decoding is not the claim.
 - Linear readout only; one feature family (reservoir BSC6). The mechanism
   argument extends to any high-dim grouped feature space but is not yet shown
   there.
-- Absolute accuracies are modest; the contribution is the compression *choice*,
-  not state-of-the-art affect decoding.
+- Reservoir operating point and arousal-pooling were fixed to match SHAPE, not
+  tuned to the external cohort.
 
 ## 8. Reproducibility
 - All estimators verified on synthetic data without the restricted dataset
@@ -87,7 +93,7 @@ so it is leak-free **and**, under aggressive compression, more discriminative.
 - [x] F2 principal-angle rotation (controlled) — `nuisance_results.json` M1a
 - [x] F3 real-data angle + ρ bars (both cohorts) — `nuisance_results*.json` M2
 - [x] T1 compressor comparison — M3
-- [ ] F4 external-cohort replication — **pending dataset**
+- [x] F4 external-cohort replication (TCRZEM, N=228) — external_results.json
 
 ## What is NOT claimed
 - Not that ARSPI-Net is an accuracy leader (it is not; raw ERP is stronger).
