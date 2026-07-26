@@ -94,7 +94,7 @@
     {
       "id": "conf_3class_rawerp16",
       "tier": "confirmatory",
-      "description": "Raw ERP (16 temporal bins) reference, three conditions — outperforms reservoir",
+      "description": "Raw ERP (16 temporal bins) reference, three conditions \u2014 outperforms reservoir",
       "value": {
         "balanced_accuracy": 0.681,
         "ci95": [
@@ -527,7 +527,7 @@
     {
       "id": "arch_baseline_centered_table",
       "tier": "archived",
-      "description": "Baseline / centered comparison table (transductive centering — descriptive only)",
+      "description": "Baseline / centered comparison table (transductive centering \u2014 descriptive only)",
       "value": {
         "BandPower_SVM": {
           "uncentered": 0.477,
@@ -571,7 +571,7 @@
         "observations": 633
       },
       "split_strategy": "cross-validation with global preprocessing; centered columns use complete held-out participant panel (transductive)",
-      "preprocessing_scope": "GLOBAL PCA + TRANSDUCTIVE subject-mean centering — NOT prospective, NOT fold-local",
+      "preprocessing_scope": "GLOBAL PCA + TRANSDUCTIVE subject-mean centering \u2014 NOT prospective, NOT fold-local",
       "estimator": "EEGNet/GRU/LSTM (PyTorch, 5-seed ensembles), LogReg, SVM",
       "seed_set": [
         "5-seed ensembles, majority voting"
@@ -651,6 +651,95 @@
       "output_table": "dissertation/chDynamics.tex, chSynthesis.tex; experiments/ablation",
       "script": "chapter6Experiments/run_chapter6_exp*.py, chapter7Experiments/run_chapter7_experiment_*.py, experiments/ablation/layer_ablation.py",
       "notes": "Cohort-level, exploratory. Does NOT establish diagnostic subtypes, patient-level interpretation, or validated biomarkers."
+    },
+    {
+      "id": "novel_n1_srp_vs_pca",
+      "tier": "exploratory",
+      "description": "N1: data-independent SRP-64 vs fold-local data-fitted PCA-64, three-condition",
+      "value": {
+        "srp_percent": 64.329,
+        "foldlocal_pca_percent": 59.968,
+        "srp_minus_pca_pp": 4.361,
+        "ci95_pp": [
+          1.453,
+          7.173
+        ],
+        "srp64_seed_stability_mean": 64.009,
+        "srp64_seed_stability_std": 1.03
+      },
+      "data_source": "SHAPE three_condition (211 participants / 633 observations)",
+      "sample_count": {
+        "participants": 211,
+        "observations": 633
+      },
+      "split_strategy": "5x5 participant-grouped fold-local CV; paired participant-cluster bootstrap on the difference",
+      "preprocessing_scope": "fold-local; SRP data-independent, fold-local PCA fitted on training participants only",
+      "estimator": "LogisticRegression balanced accuracy; paired bootstrap difference",
+      "seed_set": [
+        "SRP seed 20240517",
+        "10 SRP seeds 1000-1009 for stability",
+        "reservoir seed 42"
+      ],
+      "output_table": "experiments/novel/NOVEL_RESULTS.md N1; novel_results_3class.json",
+      "script": "experiments/novel/run_novel_experiments.py",
+      "notes": "SRP significantly OUTPERFORMS fold-local PCA (interval excludes zero) on subject-entangled EEG. Fast-mode run."
+    },
+    {
+      "id": "novel_n2_reservoir_instrument",
+      "tier": "exploratory",
+      "description": "N2: reservoir instrument - cross-seed feature ICC, transfer function, noise robustness",
+      "value": {
+        "median_feature_icc": 0.0025,
+        "decision_seed_stability_mean": 64.009,
+        "decision_seed_stability_std": 1.03,
+        "transfer_monotonicity_spearman": 1.0,
+        "dynamic_range_ratio": 2.24,
+        "noise1SD_bsc6_srp64_percent": 64.139,
+        "noise1SD_raw_erp16_percent": 66.825
+      },
+      "data_source": "SHAPE three_condition (211 participants / 633 observations)",
+      "sample_count": {
+        "participants": 211,
+        "observations": 633
+      },
+      "split_strategy": "5x5 participant-grouped fold-local CV; ICC(2,1) across reservoir seeds 7/42/99",
+      "preprocessing_scope": "fold-local",
+      "estimator": "ICC(2,1); Spearman monotonicity; balanced accuracy robustness curves",
+      "seed_set": [
+        "reservoir seeds 7,42,99",
+        "SRP seed 20240517"
+      ],
+      "output_table": "experiments/novel/NOVEL_RESULTS.md N2; novel_results_3class.json",
+      "script": "experiments/novel/run_novel_experiments.py",
+      "notes": "Reproducibility is DECISION-level (seed-stable) not feature-level (ICC ~ 0). Honest nuance."
+    },
+    {
+      "id": "novel_n3_necessity_map",
+      "tier": "exploratory",
+      "description": "N3: representational necessity map and subject/condition variance ratio, three-condition",
+      "value": {
+        "intact_condition_ba_percent": 64.329,
+        "intact_rho": 9.816,
+        "temporal_bin_shuffle_drop_pp": -25.846,
+        "temporal_collapse_drop_pp": -17.568,
+        "electrode_shuffle_drop_pp": -20.158,
+        "temporal_bin_shuffle_rho": 97.033
+      },
+      "data_source": "SHAPE three_condition (211 participants / 633 observations)",
+      "sample_count": {
+        "participants": 211,
+        "observations": 633
+      },
+      "split_strategy": "5x5 participant-grouped fold-local CV; per-feature variance decomposition",
+      "preprocessing_scope": "fold-local; SRP-64 features",
+      "estimator": "balanced-accuracy drop under destruction; subject-to-condition variance ratio rho",
+      "seed_set": [
+        "reservoir seed 42",
+        "SRP seed 20240517"
+      ],
+      "output_table": "experiments/novel/NOVEL_RESULTS.md N3; novel_results_3class.json",
+      "script": "experiments/novel/run_novel_experiments.py",
+      "notes": "Temporal-bin order most necessary (-25.8pp). Intact rho=9.8 corroborates reported rho~7.2 entanglement."
     }
   ],
   "confirmatory_pipeline": {

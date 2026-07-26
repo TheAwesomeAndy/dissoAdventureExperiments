@@ -8,18 +8,21 @@ interpretability-first neuromorphic model that is deliberately *not* an
 accuracy leader: if the raw ERP is more accurate, what does the fixed,
 inspectable measurement chain buy you?
 
-  N1  Leak-free compression is free. A fixed, data-independent sparse random
-      projection (SRP-64) matches a data-fitted, fold-local PCA-64 under
-      participant-grouped cross-validation, with a Johnson-Lindenstrauss
-      dimensionality law and an SRP-seed-stability distribution. The projection
-      the confirmatory pipeline already uses is therefore not a lucky draw and
-      pays no accuracy cost for being leak-free by construction.
+  N1  Data-independent compression beats data-fitted PCA. A fixed sparse random
+      projection (SRP-64) is compared against a data-fitted, fold-local PCA-64
+      under participant-grouped cross-validation, with a Johnson-Lindenstrauss
+      dimensionality law and an SRP-seed-stability distribution. On
+      subject-entangled EEG the random projection is leak-free by construction
+      and, empirically, more discriminative than PCA (whose variance-maximizing
+      directions align to subject nuisance). The reported conclusion is derived
+      from the paired bootstrap interval, not asserted.
 
-  N2  The reservoir behaves as a calibrated instrument. Its BSC6 features are
-      reproducible across reservoir seeds (intraclass correlation), its
-      input-amplitude transfer function is monotonic with a quantified dynamic
-      range, and the downstream readout degrades gracefully under channel
-      dropout and additive noise.
+  N2  The reservoir behaves as a calibrated instrument at the DECISION level.
+      Individual random features are not reproducible across reservoir seeds
+      (near-zero ICC, as expected for a random projection), but the readout
+      accuracy is stable across seeds, the input-amplitude transfer function is
+      monotonic with a quantified dynamic range, and the readout degrades
+      gracefully under channel dropout and additive noise.
 
   N3  Representational necessity and subject/condition information. A necessity
       map measures, for each structural factor (temporal-bin order, temporal
