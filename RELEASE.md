@@ -25,7 +25,7 @@ agree on:
 
 ## 2. Obtain a green data-independent verification run
 
-Run the complete 453-check suite, preferably through
+Run the complete 487-check suite, preferably through
 `.github/workflows/verify.yml` on the exact candidate commit:
 
 ```text
@@ -43,7 +43,11 @@ python experiments/ch6_ch7_3class/verify_ch6_ch7_3class.py
 python experiments/ablation/verify_ablation.py
 python validation/verify_validators.py
 python experiments/confirmatory/verify_confirmatory.py
+python experiments/novel/verify_novel.py
+python experiments/novel/verify_nuisance.py
+python experiments/external/verify_external.py
 python experiments/confirmatory/check_against_manifest.py
+python experiments/novel/check_novel_manifest.py
 python validation/validate_dissertation_claims.py
 ```
 
@@ -106,7 +110,7 @@ Create a GitHub Release from that exact tag. The release notes should identify:
 - the corrected SRP-64 participant-grouped protocol;
 - the authorized-data reproduction record;
 - `results_manifest.json` and `docs/REPRODUCTION_MAP.md`;
-- the 453-check code-verification result; and
+- the 487-check code-verification result; and
 - the distinction between implementation verification and empirical validity.
 
 ## 6. Mint and record the Zenodo DOI **[owner action]**

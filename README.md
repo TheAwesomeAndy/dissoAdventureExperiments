@@ -142,6 +142,8 @@ dissoAdventureExperiments/
 ├── experiments/
 │   ├── chapter3/
 │   ├── confirmatory/
+│   ├── novel/            # leak-free compression + nuisance-alignment study
+│   ├── external/         # independent-cohort replication (TCRZEM)
 │   ├── ch5_4class/
 │   ├── ch6_ch7_3class/
 │   ├── ablation/
@@ -183,7 +185,7 @@ torch>=1.12  # canonical PyTorch baselines only
 
 ## Verification
 
-The GitHub Actions workflow runs the 453 declared data-independent checks and uploads per-suite logs. These checks establish that the scripts execute, the operators satisfy their stated implementation contracts, and fixed seeds produce deterministic outputs. They do not establish that an empirical result is true, clinically valid, externally generalizable, or reproduced from restricted data.
+The GitHub Actions workflow runs the 487 declared data-independent checks and uploads per-suite logs. These checks establish that the scripts execute, the operators satisfy their stated implementation contracts, and fixed seeds produce deterministic outputs. They do not establish that an empirical result is true, clinically valid, externally generalizable, or reproduced from restricted data.
 
 | Suite | Checks |
 |---|---:|
@@ -201,7 +203,18 @@ The GitHub Actions workflow runs the 453 declared data-independent checks and up
 | Ablation | 23 |
 | Data validators | 20 |
 | Confirmatory pipeline | 18 |
-| **Total** | **453** |
+| Novel compression experiments | 13 |
+| Nuisance-alignment study | 10 |
+| External-replication harness | 11 |
+| **Total** | **487** |
+
+The workflow additionally runs three consistency gates that compare committed
+result files against `results_manifest.json` rather than exercising code:
+`experiments/confirmatory/check_against_manifest.py` (confirmatory rows),
+`experiments/novel/check_novel_manifest.py` (novel, nuisance, and external
+rows), and `validation/validate_dissertation_claims.py` (repository-to-
+dissertation consistency). A green run therefore also establishes that the
+committed JSON outputs and the manifest agree.
 
 See `docs/VERIFICATION_METHODOLOGY.md`, `docs/REPRODUCTION_MAP.md`, and `results_manifest.json` for the verification boundary and result provenance.
 

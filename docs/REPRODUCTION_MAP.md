@@ -223,4 +223,13 @@ reference implementations. It is retained for provenance and is superseded by
 | Ablation | `experiments/ablation/verify_ablation.py` | 23 |
 | Data validators | `validation/verify_validators.py` | 20 |
 | Confirmatory pipeline | `experiments/confirmatory/verify_confirmatory.py` | 18 |
-| **Total** | | **453** |
+| Novel compression experiments | `experiments/novel/verify_novel.py` | 13 |
+| Nuisance-alignment study | `experiments/novel/verify_nuisance.py` | 10 |
+| External-replication harness | `experiments/external/verify_external.py` | 11 |
+| **Total** | | **487** |
+
+Three additional CI gates compare committed result files against the manifest
+rather than exercising code:
+`experiments/confirmatory/check_against_manifest.py`,
+`experiments/novel/check_novel_manifest.py`, and
+`validation/validate_dissertation_claims.py`.
