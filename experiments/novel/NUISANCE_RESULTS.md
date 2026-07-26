@@ -29,13 +29,25 @@ paired participant-bootstrap difference **+4.4pp [1.5, 7.2]** (excludes zero).
 | Mean angle to subject / condition | 3.95° / 10.19° | — | — |
 
 PCA-64's subspace is **nearly collinear with the subject-nuisance subspace
-(1.34°)** and inflates ρ to 44; SRP-64 stays *below* ambient (7.3). This is the
-direct geometric explanation of the N1 accuracy gap.
+(1.34°)** and inflates ρ to 44; SRP-64 stays *below* ambient (7.3).
+
+> **Operator caveat (do not over-connect to N1).** M2 as computed here uses a
+> **global** compression — the full BSC tensor is flattened (~52,224 dims) and
+> reduced to 64 total coordinates. N1's accuracy comparison instead uses a
+> **blockwise** compression — each electrode's 1,536 BSC coordinates are reduced
+> to 64 *independently* and the electrode blocks are concatenated (2,112 total
+> coordinates for the reported per-electrode SRP). These are different linear
+> operators at very different compression ratios, so M2 documents a **global
+> nuisance-alignment phenomenon** but is **not yet** the exact geometric
+> explanation of the N1 gap. The blockwise-matched geometry (per-electrode PCA
+> vs SRP, fold by fold) is a pending experiment; until it is run, the causal
+> "this explains N1" language is withheld.
 
 ## Cross-granularity replication (real data)
 
-The mechanism replicates on the independent four-category labelling
-(`nuisance_results_4class.json`, 210/840):
+The mechanism holds across the four-category labelling
+(`nuisance_results_4class.json`, 210/840) — a **cross-granularity consistency
+check within SHAPE**, not an independent cohort (same participants/acquisition):
 
 | Quantity | 3-condition | 4-category |
 |---|---:|---:|
@@ -68,12 +80,15 @@ data-dependent alignment.
 
 ## Honest boundary and null
 
-- **M1b — accuracy is regime-dependent.** In the controlled model, SRP does
-  **not** always beat PCA on accuracy (crossover not reached over the swept
-  range at dim=200, k=16). The accuracy advantage requires compression
-  aggressive enough that the condition signal falls below the retained nuisance
-  spectrum — which the real SHAPE BSC regime (1,536→64 per electrode) satisfies,
-  but not every regime. We report the crossover, not a universal win.
+- **M1b — the controlled model does NOT reproduce the accuracy ordering.** In
+  the controlled model, fold-local PCA outperforms SRP at *every* tested nuisance
+  level (crossover ratio: none). So the defensible controlled result is only
+  that **PCA increasingly aligns with the simulated subject subspace as subject
+  variance grows** (M1a). It does **not** establish that this rotation *causes*
+  SRP to become more discriminative. On the measured SHAPE representations SRP
+  does exceed fold-local PCA, but the present controlled model does not reproduce
+  that accuracy ordering, and we do not claim the SHAPE regime "satisfies" an
+  unmeasured crossover condition.
 - **M3 — compressor comparison** (controlled, ratio 3.0, dim 200): fold-local
   PCA 98.8%, random-subsample 88.1%, SRP 91.9%, supervised LDA 85.0%. In a mild
   regime PCA is the best compressor; the SRP advantage is not universal.
