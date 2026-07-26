@@ -35,6 +35,9 @@ import nuisance_study as ns
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data3", default=None, help="three-condition batch_data dir")
+    ap.add_argument("--data4", default=None, help="four-category categories dir")
+    ap.add_argument("--granularity", choices=["three_condition", "four_category"],
+                    default="three_condition")
     ap.add_argument("--out", default="nuisance_results.json")
     ap.add_argument("--fast", action="store_true")
     args = ap.parse_args()
@@ -74,9 +77,14 @@ def main():
     log(f"M3 @ratio=3.0: {m3}")
 
     # ---- Real-data mechanism (M2, M5) ---------------------------------
-    if args.data3 and os.path.isdir(args.data3):
-        raw, y, groups = conf.load_3class(args.data3)
-        log(f"real three_condition: {raw.shape[0]} obs / {len(np.unique(groups))} participants")
+    if args.granularity == "four_category":
+        real_dir, loader = args.data4, conf.load_4class
+    else:
+        real_dir, loader = args.data3, conf.load_3class
+    if real_dir and os.path.isdir(real_dir):
+        raw, y, groups = loader(real_dir)
+        log(f"real {args.granularity}: {raw.shape[0]} obs / {len(np.unique(groups))} participants")
+        out["granularity"] = args.granularity
         bsc = cp.build_bsc_features(raw, reservoir_seed=42)
         bsc_flat = bsc.reshape(bsc.shape[0], -1)
         log("BSC6 built")
@@ -95,7 +103,8 @@ def main():
         log(f"M5 rho: rawERP16={dis['raw_erp16_rho']} bsc6={dis['bsc6_rho']} "
             f"bsc6/srp64={dis['bsc6_srp64_rho']}")
     else:
-        log("no --data3: skipping real-data M2/M5 (synthetic M1/M3 completed)")
+        log(f"no data dir for {args.granularity}: skipping real M2/M5 "
+            "(synthetic M1/M3 completed)")
 
     with open(args.out, "w") as f:
         json.dump(out, f, indent=2)
