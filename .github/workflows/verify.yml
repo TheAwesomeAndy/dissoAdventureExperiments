@@ -141,6 +141,20 @@ jobs:
           set -o pipefail
           python experiments/confirmatory/check_against_manifest.py 2>&1 | tee ci-logs/manifest.log
 
+      - name: Verify novel experiments
+        id: novel
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/novel/verify_novel.py 2>&1 | tee ci-logs/novel.log
+
+      - name: Verify nuisance-alignment study
+        id: nuisance
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/novel/verify_nuisance.py 2>&1 | tee ci-logs/nuisance.log
+
       - name: Check repository and dissertation consistency
         id: claims
         continue-on-error: true
@@ -168,6 +182,7 @@ jobs:
             "${{ steps.threecond.outcome }}" "${{ steps.ablation.outcome }}"
             "${{ steps.validators.outcome }}" "${{ steps.confirmatory.outcome }}"
             "${{ steps.manifest.outcome }}" "${{ steps.claims.outcome }}"
+            "${{ steps.novel.outcome }}" "${{ steps.nuisance.outcome }}"
           )
           printf 'Verifier outcomes: %s\n' "${outcomes[*]}"
           for outcome in "${outcomes[@]}"; do

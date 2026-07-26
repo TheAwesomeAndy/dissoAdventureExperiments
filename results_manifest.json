@@ -740,6 +740,95 @@
       "output_table": "experiments/novel/NOVEL_RESULTS.md N3; novel_results_3class.json",
       "script": "experiments/novel/run_novel_experiments.py",
       "notes": "Temporal-bin order most necessary (-25.8pp). Intact rho=9.8 corroborates reported rho~7.2 entanglement."
+    },
+    {
+      "id": "novel_m2_pca_nuisance_alignment",
+      "tier": "exploratory",
+      "description": "M2: PCA-64 aligns to the subject-nuisance subspace (real SHAPE), explaining N1",
+      "value": {
+        "pca_min_angle_to_subject_deg": 1.34,
+        "pca_min_angle_to_condition_deg": 3.38,
+        "pca_mean_angle_to_subject_deg": 3.95,
+        "pca_mean_angle_to_condition_deg": 10.19,
+        "rho_ambient": 11.407,
+        "rho_pca_compressed": 44.362,
+        "rho_srp_compressed": 7.336
+      },
+      "data_source": "SHAPE three_condition (211/633), BSC6 flattened (52224-dim)",
+      "sample_count": {
+        "participants": 211,
+        "observations": 633
+      },
+      "split_strategy": "descriptive geometry on full feature matrix (not a performance estimate)",
+      "preprocessing_scope": "global (geometry characterization); reservoir seed 42",
+      "estimator": "principal angles (scipy.linalg.subspace_angles); subject/condition variance ratio",
+      "seed_set": [
+        "reservoir seed 42",
+        "SRP seed 20240517"
+      ],
+      "output_table": "experiments/novel/NUISANCE_RESULTS.md M2; nuisance_results.json",
+      "script": "experiments/novel/run_nuisance_study.py",
+      "notes": "PCA top-64 near-collinear with subject subspace (1.34 deg), concentrates rho to 44; SRP stays at 7.3 (below ambient 11.4). Mechanism behind N1."
+    },
+    {
+      "id": "novel_m1a_angle_rotation",
+      "tier": "exploratory",
+      "description": "M1a: controlled demonstration that PCA subspace rotates toward the nuisance as it grows",
+      "value": {
+        "pca_angle_to_subject_deg_by_ratio": {
+          "0.0": 26.6,
+          "0.5": 10.8,
+          "1.0": 4.5,
+          "2.0": 1.3,
+          "4.0": 0.3
+        },
+        "pca_angle_to_condition_deg_by_ratio": {
+          "0.0": 0.7,
+          "0.5": 0.9,
+          "1.0": 1.6,
+          "2.0": 5.2,
+          "4.0": 29.4
+        }
+      },
+      "data_source": "semi-synthetic controlled data (dim=200, 60 participants, 3 conditions)",
+      "sample_count": {
+        "participants": 60,
+        "observations": 180
+      },
+      "split_strategy": "controlled generative model; descriptive geometry",
+      "preprocessing_scope": "n/a (synthetic)",
+      "estimator": "principal angles vs subject/condition subspaces",
+      "seed_set": [
+        "generator seed 0",
+        "SRP seed 20240517"
+      ],
+      "output_table": "experiments/novel/NUISANCE_RESULTS.md M1a; nuisance_results.json",
+      "script": "experiments/novel/run_nuisance_study.py",
+      "notes": "Monotone, dataset-independent: PCA maximizes variance = nuisance once nuisance dominates."
+    },
+    {
+      "id": "novel_m5_reservoir_not_disentangler",
+      "tier": "exploratory",
+      "description": "M5 (honest null): the reservoir does not reduce subject/condition entanglement",
+      "value": {
+        "raw_erp16_rho": 8.679,
+        "bsc6_rho": 11.407,
+        "bsc6_srp64_rho": 9.816
+      },
+      "data_source": "SHAPE three_condition (211/633)",
+      "sample_count": {
+        "participants": 211,
+        "observations": 633
+      },
+      "split_strategy": "descriptive variance decomposition",
+      "preprocessing_scope": "reservoir seed 42; SRP seed 20240517",
+      "estimator": "subject-to-condition variance ratio rho",
+      "seed_set": [
+        "reservoir seed 42"
+      ],
+      "output_table": "experiments/novel/NUISANCE_RESULTS.md M5; nuisance_results.json",
+      "script": "experiments/novel/run_nuisance_study.py",
+      "notes": "raw ERP-16 rho (8.7) <= BSC6 rho (11.4): the neuromorphic transform slightly increases entanglement. Any reduction to 9.8 is from the isotropic projection, not the reservoir."
     }
   ],
   "confirmatory_pipeline": {

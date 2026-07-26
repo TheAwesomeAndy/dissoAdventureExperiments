@@ -70,6 +70,44 @@ necessary for what*:
 inspectable factors are causally load-bearing for condition decoding, and a
 quantitative account of how subject nuisance is distributed across them.
 
+## Follow-on study — the nuisance-alignment account (M1–M5)
+
+N1 showed *that* a data-independent random projection beats data-fitted PCA on
+this cohort. The follow-on study explains *why*, and maps *when* it holds — the
+publishable core.
+
+- **M2 (real data, the mechanism).** On SHAPE BSC features, the PCA-64 subspace
+  is almost collinear with the subject-nuisance subspace (**minimum principal
+  angle 1.34°**, vs 3.38° to the condition subspace; mean 3.95° vs 10.19°) and
+  concentrates subject variance (compressed subject/condition ratio **ρ = 44**
+  vs ambient 11), while SRP-64 stays **below** ambient (ρ = 7.3). PCA spends its
+  budget on nuisance; the isotropic random projection does not.
+- **M1a (controlled, the generalization).** As the subject-nuisance magnitude
+  grows, the PCA subspace rotates *monotonically* away from the condition
+  subspace and toward the subject subspace (e.g. 26.6° → 0.3° to subject; 0.7° →
+  29.4° to condition). This is dataset-independent: PCA maximizes variance,
+  which is the nuisance once the nuisance dominates.
+- **M1b (controlled, honest boundary).** The *accuracy* consequence is
+  **regime-dependent**: SRP overtakes PCA only once compression is aggressive
+  enough that the condition signal falls below the retained nuisance spectrum.
+  We report the crossover rather than claim a universal win — the real SHAPE
+  regime happens to satisfy it (+4.4pp for SRP in N1).
+- **M3 (compressor comparison).** SRP vs fold-local PCA vs supervised in-fold
+  LDA vs random coordinate subsampling under identical grouped CV.
+- **M5 (honest null).** The neuromorphic transform does **not** itself reduce
+  entanglement: raw-ERP ρ (8.7) ≤ BSC6 ρ (11.4). The disentanglement, where it
+  occurs, comes from the *isotropic projection*, not the reservoir. Reported
+  plainly.
+
+*Publishable claim:* on subject-grouped clinical EEG, unsupervised
+variance-maximizing compression aligns to the grouping nuisance by construction;
+a data-independent random projection is leak-free and avoids that alignment.
+This is stated with its mechanism (principal angles), its boundary (M1b regime),
+and an honest null (M5), which is exactly the register a careful reviewer wants.
+
+Files: `nuisance_study.py`, `run_nuisance_study.py`, `verify_nuisance.py`,
+results in `NUISANCE_RESULTS.md` / `nuisance_results.json`.
+
 ## Files
 
 | File | Purpose |
