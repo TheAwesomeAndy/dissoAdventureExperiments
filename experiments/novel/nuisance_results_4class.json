@@ -1,0 +1,110 @@
+{
+  "study": "nuisance-alignment compression",
+  "components": {
+    "M1a_angle_rotation": {
+      "curve": [
+        {
+          "nuisance_ratio": 0.0,
+          "pca_angle_to_subject_deg": 26.59,
+          "pca_angle_to_condition_deg": 0.71,
+          "rho_pca_compressed": 2.407,
+          "rho_srp_compressed": 0.703
+        },
+        {
+          "nuisance_ratio": 0.5,
+          "pca_angle_to_subject_deg": 10.76,
+          "pca_angle_to_condition_deg": 0.95,
+          "rho_pca_compressed": 4.686,
+          "rho_srp_compressed": 1.221
+        },
+        {
+          "nuisance_ratio": 1.0,
+          "pca_angle_to_subject_deg": 4.52,
+          "pca_angle_to_condition_deg": 1.64,
+          "rho_pca_compressed": 6.444,
+          "rho_srp_compressed": 2.641
+        },
+        {
+          "nuisance_ratio": 2.0,
+          "pca_angle_to_subject_deg": 1.34,
+          "pca_angle_to_condition_deg": 5.15,
+          "rho_pca_compressed": 7.483,
+          "rho_srp_compressed": 8.021
+        },
+        {
+          "nuisance_ratio": 4.0,
+          "pca_angle_to_subject_deg": 0.35,
+          "pca_angle_to_condition_deg": 29.42,
+          "rho_pca_compressed": 19.747,
+          "rho_srp_compressed": 29.074
+        }
+      ],
+      "n_components": 16,
+      "dim": 200,
+      "subject_rank": 20
+    },
+    "M1b_accuracy_sweep": {
+      "curve": [
+        {
+          "nuisance_ratio": 0.0,
+          "srp_percent": 98.889,
+          "pca_percent": 100.0,
+          "srp_minus_pca_pp": -1.111
+        },
+        {
+          "nuisance_ratio": 0.5,
+          "srp_percent": 95.111,
+          "pca_percent": 100.0,
+          "srp_minus_pca_pp": -4.889
+        },
+        {
+          "nuisance_ratio": 1.0,
+          "srp_percent": 87.333,
+          "pca_percent": 100.0,
+          "srp_minus_pca_pp": -12.667
+        },
+        {
+          "nuisance_ratio": 2.0,
+          "srp_percent": 68.556,
+          "pca_percent": 100.0,
+          "srp_minus_pca_pp": -31.444
+        },
+        {
+          "nuisance_ratio": 4.0,
+          "srp_percent": 50.667,
+          "pca_percent": 90.0,
+          "srp_minus_pca_pp": -39.333
+        }
+      ],
+      "crossover_ratio": null,
+      "n_components": 16,
+      "dim": 200
+    },
+    "M3_compressor_comparison": {
+      "nuisance_ratio": 3.0,
+      "dim": 200,
+      "balanced_accuracy_percent": {
+        "srp64": 91.889,
+        "foldlocal_pca64": 98.778,
+        "supervised_lda": 85.0,
+        "random_subsample64": 88.111
+      }
+    },
+    "M2_geometry": {
+      "rho_ambient": 17.203,
+      "rho_pca_compressed": 31.87,
+      "rho_srp_compressed": 14.149,
+      "pca_min_angle_to_subject_deg": 1.59,
+      "pca_min_angle_to_condition_deg": 5.29,
+      "pca_mean_angle_to_subject_deg": 4.69,
+      "pca_mean_angle_to_condition_deg": 8.22
+    },
+    "M5_disentanglement": {
+      "raw_erp16_rho": 12.324,
+      "bsc6_rho": 17.203,
+      "bsc6_srp64_rho": 14.926
+    }
+  },
+  "granularity": "four_category",
+  "note": "Four-category cohort (210/840), fast mode. Cross-granularity replication of the M2 mechanism and M5 null. Summary statistics only; exploratory."
+}
