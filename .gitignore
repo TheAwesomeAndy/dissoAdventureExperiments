@@ -41,3 +41,9 @@ repo_update/
 
 # Animation pre-compute caches (rebuilt by animate_*.py scripts)
 chapter4Experiments/cache/
+
+# External replication data (restricted download, never commit)
+external_data/
+experiments/external/external_data/
+*.set
+*.fdt
