@@ -29,6 +29,26 @@ random projection has no such bias, so it is both leak-free by construction and
 more discriminative. This is a concrete argument against the default PCA step in
 grouped clinical-EEG pipelines.
 
+### Cross-granularity replication (four categories, N=210 / 840)
+
+All three N-results replicate on the independent four-category labelling
+(`novel_results_4class.json`):
+
+| Result | Three-condition | Four-category |
+|---|---|---|
+| N1 SRP-64 vs PCA-64 | 64.3 vs 60.0, **+4.4 [1.5, 7.2]** | 54.6 vs 50.7, **+3.9 [1.5, 6.4]** |
+| N1 SRP advantage at dims 16 / 32 | +3.9 / +5.3 | +6.3 / +5.4 |
+| N1 SRP-64 seed stability | 64.0% ± 1.0 | 54.1% ± 1.1 |
+| N2 feature ICC (near-zero) | 0.003 | 0.003 |
+| N2 transfer monotonicity ρ | 1.0 | 1.0 |
+| N3 temporal-bin-shuffle drop | −25.8pp | −28.2pp |
+| N3 intact ρ → shuffle ρ | 9.8 → 97 | 14.9 → 70 |
+
+Every headline holds across both label sets: SRP beats fold-local PCA at every
+dimension (interval excludes zero), reproducibility is decision-level not
+feature-level, and temporal-bin order is the most necessary factor. The findings
+are not an artefact of the three-condition labelling.
+
 ## N2 — Reservoir as an instrument: decision-level reproducibility, not feature-level
 
 - **Cross-seed feature ICC(2,1): median ≈ 0.003** over 2,176 features. Individual

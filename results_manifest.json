@@ -856,6 +856,68 @@
       "output_table": "experiments/novel/NUISANCE_RESULTS.md cross-granularity; nuisance_results_4class.json",
       "script": "experiments/novel/run_nuisance_study.py",
       "notes": "Cross-granularity replication: PCA 1.59 deg to subject (vs 5.29 to condition), rho_pca 31.9 > ambient 17.2 > rho_srp 14.1. Mirrors 3-condition."
+    },
+    {
+      "id": "novel_n1_srp_vs_pca_4class",
+      "tier": "exploratory",
+      "description": "N1 replication (four-category): SRP-64 outperforms fold-local PCA-64",
+      "value": {
+        "srp_percent": 54.643,
+        "foldlocal_pca_percent": 50.738,
+        "srp_minus_pca_pp": 3.905,
+        "ci95_pp": [
+          1.476,
+          6.405
+        ],
+        "dim16_diff_pp": 6.286,
+        "dim32_diff_pp": 5.404,
+        "srp64_seed_stability_mean": 54.064,
+        "srp64_seed_stability_std": 1.097
+      },
+      "data_source": "SHAPE four_category (210/840)",
+      "sample_count": {
+        "participants": 210,
+        "observations": 840
+      },
+      "split_strategy": "5x5 participant-grouped fold-local CV; paired participant-cluster bootstrap",
+      "preprocessing_scope": "fold-local; SRP data-independent, PCA fold-local",
+      "estimator": "LogisticRegression balanced accuracy; paired bootstrap difference",
+      "seed_set": [
+        "SRP seed 20240517",
+        "10 SRP seeds for stability",
+        "reservoir seed 42"
+      ],
+      "output_table": "experiments/novel/NOVEL_RESULTS.md cross-granularity; novel_results_4class.json",
+      "script": "experiments/novel/run_novel_experiments.py",
+      "notes": "Replicates 3-condition: SRP > PCA at all dims, CI excludes zero (+3.9 [1.5,6.4] at 64)."
+    },
+    {
+      "id": "novel_n3_necessity_map_4class",
+      "tier": "exploratory",
+      "description": "N3 replication (four-category): necessity map and rho inflation",
+      "value": {
+        "intact_condition_ba_percent": 54.643,
+        "intact_rho": 14.926,
+        "temporal_bin_shuffle_drop_pp": -28.238,
+        "temporal_collapse_drop_pp": -22.405,
+        "electrode_shuffle_drop_pp": -22.524,
+        "temporal_bin_shuffle_rho": 69.604
+      },
+      "data_source": "SHAPE four_category (210/840)",
+      "sample_count": {
+        "participants": 210,
+        "observations": 840
+      },
+      "split_strategy": "5x5 participant-grouped fold-local CV; per-feature variance decomposition",
+      "preprocessing_scope": "fold-local; SRP-64 features",
+      "estimator": "balanced-accuracy drop under destruction; subject/condition rho",
+      "seed_set": [
+        "reservoir seed 42",
+        "SRP seed 20240517"
+      ],
+      "output_table": "experiments/novel/NOVEL_RESULTS.md cross-granularity; novel_results_4class.json",
+      "script": "experiments/novel/run_novel_experiments.py",
+      "notes": "Replicates 3-condition: temporal-bin order most necessary (-28.2pp); rho inflates 14.9->70."
     }
   ],
   "confirmatory_pipeline": {

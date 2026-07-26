@@ -1,0 +1,168 @@
+{
+  "granularity": "four_category",
+  "protocol": {
+    "cv": "5x5-fold participant-grouped, fold-local",
+    "reservoir": "N=256, seeds=(7, 42, 99)",
+    "srp_seed": 20240517
+  },
+  "results": {
+    "n_participants": 210,
+    "n_observations": 840,
+    "N1_leak_free_compression": {
+      "dimensionality_sweep": {
+        "16": {
+          "srp_percent": 48.548,
+          "foldlocal_pca_percent": 42.262,
+          "srp_minus_pca_pp": 6.286,
+          "srp_minus_pca_ci95_pp": [
+            3.285,
+            9.262
+          ]
+        },
+        "32": {
+          "srp_percent": 51.214,
+          "foldlocal_pca_percent": 45.81,
+          "srp_minus_pca_pp": 5.404,
+          "srp_minus_pca_ci95_pp": [
+            2.571,
+            8.238
+          ]
+        },
+        "64": {
+          "srp_percent": 54.643,
+          "foldlocal_pca_percent": 50.738,
+          "srp_minus_pca_pp": 3.905,
+          "srp_minus_pca_ci95_pp": [
+            1.476,
+            6.405
+          ]
+        }
+      },
+      "srp64_seed_stability": {
+        "n_seeds": 10,
+        "mean": 54.064,
+        "std": 1.097,
+        "min": 52.167,
+        "max": 55.595,
+        "range_pp": 3.428
+      },
+      "interpretation": "The fixed data-independent SRP significantly outperforms a fold-local data-fitted PCA at the primary dimension (paired bootstrap interval excludes zero, SRP higher). On subject-entangled EEG, variance-maximizing PCA aligns to subject nuisance, whereas the isotropic random projection preserves condition geometry; compression is thus leak-free by construction and more discriminative."
+    },
+    "N2_reservoir_instrument": {
+      "cross_seed_feature_reliability": {
+        "median_icc": 0.0027,
+        "q1_icc": -0.0294,
+        "q3_icc": 0.0421,
+        "n_features": 2176
+      },
+      "input_amplitude_transfer_function": {
+        "monotonicity_spearman": 1.0,
+        "dynamic_range_ratio": 2.271,
+        "totals": [
+          6378.0,
+          7736.0,
+          9072.0,
+          10117.0,
+          11490.0,
+          12550.0,
+          13509.0,
+          14486.0
+        ]
+      },
+      "robustness": {
+        "channel_dropout": {
+          "bsc6_srp64": [
+            {
+              "level": 0.0,
+              "balanced_accuracy_percent": 54.643
+            },
+            {
+              "level": 0.15,
+              "balanced_accuracy_percent": 48.738
+            },
+            {
+              "level": 0.3,
+              "balanced_accuracy_percent": 44.19
+            }
+          ],
+          "raw_erp16": [
+            {
+              "level": 0.0,
+              "balanced_accuracy_percent": 60.571
+            },
+            {
+              "level": 0.15,
+              "balanced_accuracy_percent": 53.452
+            },
+            {
+              "level": 0.3,
+              "balanced_accuracy_percent": 50.405
+            }
+          ]
+        },
+        "additive_noise": {
+          "bsc6_srp64": [
+            {
+              "level": 0.0,
+              "balanced_accuracy_percent": 54.643
+            },
+            {
+              "level": 0.5,
+              "balanced_accuracy_percent": 53.976
+            },
+            {
+              "level": 1.0,
+              "balanced_accuracy_percent": 53.143
+            }
+          ],
+          "raw_erp16": [
+            {
+              "level": 0.0,
+              "balanced_accuracy_percent": 60.571
+            },
+            {
+              "level": 0.5,
+              "balanced_accuracy_percent": 60.167
+            },
+            {
+              "level": 1.0,
+              "balanced_accuracy_percent": 57.071
+            }
+          ]
+        }
+      },
+      "interpretation": "Instrument reproducibility is a DECISION-level property, not a feature-level one. Individual SRP coordinates have near-zero cross-seed ICC (expected for a random projection), yet the readout accuracy is stable across projection and reservoir seeds (54.064% +/- 1.097 over 10 SRP seeds). The transfer function is monotonic and the readout is comparatively noise-robust; these, not feature-wise ICC, are the instrument guarantees a black-box trained network cannot state about its weights."
+    },
+    "N3_necessity_map": {
+      "intact": {
+        "condition_balanced_accuracy_percent": 54.643,
+        "condition_accuracy_drop_pp": 0.0,
+        "subject_to_condition_rho": 14.926,
+        "subject_fraction": 0.4626,
+        "condition_fraction": 0.031
+      },
+      "temporal_bin_shuffle": {
+        "condition_balanced_accuracy_percent": 26.405,
+        "condition_accuracy_drop_pp": -28.238,
+        "subject_to_condition_rho": 69.604,
+        "subject_fraction": 0.2533,
+        "condition_fraction": 0.0036
+      },
+      "temporal_collapse": {
+        "condition_balanced_accuracy_percent": 32.238,
+        "condition_accuracy_drop_pp": -22.405,
+        "subject_to_condition_rho": 53.391,
+        "subject_fraction": 0.2782,
+        "condition_fraction": 0.0052
+      },
+      "electrode_shuffle": {
+        "condition_balanced_accuracy_percent": 32.119,
+        "condition_accuracy_drop_pp": -22.524,
+        "subject_to_condition_rho": 61.943,
+        "subject_fraction": 0.2509,
+        "condition_fraction": 0.004
+      }
+    }
+  },
+  "note": "Four-category cohort (210/840), fast mode. Cross-granularity replication of N1/N2/N3. Summary statistics only; exploratory."
+}
