@@ -32,6 +32,23 @@ PCA-64's subspace is **nearly collinear with the subject-nuisance subspace
 (1.34°)** and inflates ρ to 44; SRP-64 stays *below* ambient (7.3). This is the
 direct geometric explanation of the N1 accuracy gap.
 
+## Cross-granularity replication (real data)
+
+The mechanism replicates on the independent four-category labelling
+(`nuisance_results_4class.json`, 210/840):
+
+| Quantity | 3-condition | 4-category |
+|---|---:|---:|
+| PCA min principal angle → **subject** | **1.32°** | **1.59°** |
+| PCA min principal angle → condition | 3.32° | 5.29° |
+| ρ compressed — PCA / SRP / ambient | 44.4 / 7.3 / 11.4 | 31.9 / 14.1 / 17.2 |
+| M5 null — raw-ERP ρ ≤ BSC6 ρ | 8.7 ≤ 11.4 | 12.3 ≤ 17.2 |
+
+On both label sets PCA-64 sits ~1.3–1.6° from the subject subspace and inflates
+ρ above ambient, while SRP-64 stays below ambient. The reservoir-is-not-the-
+disentangler null replicates too. The geometric mechanism is not an artefact of
+one labelling.
+
 ## Generalization — the mechanism is monotone (M1a, controlled)
 
 As subject-nuisance magnitude grows, the PCA subspace rotates away from

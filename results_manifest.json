@@ -829,6 +829,33 @@
       "output_table": "experiments/novel/NUISANCE_RESULTS.md M5; nuisance_results.json",
       "script": "experiments/novel/run_nuisance_study.py",
       "notes": "raw ERP-16 rho (8.7) <= BSC6 rho (11.4): the neuromorphic transform slightly increases entanglement. Any reduction to 9.8 is from the isotropic projection, not the reservoir."
+    },
+    {
+      "id": "novel_m2_pca_nuisance_alignment_4class",
+      "tier": "exploratory",
+      "description": "M2 replication on four-category cohort: PCA-64 aligns to subject subspace",
+      "value": {
+        "pca_min_angle_to_subject_deg": 1.59,
+        "pca_min_angle_to_condition_deg": 5.29,
+        "rho_ambient": 17.203,
+        "rho_pca_compressed": 31.87,
+        "rho_srp_compressed": 14.149
+      },
+      "data_source": "SHAPE four_category (210/840), BSC6 flattened",
+      "sample_count": {
+        "participants": 210,
+        "observations": 840
+      },
+      "split_strategy": "descriptive geometry on full feature matrix",
+      "preprocessing_scope": "reservoir seed 42; SRP seed 20240517",
+      "estimator": "principal angles; subject/condition variance ratio",
+      "seed_set": [
+        "reservoir seed 42",
+        "SRP seed 20240517"
+      ],
+      "output_table": "experiments/novel/NUISANCE_RESULTS.md cross-granularity; nuisance_results_4class.json",
+      "script": "experiments/novel/run_nuisance_study.py",
+      "notes": "Cross-granularity replication: PCA 1.59 deg to subject (vs 5.29 to condition), rho_pca 31.9 > ambient 17.2 > rho_srp 14.1. Mirrors 3-condition."
     }
   ],
   "confirmatory_pipeline": {
