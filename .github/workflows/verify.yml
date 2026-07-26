@@ -155,6 +155,20 @@ jobs:
           set -o pipefail
           python experiments/novel/verify_nuisance.py 2>&1 | tee ci-logs/nuisance.log
 
+      - name: Verify external-replication harness
+        id: external
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/external/verify_external.py 2>&1 | tee ci-logs/external.log
+
+      - name: Check novel/exploratory results against manifest
+        id: novelmanifest
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/novel/check_novel_manifest.py 2>&1 | tee ci-logs/novelmanifest.log
+
       - name: Check repository and dissertation consistency
         id: claims
         continue-on-error: true
@@ -183,6 +197,7 @@ jobs:
             "${{ steps.validators.outcome }}" "${{ steps.confirmatory.outcome }}"
             "${{ steps.manifest.outcome }}" "${{ steps.claims.outcome }}"
             "${{ steps.novel.outcome }}" "${{ steps.nuisance.outcome }}"
+            "${{ steps.external.outcome }}" "${{ steps.novelmanifest.outcome }}"
           )
           printf 'Verifier outcomes: %s\n' "${outcomes[*]}"
           for outcome in "${outcomes[@]}"; do
