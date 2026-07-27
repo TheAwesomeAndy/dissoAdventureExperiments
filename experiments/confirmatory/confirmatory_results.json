@@ -268,5 +268,49 @@
     "readout": "LogisticRegression; RidgeClassifier for permutation",
     "reservoir": "N=256, beta=0.05, threshold=0.5, seeds=(7, 42, 99)"
   },
+  "provenance": {
+    "code_sha256": {
+      "confirmatory_pipeline.py": "5a2b81c860bfeceebf3bfb6dd89920dd05f64116dcb1b21101a08b3bdc16594d",
+      "run_confirmatory_validation.py": "25d9e30342b77f945927a87789b5c2a7a4af65c926ea10202dd557f7219f95fb"
+    },
+    "cohorts": {
+      "four_category": {
+        "observations": 840,
+        "participants": 210
+      },
+      "three_condition": {
+        "observations": 633,
+        "participants": 211
+      }
+    },
+    "command_line": "run_confirmatory_validation.py --data3 ./batch_data --data4 ./categories",
+    "completed_utc": "2026-07-27T02:00:18+00:00",
+    "generated_by": "experiments/confirmatory/run_confirmatory_validation.py",
+    "git_commit": "f6a0c66e2b875b4d10433ee25f0fe56d11f78fef",
+    "git_working_tree": "clean",
+    "input_file_counts": {
+      "four_category": 848,
+      "three_condition": 636
+    },
+    "package_versions": {
+      "numpy": "2.4.6",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0"
+    },
+    "platform": "Linux-6.18.5-x86_64-with-glibc2.39",
+    "python_version": "3.11.15",
+    "results_sha256": "73f0f442faa60b13acb8f648a3779192af5e397818c6022f099a91b95c824b62",
+    "seeds": {
+      "base_seed_four_category": 100,
+      "base_seed_three_condition": 0,
+      "reservoir_seeds": [
+        7,
+        42,
+        99
+      ],
+      "srp_seed": 20240517
+    },
+    "started_utc": "2026-07-27T01:15:29+00:00"
+  },
   "schema_version": "2.0.0"
 }
