@@ -21,6 +21,10 @@ jobs:
       MPLBACKEND: "Agg"
     steps:
       - uses: actions/checkout@v4
+        with:
+          # full history so validate_provenance.py can verify the execution
+          # record's generating commit is an ancestor of HEAD
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5

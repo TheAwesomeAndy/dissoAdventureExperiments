@@ -50,7 +50,27 @@ def _payload_digest(record):
     return hashlib.sha256(payload).hexdigest()
 
 
+def _commit_present(commit):
+    try:
+        r = subprocess.run(
+            ["git", "-C", _REPO, "cat-file", "-e", f"{commit}^{{commit}}"],
+            capture_output=True, text=True,
+        )
+        return r.returncode == 0
+    except (FileNotFoundError, OSError):
+        return None  # git unavailable
+
+
 def _is_ancestor(commit):
+    """True/False if determinable, None if git is unavailable OR the commit
+    object is not present locally (e.g. a shallow CI checkout with fetch-depth 1,
+    where merge-base would spuriously fail). We only assert non-ancestry when the
+    commit is actually present and genuinely not reachable from HEAD."""
+    present = _commit_present(commit)
+    if present is None:
+        return None  # git unavailable
+    if present is False:
+        return None  # shallow clone: object absent, cannot decide -> skip
     try:
         r = subprocess.run(
             ["git", "-C", _REPO, "merge-base", "--is-ancestor", commit, "HEAD"],
@@ -58,7 +78,7 @@ def _is_ancestor(commit):
         )
         return r.returncode == 0
     except (FileNotFoundError, OSError):
-        return None  # git unavailable -> undetermined
+        return None
 
 
 def main(argv):
