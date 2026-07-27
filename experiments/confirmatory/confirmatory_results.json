@@ -270,8 +270,9 @@
   },
   "provenance": {
     "code_sha256": {
-      "confirmatory_pipeline.py": "5a2b81c860bfeceebf3bfb6dd89920dd05f64116dcb1b21101a08b3bdc16594d",
-      "run_confirmatory_validation.py": "25d9e30342b77f945927a87789b5c2a7a4af65c926ea10202dd557f7219f95fb"
+      "chapter5Experiments/experiment_zero.py": "89bb524a303e58ff1a2cecfb83fdcc95d3b02a9581db01ea3fe78ee4a6fb4bcd",
+      "experiments/confirmatory/confirmatory_pipeline.py": "5a2b81c860bfeceebf3bfb6dd89920dd05f64116dcb1b21101a08b3bdc16594d",
+      "experiments/confirmatory/run_confirmatory_validation.py": "dbc56cbf5645b2c173f72991e5ff5a60f8e190cb3deccb15cca9efeac92fdbdd"
     },
     "cohorts": {
       "four_category": {
@@ -284,9 +285,9 @@
       }
     },
     "command_line": "run_confirmatory_validation.py --data3 ./batch_data --data4 ./categories",
-    "completed_utc": "2026-07-27T02:00:18+00:00",
+    "completed_utc": "2026-07-27T22:00:59+00:00",
     "generated_by": "experiments/confirmatory/run_confirmatory_validation.py",
-    "git_commit": "f6a0c66e2b875b4d10433ee25f0fe56d11f78fef",
+    "git_commit": "05acc31ca480f28184c1ac9eb454e4b89fd42403",
     "git_working_tree": "clean",
     "input_file_counts": {
       "four_category": 848,
@@ -310,7 +311,7 @@
       ],
       "srp_seed": 20240517
     },
-    "started_utc": "2026-07-27T01:15:29+00:00"
+    "started_utc": "2026-07-27T21:10:41+00:00"
   },
   "schema_version": "2.0.0"
 }
