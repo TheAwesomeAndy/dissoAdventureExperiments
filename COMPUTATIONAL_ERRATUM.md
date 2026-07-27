@@ -17,8 +17,8 @@ The committed canonical pipeline
 `confirmatory_pipeline.py`) is an **independent reconstruction** of that
 protocol. The original analysis code is not part of this repository, and the
 SRP/reservoir path was reimplemented from the described method. Run on the
-authorized SHAPE data it produces **64.3%** and **54.6%** — it agrees with the
-dissertation on the raw-ERP and conventional-baseline rows (within ≈1 pp) but
+authorized SHAPE data it produces **64.3%** and **54.6%** — it is close to the
+dissertation on the raw-ERP and conventional-baseline rows (within ≈1.5 pp) but
 diverges on the reservoir/SRP rows and, more strongly, on the destruction
 controls.
 
@@ -45,20 +45,27 @@ not hold and is not claimed.
 
 ## Reconciliation table (BSC₆/SRP-64, balanced accuracy)
 
-| Quantity | Dissertation (submitted) | Committed runner (reproduced) |
-|---|---:|---:|
-| Three conditions | 60.6% [57.8, 63.4] | **64.3% [61.1, 67.2]** |
-| Four categories | 53.2% [50.6, 55.8] | **54.6% [51.9, 57.3]** |
-| Advantage over conventional (3-cond) | +11.3 pp [7.9, 14.7] | +15.7 pp [11.9, 19.5] |
-| Advantage over conventional (4-cat) | +16.5 pp [13.3, 19.8] | +18.5 pp [15.2, 21.7] |
-| Participant-label permutation | p = 0.0099 (both) | p = 0.0099 (both) — **exact** |
-| Temporal-bin-shuffle drop (3-cond) | −7.4 pp | −24.8 pp |
-| Temporal-bin-shuffle drop (4-cat) | −12.9 pp | −27.8 pp |
+Format `3-cond; 4-cat`. **Agree** = within ≈1.5 pp; **Diverge** = larger.
 
-Rows that agree (raw ERP-16, conventional baseline, permutation p) and rows that
-diverge (reservoir/SRP accuracies, destruction magnitudes) are both shown, so the
-scope of the divergence is explicit. The divergence is concentrated on exactly
-the path that was reimplemented.
+| Quantity | Dissertation (submitted) | Committed runner (reproduced) | Status |
+|---|---|---|---|
+| Raw ERP-16 | 68.1%; 60.5% | 69.6%; 60.6% | agree (≤1.5 pp) |
+| Conventional baseline | 49.4%; 36.7% | 48.7%; 36.1% | agree (≤0.7 pp) |
+| BSC6/SRP-64 | 60.6% [57.8, 63.4]; 53.2% [50.6, 55.8] | **64.3% [61.1, 67.2]; 54.6% [51.9, 57.3]** | diverge |
+| BSC6/SRP-64 + conventional (fusion) | 62.0%; 53.5% | 65.1%; 55.0% | diverge |
+| Advantage over conventional | +11.3 pp; +16.5 pp | +15.7 pp; +18.5 pp | diverge |
+| Participant-label permutation | p = 0.0099 (both) | p = 0.0099 (both) | **exact** |
+| Temporal-bin-shuffle drop | −7.4 pp; −12.9 pp | −24.8 pp; −27.8 pp | diverge (large) |
+| Temporal-collapse drop | −4.9 pp; −8.6 pp | −17.6 pp; −22.4 pp | diverge (large) |
+| Electrode-shuffle drop | −13.9 pp; −20.1 pp | −24.1 pp; −22.0 pp | diverge |
+
+Every confirmatory row is shown. The agreeing rows (raw ERP-16, conventional
+baseline, permutation p) and the diverging rows (reservoir/SRP accuracies, fusion,
+and all destruction-control magnitudes) are both present, so the scope of the
+divergence is explicit. The divergence is concentrated on exactly the
+SRP/reservoir path that was reimplemented and on the destruction controls that
+depend on it. The largest single accuracy-row gap is BSC6/SRP-64 (≈3.7 pp,
+3-cond); the raw-ERP gap is ≈1.5 pp.
 
 ## What reproduces exactly, and what drifts
 
@@ -67,8 +74,11 @@ the path that was reimplemented.
   byte-identical on reruns).
 - **SVD-based descriptive variance ratios (ρ) in the exploratory study** drift at
   the ~1-unit level across BLAS/LAPACK builds; the committed JSONs and manifest
-  hold the values produced by the pinned CI environment, and the qualitative
-  conclusions are invariant to that drift.
+  hold the values produced by the environment recorded in the execution record's
+  provenance block (`package_versions`, `platform`, `python_version`), and the
+  qualitative conclusions are invariant to that drift. Note the CI workflow
+  installs dependency *lower bounds*, not an exact lock file, so the recorded
+  environment — not the CI spec — is the authoritative version record.
 
 ## Verification
 

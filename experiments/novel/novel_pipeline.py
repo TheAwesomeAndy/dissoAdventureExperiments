@@ -13,16 +13,23 @@ inspectable measurement chain buy you?
       under participant-grouped cross-validation, with a Johnson-Lindenstrauss
       dimensionality law and an SRP-seed-stability distribution. On
       subject-entangled EEG the random projection is leak-free by construction
-      and, empirically, more discriminative than PCA (whose variance-maximizing
-      directions align to subject nuisance). The reported conclusion is derived
-      from the paired bootstrap interval, not asserted.
+      and, empirically, more discriminative than PCA. The reported conclusion is
+      derived from the paired bootstrap interval, not asserted. NOTE: the gross
+      "PCA aligns to subject nuisance" mechanism holds only for AGGRESSIVE GLOBAL
+      compression; the blockwise per-electrode operator used here does NOT show
+      that alignment (see experiments/novel/NUISANCE_RESULTS.md M2 blockwise), so
+      the accuracy gap is presented as a mild-regime + leak-safety result, not a
+      consequence of gross nuisance alignment.
 
-  N2  The reservoir behaves as a calibrated instrument at the DECISION level.
-      Individual random features are not reproducible across reservoir seeds
-      (near-zero ICC, as expected for a random projection), but the readout
-      accuracy is stable across seeds, the input-amplitude transfer function is
-      monotonic with a quantified dynamic range, and the readout degrades
-      gracefully under channel dropout and additive noise.
+  N2  Single-axis seed and response characterization (NOT a full instrument
+      claim). Individual random features are not reproducible across reservoir
+      seeds (near-zero ICC, as expected for a random projection); the readout
+      accuracy is stable across a set of SRP seeds with the reservoir fixed; the
+      input-amplitude transfer function is monotonic on a single template; and
+      the readout is measured under channel dropout / additive noise at a single
+      perturbation seed. The crossed reservoir-seed x projection-seed x CV-repeat
+      instrument experiment is not run, so "calibrated instrument" and "graceful
+      degradation" are not claimed here.
 
   N3  Representational necessity and subject/condition information. A necessity
       map measures, for each structural factor (temporal-bin order, temporal

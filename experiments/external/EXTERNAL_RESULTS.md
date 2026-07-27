@@ -3,8 +3,8 @@
 The two dataset-independent claims replicate on a **genuinely external** IAPS
 affective-picture ERP cohort: **DataVerseNL `doi:10.34894/TCRZEM`** (Revers et
 al.), 228 complete-panel participants, different lab, different acquisition
-(BioSemi, 41 channels), same paradigm (passive IAPS viewing, negative / neutral
-/ positive valence). Machine-readable:
+(BrainVision segmented `.vhdr/.dat`, 41 channels), same paradigm (passive IAPS
+viewing, negative / neutral / positive valence). Machine-readable:
 [`external_results.json`](external_results.json). Exploratory; passing tests
 verify code behavior, not scientific validity.
 
@@ -22,17 +22,31 @@ participant-bootstrap 95% interval on the difference.
 The interval excludes zero at every dimension — the same direction and a
 **larger** effect than on SHAPE (+3.9–4.4 pp).
 
-## M2 — PCA aligns to the subject-nuisance subspace (replicated, starker)
+## M2 — global PCA aligns to the subject-nuisance subspace (replicated, starker)
 
-| Quantity | SHAPE (211) | TCRZEM external (228) |
+These are the **global** operator angles (full flattened representation → 64),
+directly comparable to SHAPE's *global* M2 — **not** the blockwise per-electrode
+operator N1 uses.
+
+| Quantity (global operator) | SHAPE (211) | TCRZEM external (228) |
 |---|---:|---:|
-| PCA-64 min principal angle → **subject** | 1.32° | **0.89°** |
-| PCA-64 min principal angle → condition | 3.32° | 21.15° |
+| PCA-64 min principal angle → **subject** | 1.33° | **0.89°** |
+| PCA-64 min principal angle → condition | 3.21° | 21.15° |
 | ρ compressed: PCA / SRP / ambient | 44 / 7 / 11 | 133 / 111 / 111 |
 
-On the external cohort PCA-64 is **within 0.9° of the subject subspace** and
+Under the global operator PCA-64 is **within 0.9° of the subject subspace** and
 21° from the condition subspace — even more collinear with the nuisance than on
 SHAPE.
+
+> **Operator scope (same caveat as SHAPE).** External N1 uses the **blockwise**
+> per-electrode operator; external M2 above uses the **global** operator. On
+> SHAPE, the blockwise geometry did *not* show the gross alignment
+> (`nuisance_results.json` `M2_geometry_blockwise`), so the global external
+> angle here does **not** establish that alignment causes the external
+> blockwise accuracy gap. The external blockwise geometry has not been run
+> (the external data are not staged in this environment), so — exactly as on
+> SHAPE — no causal "alignment explains the accuracy gap" claim is made for the
+> external cohort.
 
 ## Honest reading of the absolute accuracies
 
@@ -63,9 +77,11 @@ The paper's single-dataset limitation is resolved for its central claims:
 > Revers/TCRZEM, N=228) — different labs, montages, and acquisition systems —
 > a fixed data-independent random projection significantly outperforms a
 > fold-local data-fitted PCA under participant-grouped evaluation (+4–7 pp,
-> intervals excluding zero), because PCA's leading components align to the
-> between-subject nuisance subspace (principal angle 0.9–1.3°). The effect is
-> strongest where the subject nuisance is most dominant.
+> intervals excluding zero). Separately, **global** PCA is strongly collinear
+> with the between-subject nuisance subspace on both cohorts (principal angle
+> 0.9–1.3°). The present experiments do not establish that the global alignment
+> *causes* the blockwise accuracy difference; the blockwise geometry that would
+> test this has not been run on the external cohort.
 
 ## Reproduce
 

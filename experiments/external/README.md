@@ -16,13 +16,18 @@ per-channel z-scored ERP-per-(subject,condition) form the pipeline consumes —
 matching how the SHAPE ERPs were made. The pipeline is channel-count agnostic,
 so no montage matching is needed for these claims.
 
-## Candidate dataset (identified, pending download)
+## Dataset (downloaded and used)
 
-**`doi:10.34894/TCRZEM`** (DataVerseNL) — "EEG data of 239 participants during
-passive viewing of IAPS images": 239 subjects, 150 IAPS images across
-negative/neutral/positive valence, 32-channel BioSemi, raw + preprocessed
-epoched EEG (−1000..+2500 ms), EEGLAB `.mat`, CC BY-NC 4.0. Same paradigm as
-SHAPE, different (larger) cohort — the right external replication set.
+**`doi:10.34894/TCRZEM`** (DataVerseNL) — IAPS passive viewing,
+negative/neutral/positive valence, CC BY-NC 4.0. The **preprocessed** release is
+BrainVision segmented files, one per subject × valence × arousal
+(`S<id>_Mastoid_<Neg|Neu|Pos>_<High|Low>.{vhdr,dat}`); each `.dat` is INT_16,
+MULTIPLEXED, `NumberOfChannels` channels, 1792-point segments at 512 Hz. The
+channel count is **41** (including reference/EOG), different from SHAPE's 34; the
+pipeline is channel-count agnostic, so no montage matching is done. Of the ~239
+participants, the **228** with a complete negative/neutral/positive panel are
+used (684 subject × condition ERPs). This is a genuinely different cohort in the
+same paradigm — the external replication set.
 
 ## Files
 
@@ -30,7 +35,10 @@ SHAPE, different (larger) cohort — the right external replication set.
 |---|---|
 | `external_replication.py` | dataset-agnostic core: `prepare_epochs()` + `replicate()` (N1 + M2) |
 | `verify_external.py` | synthetic verification of the harness (no download) — CI-safe |
-| `load_tcrzem.py` | dataset-specific loader for `doi:10.34894/TCRZEM` (added at download time) |
+| `load_tcrzem.py` | committed dataset-specific loader for `doi:10.34894/TCRZEM` (BrainVision `.vhdr/.dat`, memory-safe trial-averaging) |
+| `run_tcrzem_replication.py` | committed runner that produces `external_results.json` |
+| `external_results.json` | committed summary outputs (accuracies, angles, ρ) — no participant-level data |
+| `EXTERNAL_RESULTS.md` | committed results narrative |
 
 ## Running
 
@@ -43,10 +51,10 @@ python experiments/external/run_tcrzem_replication.py --data ./external_data/tcr
 
 ## Scope and data handling
 
-The external EEG is downloaded to a **gitignored** directory and never
-committed; only summary statistics (accuracies, angles, ρ) are recorded. Like
-the rest of the repo, `verify_external.py` establishes code behavior, not the
-empirical finding, which requires the downloaded cohort. This is an
-**exploratory** replication — a positive result strengthens the generality of
-the compression-nuisance claim; a null would bound it, and either is reported
-honestly.
+The external EEG lives in a **gitignored** directory and is never committed; only
+the summary statistics in `external_results.json` are. `verify_external.py`
+establishes code behavior; the empirical finding comes from the downloaded
+cohort. This is an **exploratory** replication: on the 228-participant cohort the
+committed run reproduces the N1 accuracy ordering (SRP-64 > fold-local PCA-64,
++5.0 pp [2.0, 8.0]) and exhibits the global-PCA subject alignment (see
+`EXTERNAL_RESULTS.md`).

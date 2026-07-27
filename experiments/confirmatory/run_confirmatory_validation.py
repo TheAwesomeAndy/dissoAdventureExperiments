@@ -454,10 +454,13 @@ def build_provenance(args, results, cohorts, started_iso):
             "sklearn": _pkg_version("sklearn"),
         },
         "code_sha256": {
-            "run_confirmatory_validation.py":
+            "experiments/confirmatory/run_confirmatory_validation.py":
                 _sha256_file(os.path.join(_HERE, "run_confirmatory_validation.py")),
-            "confirmatory_pipeline.py":
+            "experiments/confirmatory/confirmatory_pipeline.py":
                 _sha256_file(os.path.join(_HERE, "confirmatory_pipeline.py")),
+            # the reservoir + BSC6 encoder are imported from chapter5Experiments
+            "chapter5Experiments/experiment_zero.py":
+                _sha256_file(os.path.join(_REPO, "chapter5Experiments", "experiment_zero.py")),
         },
         "input_file_counts": {
             "three_condition": _count_files(args.data3),

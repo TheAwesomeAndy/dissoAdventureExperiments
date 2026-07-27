@@ -151,6 +151,15 @@ jobs:
           python experiments/confirmatory/check_against_manifest.py \
             "$REC" --tol 0.05 2>&1 | tee ci-logs/manifest.log
 
+      - name: Validate confirmatory execution-record provenance
+        id: provenance
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/confirmatory/validate_provenance.py \
+            experiments/confirmatory/confirmatory_results.json \
+            2>&1 | tee ci-logs/provenance.log
+
       - name: Verify novel experiments
         id: novel
         continue-on-error: true
@@ -205,7 +214,8 @@ jobs:
             "${{ steps.ch7util.outcome }}" "${{ steps.fourcat.outcome }}"
             "${{ steps.threecond.outcome }}" "${{ steps.ablation.outcome }}"
             "${{ steps.validators.outcome }}" "${{ steps.confirmatory.outcome }}"
-            "${{ steps.manifest.outcome }}" "${{ steps.claims.outcome }}"
+            "${{ steps.manifest.outcome }}" "${{ steps.provenance.outcome }}"
+            "${{ steps.claims.outcome }}"
             "${{ steps.novel.outcome }}" "${{ steps.nuisance.outcome }}"
             "${{ steps.external.outcome }}" "${{ steps.novelmanifest.outcome }}"
           )

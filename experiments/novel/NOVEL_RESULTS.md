@@ -19,15 +19,19 @@ Balanced accuracy, 5×5 participant-grouped fold-local CV; SRP vs a **fold-local
 | 64 | 64.3% | 60.0% | **+4.4 pp** | [1.5, 7.2] |
 
 **The interval excludes zero at every dimension**: the fixed random projection is
-significantly *more accurate* than an optimally fitted, leak-free PCA. SRP-64
+significantly *more accurate* than a data-fitted, leak-free fold-local PCA. SRP-64
 across 10 random seeds: **64.0% ± 1.0** (range 3.3pp), so the result is not a
 lucky seed.
 
-*Interpretation.* On subject-entangled EEG, PCA's variance-maximizing directions
-capture subject nuisance (ρ≈10, see N3) rather than condition. An isotropic
-random projection has no such bias, so it is both leak-free by construction and
-more discriminative. This is a concrete argument against the default PCA step in
-grouped clinical-EEG pipelines.
+*Interpretation.* An isotropic random projection is leak-free by construction and,
+on these representations, empirically more discriminative than fold-local PCA — a
+concrete argument for it over a default PCA step in grouped clinical-EEG
+pipelines. The *why* is deliberately scoped: the gross "PCA captures subject
+nuisance" story (ρ≈10, see N3) is demonstrated for **global** compression, but the
+**blockwise** per-electrode operator used here does not show that alignment (M2
+blockwise, `NUISANCE_RESULTS.md`), so the accuracy gap is reported as a
+mild-regime + leak-safety result rather than a consequence of gross nuisance
+alignment.
 
 ### Cross-granularity consistency (four categories, N=210 / 840)
 

@@ -49,14 +49,16 @@ alignment does not survive the operator change.
 > `nuisance_results.json`, produced by the exact N1 SRP/PCA operators). Its
 > verdict is a **negative** one and is stated plainly: the strong subject
 > alignment is a property of *aggressive global* compression, not of N1's
-> per-electrode compression. Physically, subject identity is a coherent pattern
-> *across* electrodes (a direction in the 52,224-dim flattened space); a shared
-> per-electrode basis captures within-electrode variance shapes and structurally
-> cannot reach that cross-electrode direction, so blockwise PCA does not
-> concentrate the subject nuisance. **We therefore do not claim M2 explains the
-> N1 accuracy gap.** The remaining +4.36pp is a mild-regime effect (consistent
-> with fold-local PCA's estimation variance and a much weaker version of the
-> alignment), not gross collinearity.
+> per-electrode compression. The plausible reading is that subject identity is a
+> coherent pattern *across* electrodes (a direction in the 52,224-dim flattened
+> space), while a shared per-electrode PCA basis is fitted to within-electrode
+> variance shapes; empirically its read-subspace aligns far more weakly with the
+> global subject subspace (23.9° vs 1.3°). This is a **measured weaker
+> alignment**, not a structural impossibility — the downstream linear readout can
+> still combine coordinates across electrode blocks. **We therefore do not claim
+> M2 explains the N1 accuracy gap.** The remaining +4.36pp is a mild-regime effect
+> (consistent with fold-local PCA's estimation variance and a much weaker version
+> of the alignment), not gross collinearity.
 
 ## Cross-granularity replication (real data)
 

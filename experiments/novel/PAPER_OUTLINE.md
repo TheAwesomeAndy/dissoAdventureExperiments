@@ -28,9 +28,11 @@ leak-safety plus mild-regime grounds.
   control), a practical consequence, and honest nulls.
 
 ## 2. Setup
-- Dataset: SHAPE affective EEG; two independent labellings (3-condition 211/633,
-  4-category 210/840). Fixed LIF-reservoir BSC6 features (1,536/electrode).
-  Independent external cohort: TCRZEM IAPS (228 subj) — see `experiments/external/`.
+- Dataset: SHAPE affective EEG under two label granularities of the *same*
+  cohort (3-condition 211/633, 4-category 210/840 — same participants and
+  acquisition, not independent cohorts). Fixed LIF-reservoir BSC6 features
+  (1,536/electrode). One genuinely independent external cohort: TCRZEM IAPS
+  (228 subj) — see `experiments/external/`.
 - Estimator: 5×5 participant-grouped `StratifiedGroupKFold`, fold-local
   standardization, linear readout; participant-cluster bootstrap intervals.
 - Two compression operators are distinguished throughout: a **global** operator
@@ -59,10 +61,12 @@ leak-safety plus mild-regime grounds.
 - **Negative control — blockwise operator (real, the key honesty result):** with
   the *same* per-electrode operator the model uses, PCA-64 sits **23.9°** from
   the subject subspace (both granularities) and its ρ (7.2 / 15.5) is *below*
-  ambient. The gross alignment **does not transfer** to N1's operator. Physically,
-  subject identity is a cross-electrode direction a shared per-electrode basis
-  cannot reach. **We therefore do not claim the alignment mechanism explains the
-  accuracy gap.**
+  ambient. The gross alignment **does not transfer** to N1's operator. We report
+  this as a measured *weaker* alignment of the shared per-electrode PCA
+  read-subspace with the global subject subspace (23.9° vs the global 1.3°), not
+  as a structural impossibility — the downstream linear readout can still combine
+  coordinates across electrodes. **We therefore do not claim the alignment
+  mechanism explains the accuracy gap.**
 - Figure: principal-angle rotation curve (controlled) + real-data angle/ρ bars
   for BOTH the global and blockwise operators, side by side.
 
@@ -80,9 +84,12 @@ leak-safety plus mild-regime grounds.
   account of the accuracy gap.
 
 ## 6. Practical recommendation
-- On subject-grouped clinical EEG, prefer a fixed data-independent projection to
-  a fitted PCA front-end: it removes a transductive-leakage foot-gun and, on
-  three cohorts, does not lose (and modestly gains) grouped accuracy. The
+- For grouped-EEG pipelines that reduce reservoir/BSC6-style high-dimensional
+  representations before a grouped readout, prefer a fixed data-independent
+  projection to a fitted PCA front-end: it removes a transductive-leakage foot-gun
+  and, across the SHAPE cohort (two label granularities) and one independent
+  external cohort, does not lose (and modestly gains) grouped accuracy. Scope the
+  recommendation to the measured BSC6 regimes rather than all clinical EEG. The
   strongest argument is leak-safety; the accuracy gain is a bonus, not attributed
   to gross nuisance alignment under the operator used.
 

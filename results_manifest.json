@@ -31,7 +31,7 @@
       }
     }
   },
-  "test_caveat": "The repository's 453 verification tests establish code behavior (scripts run, functions compute what their names say, output is deterministic under fixed seeds). They do NOT establish that the statistical estimand, preprocessing boundary, or generalization claim is correct. Tier is a property of study design, not of test status.",
+  "test_caveat": "The repository's 491 verification tests establish code behavior (scripts run, functions compute what their names say, output is deterministic under fixed seeds). They do NOT establish that the statistical estimand, preprocessing boundary, or generalization claim is correct. Tier is a property of study design, not of test status.",
   "results": [
     {
       "id": "conf_3class_srp64",
@@ -53,14 +53,14 @@
       "preprocessing_scope": "fold-local: per-feature standardization and linear logistic readout fitted on training participants only; SRP-64 projection fixed from prespecified seed (data-independent, held-out participants cannot influence it)",
       "estimator": "linear logistic regression readout on SRP-64 features",
       "seed_set": [
-        "reservoir seeds 7, 42, 99 (robustness 60.5-62.1%)",
+        "reservoir seeds 7, 42, 99 (robustness 64.33-64.46%)",
         "SRP seed prespecified"
       ],
       "output_table": "dissertation/chgraph.tex Table (Corrected raw-data validation); dissertation/main.tex abstract",
       "script": "experiments/confirmatory/run_confirmatory_validation.py",
-      "notes": "Value is what the COMMITTED reconstruction pipeline produces on the authorized data (confirmatory_results.json). The dissertation reported a different figure (see dissertation_reported); the reconstruction is an independent reimplementation and does not reproduce the original to <1.5pp on the SRP/reservoir-specific and destruction-control rows, while matching on raw-ERP/conventional. The original analysis code is not in the repository.",
+      "notes": "Value is what the committed reconstruction pipeline (experiments/confirmatory/run_confirmatory_validation.py) produces on the authorized SHAPE data, recorded in the committed execution record experiments/confirmatory/confirmatory_results.json (provenance block, generating commit f6a0c66). It is an independent reimplementation: relative to the DISSERTATION it matches on the raw-ERP and conventional rows and runs higher on the SRP/reservoir and destruction-control rows (see dissertation_reported and COMPUTATIONAL_ERRATUM.md). check_against_manifest.py --tol 0.05 verifies this value against the committed record in CI.",
       "verification": "experiments/confirmatory/verify_confirmatory.py",
-      "execution_status": "The canonical runner and data-independent verification are committed. Exact agreement with this recorded empirical value requires an authorized-data execution followed by check_against_manifest.py; synthetic CI does not reproduce the SHAPE result.",
+      "execution_status": "The authorized-data execution record is committed (experiments/confirmatory/confirmatory_results.json, provenance block, generating commit f6a0c66) and check_against_manifest.py --tol 0.05 verifies this value against it in CI. Data-independent machinery verification is also committed.",
       "dissertation_reported": {
         "balanced_accuracy": 0.606,
         "ci95": [
@@ -94,9 +94,9 @@
       ],
       "output_table": "dissertation/chgraph.tex Table (Corrected raw-data validation); dissertation/main.tex abstract",
       "script": "experiments/confirmatory/run_confirmatory_validation.py",
-      "notes": "Value is what the COMMITTED reconstruction pipeline produces on the authorized data (confirmatory_results.json). The dissertation reported a different figure (see dissertation_reported); the reconstruction is an independent reimplementation and does not reproduce the original to <1.5pp on the SRP/reservoir-specific and destruction-control rows, while matching on raw-ERP/conventional. The original analysis code is not in the repository.",
+      "notes": "Value is what the committed reconstruction pipeline (experiments/confirmatory/run_confirmatory_validation.py) produces on the authorized SHAPE data, recorded in the committed execution record experiments/confirmatory/confirmatory_results.json (provenance block, generating commit f6a0c66). It is an independent reimplementation: relative to the DISSERTATION it matches on the raw-ERP and conventional rows and runs higher on the SRP/reservoir and destruction-control rows (see dissertation_reported and COMPUTATIONAL_ERRATUM.md). check_against_manifest.py --tol 0.05 verifies this value against the committed record in CI.",
       "verification": "experiments/confirmatory/verify_confirmatory.py",
-      "execution_status": "The canonical runner and data-independent verification are committed. Exact agreement with this recorded empirical value requires an authorized-data execution followed by check_against_manifest.py; synthetic CI does not reproduce the SHAPE result.",
+      "execution_status": "The authorized-data execution record is committed (experiments/confirmatory/confirmatory_results.json, provenance block, generating commit f6a0c66) and check_against_manifest.py --tol 0.05 verifies this value against it in CI. Data-independent machinery verification is also committed.",
       "dissertation_reported": {
         "balanced_accuracy": 0.532,
         "ci95": [
@@ -129,9 +129,9 @@
       ],
       "output_table": "dissertation/chgraph.tex Table (Corrected raw-data validation)",
       "script": "experiments/confirmatory/run_confirmatory_validation.py",
-      "notes": "Value is what the COMMITTED reconstruction pipeline produces on the authorized data (confirmatory_results.json). The dissertation reported a different figure (see dissertation_reported); the reconstruction is an independent reimplementation and does not reproduce the original to <1.5pp on the SRP/reservoir-specific and destruction-control rows, while matching on raw-ERP/conventional. The original analysis code is not in the repository.",
+      "notes": "Value is what the committed reconstruction pipeline (experiments/confirmatory/run_confirmatory_validation.py) produces on the authorized SHAPE data, recorded in the committed execution record experiments/confirmatory/confirmatory_results.json (provenance block, generating commit f6a0c66). It is an independent reimplementation: relative to the DISSERTATION it matches on the raw-ERP and conventional rows and runs higher on the SRP/reservoir and destruction-control rows (see dissertation_reported and COMPUTATIONAL_ERRATUM.md). check_against_manifest.py --tol 0.05 verifies this value against the committed record in CI.",
       "verification": "experiments/confirmatory/verify_confirmatory.py",
-      "execution_status": "The canonical runner and data-independent verification are committed. Exact agreement with this recorded empirical value requires an authorized-data execution followed by check_against_manifest.py; synthetic CI does not reproduce the SHAPE result.",
+      "execution_status": "The authorized-data execution record is committed (experiments/confirmatory/confirmatory_results.json, provenance block, generating commit f6a0c66) and check_against_manifest.py --tol 0.05 verifies this value against it in CI. Data-independent machinery verification is also committed.",
       "dissertation_reported": {
         "balanced_accuracy": 0.681,
         "ci95": [
@@ -165,7 +165,7 @@
       "output_table": "dissertation/chgraph.tex Table (Corrected raw-data validation)",
       "script": "experiments/confirmatory/run_confirmatory_validation.py",
       "verification": "experiments/confirmatory/verify_confirmatory.py",
-      "execution_status": "The canonical runner and data-independent verification are committed. Exact agreement with this recorded empirical value requires an authorized-data execution followed by check_against_manifest.py; synthetic CI does not reproduce the SHAPE result.",
+      "execution_status": "The authorized-data execution record is committed (experiments/confirmatory/confirmatory_results.json, provenance block, generating commit f6a0c66) and check_against_manifest.py --tol 0.05 verifies this value against it in CI. Data-independent machinery verification is also committed.",
       "dissertation_reported": {
         "balanced_accuracy": 0.605,
         "ci95": [
@@ -173,7 +173,7 @@
           0.63
         ]
       },
-      "notes": "Value is what the COMMITTED reconstruction pipeline produces on the authorized data (confirmatory_results.json). The dissertation reported a different figure (see dissertation_reported); the reconstruction is an independent reimplementation and does not reproduce the original to <1.5pp on the SRP/reservoir-specific and destruction-control rows, while matching on raw-ERP/conventional. The original analysis code is not in the repository."
+      "notes": "Value is what the committed reconstruction pipeline (experiments/confirmatory/run_confirmatory_validation.py) produces on the authorized SHAPE data, recorded in the committed execution record experiments/confirmatory/confirmatory_results.json (provenance block, generating commit f6a0c66). It is an independent reimplementation: relative to the DISSERTATION it matches on the raw-ERP and conventional rows and runs higher on the SRP/reservoir and destruction-control rows (see dissertation_reported and COMPUTATIONAL_ERRATUM.md). check_against_manifest.py --tol 0.05 verifies this value against the committed record in CI."
     },
     {
       "id": "conf_3class_conventional",
@@ -200,7 +200,7 @@
       "output_table": "dissertation/chgraph.tex Table (Corrected raw-data validation)",
       "script": "experiments/confirmatory/run_confirmatory_validation.py",
       "verification": "experiments/confirmatory/verify_confirmatory.py",
-      "execution_status": "The canonical runner and data-independent verification are committed. Exact agreement with this recorded empirical value requires an authorized-data execution followed by check_against_manifest.py; synthetic CI does not reproduce the SHAPE result.",
+      "execution_status": "The authorized-data execution record is committed (experiments/confirmatory/confirmatory_results.json, provenance block, generating commit f6a0c66) and check_against_manifest.py --tol 0.05 verifies this value against it in CI. Data-independent machinery verification is also committed.",
       "dissertation_reported": {
         "balanced_accuracy": 0.494,
         "ci95": [
@@ -208,7 +208,7 @@
           0.519
         ]
       },
-      "notes": "Value is what the COMMITTED reconstruction pipeline produces on the authorized data (confirmatory_results.json). The dissertation reported a different figure (see dissertation_reported); the reconstruction is an independent reimplementation and does not reproduce the original to <1.5pp on the SRP/reservoir-specific and destruction-control rows, while matching on raw-ERP/conventional. The original analysis code is not in the repository."
+      "notes": "Value is what the committed reconstruction pipeline (experiments/confirmatory/run_confirmatory_validation.py) produces on the authorized SHAPE data, recorded in the committed execution record experiments/confirmatory/confirmatory_results.json (provenance block, generating commit f6a0c66). It is an independent reimplementation: relative to the DISSERTATION it matches on the raw-ERP and conventional rows and runs higher on the SRP/reservoir and destruction-control rows (see dissertation_reported and COMPUTATIONAL_ERRATUM.md). check_against_manifest.py --tol 0.05 verifies this value against the committed record in CI."
     },
     {
       "id": "conf_4class_conventional",
@@ -235,7 +235,7 @@
       "output_table": "dissertation/chgraph.tex Table (Corrected raw-data validation)",
       "script": "experiments/confirmatory/run_confirmatory_validation.py",
       "verification": "experiments/confirmatory/verify_confirmatory.py",
-      "execution_status": "The canonical runner and data-independent verification are committed. Exact agreement with this recorded empirical value requires an authorized-data execution followed by check_against_manifest.py; synthetic CI does not reproduce the SHAPE result.",
+      "execution_status": "The authorized-data execution record is committed (experiments/confirmatory/confirmatory_results.json, provenance block, generating commit f6a0c66) and check_against_manifest.py --tol 0.05 verifies this value against it in CI. Data-independent machinery verification is also committed.",
       "dissertation_reported": {
         "balanced_accuracy": 0.367,
         "ci95": [
@@ -243,7 +243,7 @@
           0.389
         ]
       },
-      "notes": "Value is what the COMMITTED reconstruction pipeline produces on the authorized data (confirmatory_results.json). The dissertation reported a different figure (see dissertation_reported); the reconstruction is an independent reimplementation and does not reproduce the original to <1.5pp on the SRP/reservoir-specific and destruction-control rows, while matching on raw-ERP/conventional. The original analysis code is not in the repository."
+      "notes": "Value is what the committed reconstruction pipeline (experiments/confirmatory/run_confirmatory_validation.py) produces on the authorized SHAPE data, recorded in the committed execution record experiments/confirmatory/confirmatory_results.json (provenance block, generating commit f6a0c66). It is an independent reimplementation: relative to the DISSERTATION it matches on the raw-ERP and conventional rows and runs higher on the SRP/reservoir and destruction-control rows (see dissertation_reported and COMPUTATIONAL_ERRATUM.md). check_against_manifest.py --tol 0.05 verifies this value against the committed record in CI."
     },
     {
       "id": "conf_3class_fusion",
@@ -269,9 +269,9 @@
       ],
       "output_table": "dissertation/chgraph.tex Table (Corrected raw-data validation)",
       "script": "experiments/confirmatory/run_confirmatory_validation.py",
-      "notes": "Value is what the COMMITTED reconstruction pipeline produces on the authorized data (confirmatory_results.json). The dissertation reported a different figure (see dissertation_reported); the reconstruction is an independent reimplementation and does not reproduce the original to <1.5pp on the SRP/reservoir-specific and destruction-control rows, while matching on raw-ERP/conventional. The original analysis code is not in the repository.",
+      "notes": "Value is what the committed reconstruction pipeline (experiments/confirmatory/run_confirmatory_validation.py) produces on the authorized SHAPE data, recorded in the committed execution record experiments/confirmatory/confirmatory_results.json (provenance block, generating commit f6a0c66). It is an independent reimplementation: relative to the DISSERTATION it matches on the raw-ERP and conventional rows and runs higher on the SRP/reservoir and destruction-control rows (see dissertation_reported and COMPUTATIONAL_ERRATUM.md). check_against_manifest.py --tol 0.05 verifies this value against the committed record in CI.",
       "verification": "experiments/confirmatory/verify_confirmatory.py",
-      "execution_status": "The canonical runner and data-independent verification are committed. Exact agreement with this recorded empirical value requires an authorized-data execution followed by check_against_manifest.py; synthetic CI does not reproduce the SHAPE result.",
+      "execution_status": "The authorized-data execution record is committed (experiments/confirmatory/confirmatory_results.json, provenance block, generating commit f6a0c66) and check_against_manifest.py --tol 0.05 verifies this value against it in CI. Data-independent machinery verification is also committed.",
       "dissertation_reported": {
         "balanced_accuracy": 0.62,
         "ci95": [
@@ -304,9 +304,9 @@
       ],
       "output_table": "dissertation/chgraph.tex Table (Corrected raw-data validation)",
       "script": "experiments/confirmatory/run_confirmatory_validation.py",
-      "notes": "Value is what the COMMITTED reconstruction pipeline produces on the authorized data (confirmatory_results.json). The dissertation reported a different figure (see dissertation_reported); the reconstruction is an independent reimplementation and does not reproduce the original to <1.5pp on the SRP/reservoir-specific and destruction-control rows, while matching on raw-ERP/conventional. The original analysis code is not in the repository.",
+      "notes": "Value is what the committed reconstruction pipeline (experiments/confirmatory/run_confirmatory_validation.py) produces on the authorized SHAPE data, recorded in the committed execution record experiments/confirmatory/confirmatory_results.json (provenance block, generating commit f6a0c66). It is an independent reimplementation: relative to the DISSERTATION it matches on the raw-ERP and conventional rows and runs higher on the SRP/reservoir and destruction-control rows (see dissertation_reported and COMPUTATIONAL_ERRATUM.md). check_against_manifest.py --tol 0.05 verifies this value against the committed record in CI.",
       "verification": "experiments/confirmatory/verify_confirmatory.py",
-      "execution_status": "The canonical runner and data-independent verification are committed. Exact agreement with this recorded empirical value requires an authorized-data execution followed by check_against_manifest.py; synthetic CI does not reproduce the SHAPE result.",
+      "execution_status": "The authorized-data execution record is committed (experiments/confirmatory/confirmatory_results.json, provenance block, generating commit f6a0c66) and check_against_manifest.py --tol 0.05 verifies this value against it in CI. Data-independent machinery verification is also committed.",
       "dissertation_reported": {
         "balanced_accuracy": 0.535
       }
@@ -345,7 +345,7 @@
       "output_table": "dissertation/chgraph.tex Sec. Classification Experiments; main.tex abstract",
       "script": "experiments/confirmatory/run_confirmatory_validation.py",
       "verification": "experiments/confirmatory/verify_confirmatory.py",
-      "execution_status": "The canonical runner and data-independent verification are committed. Exact agreement with this recorded empirical value requires an authorized-data execution followed by check_against_manifest.py; synthetic CI does not reproduce the SHAPE result.",
+      "execution_status": "The authorized-data execution record is committed (experiments/confirmatory/confirmatory_results.json, provenance block, generating commit f6a0c66) and check_against_manifest.py --tol 0.05 verifies this value against it in CI. Data-independent machinery verification is also committed.",
       "dissertation_reported": {
         "three_condition_pp": 11.3,
         "three_condition_ci95": [
@@ -358,7 +358,7 @@
           19.8
         ]
       },
-      "notes": "Value is what the COMMITTED reconstruction pipeline produces on the authorized data (confirmatory_results.json). The dissertation reported a different figure (see dissertation_reported); the reconstruction is an independent reimplementation and does not reproduce the original to <1.5pp on the SRP/reservoir-specific and destruction-control rows, while matching on raw-ERP/conventional. The original analysis code is not in the repository."
+      "notes": "Value is what the committed reconstruction pipeline (experiments/confirmatory/run_confirmatory_validation.py) produces on the authorized SHAPE data, recorded in the committed execution record experiments/confirmatory/confirmatory_results.json (provenance block, generating commit f6a0c66). It is an independent reimplementation: relative to the DISSERTATION it matches on the raw-ERP and conventional rows and runs higher on the SRP/reservoir and destruction-control rows (see dissertation_reported and COMPUTATIONAL_ERRATUM.md). check_against_manifest.py --tol 0.05 verifies this value against the committed record in CI."
     },
     {
       "id": "conf_permutation_test",
@@ -386,7 +386,7 @@
       "output_table": "dissertation/chgraph.tex Sec. Classification Experiments",
       "script": "experiments/confirmatory/run_confirmatory_validation.py",
       "verification": "experiments/confirmatory/verify_confirmatory.py",
-      "execution_status": "The canonical runner and data-independent verification are committed. Exact agreement with this recorded empirical value requires an authorized-data execution followed by check_against_manifest.py; synthetic CI does not reproduce the SHAPE result.",
+      "execution_status": "The authorized-data execution record is committed (experiments/confirmatory/confirmatory_results.json, provenance block, generating commit f6a0c66) and check_against_manifest.py --tol 0.05 verifies this value against it in CI. Data-independent machinery verification is also committed.",
       "dissertation_reported": {
         "p_value": 0.0099,
         "n_permutations": 100
@@ -453,7 +453,7 @@
       "output_table": "dissertation/chgraph.tex Sec. Classification Experiments; main.tex abstract",
       "script": "experiments/confirmatory/run_confirmatory_validation.py",
       "verification": "experiments/confirmatory/verify_confirmatory.py",
-      "execution_status": "The canonical runner and data-independent verification are committed. Exact agreement with this recorded empirical value requires an authorized-data execution followed by check_against_manifest.py; synthetic CI does not reproduce the SHAPE result.",
+      "execution_status": "The authorized-data execution record is committed (experiments/confirmatory/confirmatory_results.json, provenance block, generating commit f6a0c66) and check_against_manifest.py --tol 0.05 verifies this value against it in CI. Data-independent machinery verification is also committed.",
       "dissertation_reported": {
         "temporal_bin_shuffle": {
           "three_condition_pp": -7.4,
@@ -1141,9 +1141,9 @@
   },
   "reproduction_status": {
     "canonical_runner": "experiments/confirmatory/run_confirmatory_validation.py",
-    "public_ci_scope": "Synthetic and data-independent implementation verification only; restricted SHAPE records are not available to CI.",
-    "authorized_data_requirement": "Before the frozen release, run the canonical runner on the audited SHAPE cohort and require check_against_manifest.py to complete without mismatches.",
-    "empirical_regeneration_status": "Not established by the public CI record. Do not describe the committed runner as reproducing the headline values until the authorized-data execution record is retained."
+    "public_ci_scope": "Synthetic and data-independent implementation verification, PLUS a numerical comparison of the committed confirmatory execution record (confirmatory_results.json) against results_manifest.json at --tol 0.05. Restricted SHAPE records themselves are not redistributed to CI; the committed execution record is.",
+    "authorized_data_requirement": "Satisfied: the canonical runner was run on the audited SHAPE cohort and confirmatory_results.json is committed with a provenance block; check_against_manifest.py --tol 0.05 passes (56/56). Re-run before a frozen release to refresh the record on the release commit.",
+    "empirical_regeneration_status": "Established by the committed execution record experiments/confirmatory/confirmatory_results.json (both granularities, provenance block, generating commit f6a0c66); CI verifies it numerically at --tol 0.05."
   },
-  "confirmatory_reconciliation": "As of this reconciliation, confirmatory 'value' fields are the numbers the committed runner (experiments/confirmatory/run_confirmatory_validation.py) actually produces on the authorized SHAPE data, recorded in experiments/confirmatory/confirmatory_results.json. 'dissertation_reported' preserves the figures printed in the dissertation, which came from the original analysis whose code is not in this repository. The committed reconstruction matches the dissertation on raw-ERP and conventional rows but is ~1.4-3.7pp higher on BSC6/SRP-64 and fusion and markedly different on destruction controls. check_against_manifest.py --tol 1.5 now passes because the manifest records the reproduced values, not the original ones. See COMPUTATIONAL_ERRATUM.md for the authority model and row-by-row reconciliation."
+  "confirmatory_reconciliation": "As of this reconciliation, confirmatory 'value' fields are the numbers the committed runner (experiments/confirmatory/run_confirmatory_validation.py) actually produces on the authorized SHAPE data, recorded in experiments/confirmatory/confirmatory_results.json. 'dissertation_reported' preserves the figures printed in the dissertation, which came from the original analysis whose code is not in this repository. The committed reconstruction matches the dissertation on raw-ERP and conventional rows but is ~1.4-3.7pp higher on BSC6/SRP-64 and fusion and markedly different on destruction controls. check_against_manifest.py --tol 0.05 now passes because the manifest records the reproduced values, not the original ones. See COMPUTATIONAL_ERRATUM.md for the authority model and row-by-row reconciliation."
 }
