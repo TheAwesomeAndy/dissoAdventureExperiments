@@ -59,7 +59,7 @@ python experiments/confirmatory/run_confirmatory_validation.py \
     --out confirmatory_results.json
 
 python experiments/confirmatory/check_against_manifest.py \
-    confirmatory_results.json --tol 1.5
+    confirmatory_results.json --tol 0.05
 ```
 
 ## Scope
@@ -72,7 +72,7 @@ It does not establish the empirical SHAPE findings.
 **Reproduction status (resolved).** The committed pipeline has now been run on
 the authorized data; the execution record is `confirmatory_results.json` and the
 manifest confirmatory values equal those reproduced numbers
-(`check_against_manifest.py confirmatory_results.json --tol 1.5` passes). The
+(`check_against_manifest.py confirmatory_results.json --tol 0.05` passes). The
 committed reconstruction produces BSC6/SRP-64 = 64.3% (three conditions) and
 54.6% (four categories); the dissertation reported 60.6% and 53.2%. The two
 match on raw-ERP and conventional rows but differ by ~1.4-3.7 pp on the

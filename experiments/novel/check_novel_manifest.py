@@ -3,14 +3,21 @@
 Consistency checker: committed novel/nuisance/external result JSONs vs the
 exploratory entries in results_manifest.json.
 
-The confirmatory checker only covers confirmatory rows; this closes the gap the
-audit identified -- a green CI run now also establishes that the committed
-exploratory result files and their manifest entries agree. It compares the
-headline numbers that appear in both places (accuracies, differences, principal
-angles, rho), so a stale JSON or a hand-edited manifest number is caught.
+The confirmatory checker covers only the confirmatory rows; this closes the gap
+for the exploratory rows -- a green CI run also establishes that the committed
+exploratory result files and their manifest entries agree.
 
-Run with no argument for the default repo paths (CI-safe: needs only the
-committed JSONs, no restricted data).
+Hardening (audit response):
+  * Every committed result file is MANDATORY. A missing file is a provenance
+    failure, not a silently skipped comparison.
+  * Every mapped field is MANDATORY on both sides. A missing key on either the
+    JSON or the manifest is a failure.
+  * The tolerance is strict (TOL). These are serialized copies of the SAME run
+    recorded to three decimals, not independent floating-point reruns, so they
+    must be identical up to last-digit rounding.
+  * Zero comparisons is a FAILURE, never a pass.
+
+CI-safe: needs only the committed JSONs, no restricted data.
 """
 
 import json
@@ -20,8 +27,11 @@ import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO = os.path.abspath(os.path.join(_HERE, "..", ".."))
 _MANIFEST = os.path.join(_REPO, "results_manifest.json")
+_EXT = os.path.join(_REPO, "experiments", "external")
 
-TOL = 0.05  # percentage-point / degree tolerance for identical committed values
+# Serialized copies recorded to 3 decimals -> identical up to last-digit rounding.
+TOL = 0.001
+
 FAIL = 0
 CHECKED = 0
 
@@ -38,96 +48,155 @@ def entry(manifest, mid):
     return None
 
 
-def cmp(label, got, want, tol=TOL):
+def dig(obj, path):
+    """Follow a dotted/indexed path; return (found, value)."""
+    cur = obj
+    for key in path:
+        if isinstance(cur, dict) and key in cur:
+            cur = cur[key]
+        elif isinstance(cur, list) and isinstance(key, int) and 0 <= key < len(cur):
+            cur = cur[key]
+        else:
+            return False, None
+    return True, cur
+
+
+def cmp(label, got_ok, got, want_ok, want, tol=TOL):
     global FAIL, CHECKED
-    if got is None or want is None:
+    if not got_ok or not want_ok:
         FAIL += 1
-        print(f"  [MISSING] {label}: got={got} want={want}")
+        side = []
+        if not got_ok:
+            side.append("json-missing")
+        if not want_ok:
+            side.append("manifest-missing")
+        print(f"  [MISSING] {label}: {','.join(side)}")
         return
-    if abs(float(got) - float(want)) > tol:
-        FAIL += 1
-        print(f"  [MISMATCH] {label}: json={got} manifest={want}")
-    else:
+    try:
+        ok = abs(float(got) - float(want)) <= tol
+    except (TypeError, ValueError):
+        ok = got == want
+    if ok:
         CHECKED += 1
         print(f"  [ok] {label}: {got} ~ {want}")
+    else:
+        FAIL += 1
+        print(f"  [MISMATCH] {label}: json={got} manifest={want}")
 
 
-def opt(path):
-    return path if os.path.exists(path) else None
+def require_file(path):
+    global FAIL
+    if not os.path.exists(path):
+        FAIL += 1
+        print(f"  [MISSING FILE] {os.path.relpath(path, _REPO)} "
+              f"(committed result file is mandatory)")
+        return None
+    return load(path)
+
+
+def check_pairs(label_prefix, jobj, mval, pairs):
+    """pairs: list of (label, json_path, manifest_path)."""
+    for lbl, jpath, mpath in pairs:
+        jok, jv = dig(jobj, jpath)
+        mok, mv = dig(mval, mpath) if mval is not None else (False, None)
+        cmp(f"{label_prefix} {lbl}", jok, jv, mok, mv)
 
 
 def main():
     m = load(_MANIFEST)
-    # --- N1 three-condition (novel_results_3class.json) ---
-    p = opt(os.path.join(_HERE, "novel_results_3class.json"))
-    if p:
-        d = load(p)["results"]["N1_leak_free_compression"]["dimensionality_sweep"]["64"]
-        v = entry(m, "novel_n1_srp_vs_pca")
-        cmp("N1/3class srp", d["srp_percent"], v["srp_percent"])
-        cmp("N1/3class pca", d["foldlocal_pca_percent"], v["foldlocal_pca_percent"])
-        cmp("N1/3class diff", d["srp_minus_pca_pp"], v["srp_minus_pca_pp"])
 
-    # --- N1 four-category (novel_results_4class.json) ---
-    p = opt(os.path.join(_HERE, "novel_results_4class.json"))
-    if p:
-        d = load(p)["results"]["N1_leak_free_compression"]["dimensionality_sweep"]["64"]
-        v = entry(m, "novel_n1_srp_vs_pca_4class")
-        cmp("N1/4class srp", d["srp_percent"], v["srp_percent"])
-        cmp("N1/4class pca", d["foldlocal_pca_percent"], v["foldlocal_pca_percent"])
+    # ---- N1 three-condition ------------------------------------------
+    d = require_file(os.path.join(_HERE, "novel_results_3class.json"))
+    v = entry(m, "novel_n1_srp_vs_pca")
+    if d is not None:
+        n1 = d["results"]["N1_leak_free_compression"]
+        check_pairs("N1/3class", n1, v, [
+            ("d64 srp", ["dimensionality_sweep", "64", "srp_percent"], ["srp_percent"]),
+            ("d64 pca", ["dimensionality_sweep", "64", "foldlocal_pca_percent"], ["foldlocal_pca_percent"]),
+            ("d64 diff", ["dimensionality_sweep", "64", "srp_minus_pca_pp"], ["srp_minus_pca_pp"]),
+            ("d64 ci-lo", ["dimensionality_sweep", "64", "srp_minus_pca_ci95_pp", 0], ["ci95_pp", 0]),
+            ("d64 ci-hi", ["dimensionality_sweep", "64", "srp_minus_pca_ci95_pp", 1], ["ci95_pp", 1]),
+            ("seed mean", ["srp64_seed_stability", "mean"], ["srp64_seed_stability_mean"]),
+            ("seed std", ["srp64_seed_stability", "std"], ["srp64_seed_stability_std"]),
+        ])
 
-    # --- M2 three-condition (nuisance_results.json) ---
-    p = opt(os.path.join(_HERE, "nuisance_results.json"))
-    if p:
-        comp = load(p)["components"]
-        g = comp["M2_geometry"]
-        v = entry(m, "novel_m2_pca_nuisance_alignment")
-        cmp("M2/3class global angle-subject", g["pca_min_angle_to_subject_deg"],
-            v["pca_min_angle_to_subject_deg"])
-        cmp("M2/3class global rho_pca", g["rho_pca_compressed"], v["rho_pca_compressed"])
-        # blockwise operator matching N1 (audit point #2)
-        b = comp.get("M2_geometry_blockwise")
-        vb = v.get("blockwise_n1_operator") if v else None
-        if b and vb:
-            cmp("M2/3class blockwise angle-subject",
-                b["pca_min_angle_to_subject_deg"],
-                vb["pca_min_angle_to_subject_deg"])
-            cmp("M2/3class blockwise rho_pca", b["rho_pca_compressed"],
-                vb["rho_pca_compressed"])
+    # ---- N1 four-category --------------------------------------------
+    d = require_file(os.path.join(_HERE, "novel_results_4class.json"))
+    v = entry(m, "novel_n1_srp_vs_pca_4class")
+    if d is not None:
+        n1 = d["results"]["N1_leak_free_compression"]
+        check_pairs("N1/4class", n1, v, [
+            ("d64 srp", ["dimensionality_sweep", "64", "srp_percent"], ["srp_percent"]),
+            ("d64 pca", ["dimensionality_sweep", "64", "foldlocal_pca_percent"], ["foldlocal_pca_percent"]),
+            ("d64 diff", ["dimensionality_sweep", "64", "srp_minus_pca_pp"], ["srp_minus_pca_pp"]),
+            ("d64 ci-lo", ["dimensionality_sweep", "64", "srp_minus_pca_ci95_pp", 0], ["ci95_pp", 0]),
+            ("d64 ci-hi", ["dimensionality_sweep", "64", "srp_minus_pca_ci95_pp", 1], ["ci95_pp", 1]),
+            ("d16 diff", ["dimensionality_sweep", "16", "srp_minus_pca_pp"], ["dim16_diff_pp"]),
+            ("d32 diff", ["dimensionality_sweep", "32", "srp_minus_pca_pp"], ["dim32_diff_pp"]),
+            ("seed mean", ["srp64_seed_stability", "mean"], ["srp64_seed_stability_mean"]),
+            ("seed std", ["srp64_seed_stability", "std"], ["srp64_seed_stability_std"]),
+        ])
 
-    # --- M2 four-category (nuisance_results_4class.json) ---
-    p = opt(os.path.join(_HERE, "nuisance_results_4class.json"))
-    if p:
-        comp = load(p)["components"]
-        g = comp["M2_geometry"]
-        v = entry(m, "novel_m2_pca_nuisance_alignment_4class")
-        if v:
-            cmp("M2/4class global angle-subject", g["pca_min_angle_to_subject_deg"],
-                v["pca_min_angle_to_subject_deg"])
-            b = comp.get("M2_geometry_blockwise")
-            vb = v.get("blockwise_n1_operator")
-            if b and vb:
-                cmp("M2/4class blockwise angle-subject",
-                    b["pca_min_angle_to_subject_deg"],
-                    vb["pca_min_angle_to_subject_deg"])
-                cmp("M2/4class blockwise rho_pca", b["rho_pca_compressed"],
-                    vb["rho_pca_compressed"])
+    # ---- M2 three-condition (global + blockwise) ---------------------
+    d = require_file(os.path.join(_HERE, "nuisance_results.json"))
+    v = entry(m, "novel_m2_pca_nuisance_alignment")
+    if d is not None:
+        comp = d["components"]
+        check_pairs("M2/3class global", comp.get("M2_geometry", {}), v, [
+            ("angle-subject", ["pca_min_angle_to_subject_deg"], ["pca_min_angle_to_subject_deg"]),
+            ("angle-condition", ["pca_min_angle_to_condition_deg"], ["pca_min_angle_to_condition_deg"]),
+            ("rho_pca", ["rho_pca_compressed"], ["rho_pca_compressed"]),
+            ("rho_srp", ["rho_srp_compressed"], ["rho_srp_compressed"]),
+            ("rho_ambient", ["rho_ambient"], ["rho_ambient"]),
+        ])
+        vb = (v or {}).get("blockwise_n1_operator")
+        check_pairs("M2/3class blockwise", comp.get("M2_geometry_blockwise", {}),
+                    vb if vb is not None else None, [
+            ("angle-subject", ["pca_min_angle_to_subject_deg"], ["pca_min_angle_to_subject_deg"]),
+            ("angle-condition", ["pca_min_angle_to_condition_deg"], ["pca_min_angle_to_condition_deg"]),
+            ("rho_pca", ["rho_pca_compressed"], ["rho_pca_compressed"]),
+            ("total-dims", ["total_compressed_dims"], ["total_compressed_dims"]),
+        ])
 
-    # --- External (experiments/external/external_results.json) ---
-    p = opt(os.path.join(_REPO, "experiments", "external", "external_results.json"))
-    if p:
-        r = load(p)["results"]
-        v = entry(m, "external_n1_srp_vs_pca_tcrzem")
-        if v:
-            cmp("EXT/N1 srp d64", r["N1_srp_vs_pca"]["64"]["srp_percent"],
-                v["dim64"]["srp"])
-        vg = entry(m, "external_m2_pca_nuisance_alignment_tcrzem")
-        if vg:
-            cmp("EXT/M2 angle-subject", r["M2_geometry"]["pca_min_angle_to_subject_deg"],
-                vg["pca_min_angle_to_subject_deg"])
+    # ---- M2 four-category (global + blockwise) -----------------------
+    d = require_file(os.path.join(_HERE, "nuisance_results_4class.json"))
+    v = entry(m, "novel_m2_pca_nuisance_alignment_4class")
+    if d is not None:
+        comp = d["components"]
+        check_pairs("M2/4class global", comp.get("M2_geometry", {}), v, [
+            ("angle-subject", ["pca_min_angle_to_subject_deg"], ["pca_min_angle_to_subject_deg"]),
+            ("rho_pca", ["rho_pca_compressed"], ["rho_pca_compressed"]),
+        ])
+        vb = (v or {}).get("blockwise_n1_operator")
+        check_pairs("M2/4class blockwise", comp.get("M2_geometry_blockwise", {}),
+                    vb if vb is not None else None, [
+            ("angle-subject", ["pca_min_angle_to_subject_deg"], ["pca_min_angle_to_subject_deg"]),
+            ("rho_pca", ["rho_pca_compressed"], ["rho_pca_compressed"]),
+        ])
 
-    print(f"\n{CHECKED} checked, {FAIL} mismatch(es)")
-    if CHECKED == 0 and FAIL == 0:
-        print("  (no committed result JSONs found -- nothing to compare)")
+    # ---- External TCRZEM (genuine independent cohort) ----------------
+    d = require_file(os.path.join(_EXT, "external_results.json"))
+    vn = entry(m, "external_n1_srp_vs_pca_tcrzem")
+    vg = entry(m, "external_m2_pca_nuisance_alignment_tcrzem")
+    if d is not None:
+        r = d["results"]
+        for dim in ("16", "32", "64"):
+            check_pairs(f"EXT/N1 d{dim}", r["N1_srp_vs_pca"].get(dim, {}), vn, [
+                ("srp", ["srp_percent"], [f"dim{dim}", "srp"]),
+                ("pca", ["foldlocal_pca_percent"], [f"dim{dim}", "pca"]),
+                ("diff", ["srp_minus_pca_pp"], [f"dim{dim}", "diff_pp"]),
+            ])
+        check_pairs("EXT/M2", r.get("M2_geometry", {}), vg, [
+            ("angle-subject", ["pca_min_angle_to_subject_deg"], ["pca_min_angle_to_subject_deg"]),
+            ("angle-condition", ["pca_min_angle_to_condition_deg"], ["pca_min_angle_to_condition_deg"]),
+            ("rho_pca", ["rho_pca_compressed"], ["rho_pca_compressed"]),
+            ("rho_srp", ["rho_srp_compressed"], ["rho_srp_compressed"]),
+        ])
+
+    print(f"\n{CHECKED} checked, {FAIL} failure(s)")
+    if CHECKED == 0:
+        print("  [FAIL] zero comparisons performed -- not a pass")
+        return 1
     return 1 if FAIL else 0
 
 

@@ -30,7 +30,9 @@ The repository and corrected dissertation use the following scope restrictions.
 
 ## Authoritative dissertation source
 
-The corrected LaTeX source is under `dissertation/`. The authoritative files are `main.tex`, the chapter files, `Appendixa.tex`, and `Disso.bib`. `dissertation/AUDIT_REPORT.md` records the language and consistency audit. `ArspiNetFinalVer_.zip` is retained only as an earlier packaged source. Where the package differs from `dissertation/`, the corrected `dissertation/` source governs.
+The LaTeX source is under `dissertation/`. The authoritative files for the **language- and consistency-corrected manuscript** are `main.tex`, the chapter files, `Appendixa.tex`, and `Disso.bib`. `dissertation/AUDIT_REPORT.md` records the language and consistency audit. `ArspiNetFinalVer_.zip` is retained only as an earlier packaged source. Where the package differs from `dissertation/`, the corrected `dissertation/` source governs.
+
+**Authority split for confirmatory numbers.** The `dissertation/` tree is authoritative for the corrected *manuscript*, not for asserting that its reported confirmatory *values* equal the committed runner's output. The dissertation reports BSC₆/SRP-64 = 60.6% / 53.2% (the submitted record); the committed pipeline is an independent reconstruction that reproduces 64.3% / 54.6%. These are reconciled in [`COMPUTATIONAL_ERRATUM.md`](COMPUTATIONAL_ERRATUM.md): the dissertation source is **not** edited to the reconstruction values, and the committed execution record is authoritative for code-derived numbers.
 
 ## Dissertation map
 
@@ -54,7 +56,7 @@ Every indexed numerical result is recorded in `results_manifest.json`. The scrip
 
 **Cohorts:** 211 participants and 633 observations for Negative, Neutral, and Pleasant; 210 participants and 840 observations for Threat, Mutilation, Cute, and Erotic.
 
-> **Reproduction note (important).** The numbers below are what the **committed pipeline** (`experiments/confirmatory/run_confirmatory_validation.py`) actually produces on the authorized SHAPE data, recorded in `experiments/confirmatory/confirmatory_results.json` and checked into `results_manifest.json` (`check_against_manifest.py --tol 1.5` passes). The **dissertation reports different figures** (e.g. BSC6/SRP-64 60.6% / 53.2%), preserved in the manifest under `dissertation_reported`. The committed pipeline is an **independent reconstruction**: it matches the dissertation on the raw-ERP and conventional rows (within ~1 pp) but runs **~1.4–3.7 pp higher on the BSC6/SRP-64 and fusion rows** and gives markedly larger destruction-control drops, because the original analysis code is not in this repository and the SRP/reservoir path is reimplemented. Where this README states a confirmatory number, it is the reproduced value; the dissertation value is given in parentheses.
+> **Reproduction note (important).** The numbers below are what the **committed pipeline** (`experiments/confirmatory/run_confirmatory_validation.py`) actually produces on the authorized SHAPE data, recorded in `experiments/confirmatory/confirmatory_results.json` and checked into `results_manifest.json` (`check_against_manifest.py confirmatory_results.json --tol 0.05` passes). The **dissertation reports different figures** (e.g. BSC6/SRP-64 60.6% / 53.2%), preserved in the manifest under `dissertation_reported`. The committed pipeline is an **independent reconstruction**: it matches the dissertation on the raw-ERP and conventional rows (within ~1 pp) but runs **~1.4–3.7 pp higher on the BSC6/SRP-64 and fusion rows** and gives markedly larger destruction-control drops, because the original analysis code is not in this repository and the SRP/reservoir path is reimplemented. Where this README states a confirmatory number, it is the reproduced value; the dissertation value is given in parentheses. The full authority model and a row-by-row reconciliation are in [`COMPUTATIONAL_ERRATUM.md`](COMPUTATIONAL_ERRATUM.md).
 
 | Representation | Three conditions (dissertation) | Four categories (dissertation) |
 |---|---:|---:|
@@ -94,7 +96,7 @@ python experiments/confirmatory/run_confirmatory_validation.py \
     --out confirmatory_results.json
 
 python experiments/confirmatory/check_against_manifest.py \
-    confirmatory_results.json --tol 1.5
+    confirmatory_results.json --tol 0.05
 ```
 
 ## Interpretability audit measurements

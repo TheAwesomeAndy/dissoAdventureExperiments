@@ -152,6 +152,8 @@ under sklearn 1.9 / numpy 2.4 / scipy 1.17). The committed JSONs and manifest
 reflect the values reproduced by the pinned committed pipeline in CI's
 environment; the qualitative conclusions are invariant to that drift.
 
-Open items before submission: full (non-fast) sweep and an external cohort to
-establish generality of the mild-regime accuracy consequence (the external
-TCRZEM cohort in `experiments/external/` is a first such replication).
+External replication: one independent cohort (TCRZEM, `experiments/external/`)
+**is committed** and replicates the accuracy consequence (+5.0pp) and the global
+nuisance-alignment. Open items before submission: the full (non-fast) sweep, and
+one or more *additional* external cohorts to further establish generality of the
+mild-regime accuracy consequence.

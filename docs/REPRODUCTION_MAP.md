@@ -81,7 +81,7 @@ the committed pipeline on the authorized dataset and then executing:
 
 ```text
 python experiments/confirmatory/check_against_manifest.py \
-    confirmatory_results.json --tol 1.5
+    confirmatory_results.json --tol 0.05
 ```
 
 The release should include the generated `confirmatory_results.json` or a

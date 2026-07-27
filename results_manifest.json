@@ -803,7 +803,7 @@
     {
       "id": "novel_n2_reservoir_instrument",
       "tier": "exploratory",
-      "description": "N2: reservoir instrument - cross-seed feature ICC, transfer function, noise robustness",
+      "description": "N2: single-axis seed and response characterization - cross-seed feature ICC, decision seed-stability, single-template transfer function, single-seed noise robustness",
       "value": {
         "median_feature_icc": 0.0025,
         "decision_seed_stability_mean": 64.009,
@@ -827,7 +827,7 @@
       ],
       "output_table": "experiments/novel/NOVEL_RESULTS.md N2; novel_results_3class.json",
       "script": "experiments/novel/run_novel_experiments.py",
-      "notes": "Reproducibility is DECISION-level (seed-stable) not feature-level (ICC ~ 0). Honest nuance."
+      "notes": "Bounded to what was measured: feature-level reproducibility across reservoir seeds is near zero (ICC ~ 0), while decision-level balanced accuracy is seed-stable (64.0 +/- 1.0). Transfer function is a single-template demonstration; robustness curves use a single perturbation seed. The crossed reservoir-seed x projection-seed x CV-repeat instrument experiment is NOT yet run, so 'calibrated instrument' is not claimed."
     },
     {
       "id": "novel_n3_necessity_map",
@@ -994,7 +994,7 @@
     {
       "id": "novel_n1_srp_vs_pca_4class",
       "tier": "exploratory",
-      "description": "N1 replication (four-category): SRP-64 outperforms fold-local PCA-64",
+      "description": "N1 cross-granularity consistency (four-category, within SHAPE): SRP-64 outperforms fold-local PCA-64",
       "value": {
         "srp_percent": 54.643,
         "foldlocal_pca_percent": 50.738,
@@ -1023,12 +1023,12 @@
       ],
       "output_table": "experiments/novel/NOVEL_RESULTS.md cross-granularity; novel_results_4class.json",
       "script": "experiments/novel/run_novel_experiments.py",
-      "notes": "Replicates 3-condition: SRP > PCA at all dims, CI excludes zero (+3.9 [1.5,6.4] at 64)."
+      "notes": "Within-SHAPE cross-granularity consistency (same participants/acquisition, not an independent cohort): SRP > PCA at all dims, CI excludes zero (+3.9 [1.5,6.4] at 64)."
     },
     {
       "id": "novel_n3_necessity_map_4class",
       "tier": "exploratory",
-      "description": "N3 replication (four-category): necessity map and rho inflation",
+      "description": "N3 cross-granularity consistency (four-category, within SHAPE): necessity map and rho inflation",
       "value": {
         "intact_condition_ba_percent": 54.643,
         "intact_rho": 14.926,
@@ -1051,7 +1051,7 @@
       ],
       "output_table": "experiments/novel/NOVEL_RESULTS.md cross-granularity; novel_results_4class.json",
       "script": "experiments/novel/run_novel_experiments.py",
-      "notes": "Replicates 3-condition: temporal-bin order most necessary (-28.2pp); rho inflates 14.9->70."
+      "notes": "Consistent with 3-condition: temporal-bin order most necessary (-28.2pp); rho inflates 14.9->70."
     },
     {
       "id": "external_n1_srp_vs_pca_tcrzem",
@@ -1145,5 +1145,5 @@
     "authorized_data_requirement": "Before the frozen release, run the canonical runner on the audited SHAPE cohort and require check_against_manifest.py to complete without mismatches.",
     "empirical_regeneration_status": "Not established by the public CI record. Do not describe the committed runner as reproducing the headline values until the authorized-data execution record is retained."
   },
-  "confirmatory_reconciliation": "As of this reconciliation, confirmatory 'value' fields are the numbers the committed runner (experiments/confirmatory/run_confirmatory_validation.py) actually produces on the authorized SHAPE data, recorded in experiments/confirmatory/confirmatory_results.json. 'dissertation_reported' preserves the figures printed in the dissertation, which came from the original analysis whose code is not in this repository. The committed reconstruction matches the dissertation on raw-ERP and conventional rows but is ~1.4-3.7pp higher on BSC6/SRP-64 and fusion and markedly different on destruction controls. check_against_manifest.py --tol 1.5 now passes because the manifest records the reproduced values, not the original ones."
+  "confirmatory_reconciliation": "As of this reconciliation, confirmatory 'value' fields are the numbers the committed runner (experiments/confirmatory/run_confirmatory_validation.py) actually produces on the authorized SHAPE data, recorded in experiments/confirmatory/confirmatory_results.json. 'dissertation_reported' preserves the figures printed in the dissertation, which came from the original analysis whose code is not in this repository. The committed reconstruction matches the dissertation on raw-ERP and conventional rows but is ~1.4-3.7pp higher on BSC6/SRP-64 and fusion and markedly different on destruction controls. check_against_manifest.py --tol 1.5 now passes because the manifest records the reproduced values, not the original ones. See COMPUTATIONAL_ERRATUM.md for the authority model and row-by-row reconciliation."
 }

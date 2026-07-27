@@ -14,14 +14,19 @@ verification and authorized-data requirements below are satisfied.
 ## 1. Establish repository consistency
 
 Confirm that `README.md`, `docs/REPRODUCTION_MAP.md`,
-`results_manifest.json`, and the authoritative files under `dissertation/`
-agree on:
+`results_manifest.json`, and the files under `dissertation/` agree on:
 
 - cohort definitions and exclusions;
 - preprocessing boundaries;
-- estimands and uncertainty intervals;
 - confirmatory, exploratory, and archived status; and
 - the generating script for every indexed result.
+
+The confirmatory *values* deliberately differ between the submitted
+dissertation (60.6% / 53.2%) and the committed reconstruction (64.3% / 54.6%);
+that divergence is reconciled in `COMPUTATIONAL_ERRATUM.md`, which is
+authoritative for code-derived numbers. Confirm the erratum table matches
+`results_manifest.json` (`value` vs `dissertation_reported`) rather than
+expecting the dissertation source to be edited to the reconstruction values.
 
 ## 2. Obtain a green data-independent verification run
 
@@ -69,7 +74,7 @@ python experiments/confirmatory/run_confirmatory_validation.py \
     --out confirmatory_results.json
 
 python experiments/confirmatory/check_against_manifest.py \
-    confirmatory_results.json --tol 1.5
+    confirmatory_results.json --tol 0.05
 ```
 
 The checker must complete without mismatches. Retain

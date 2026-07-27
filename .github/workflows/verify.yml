@@ -139,7 +139,17 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          python experiments/confirmatory/check_against_manifest.py 2>&1 | tee ci-logs/manifest.log
+          REC=experiments/confirmatory/confirmatory_results.json
+          if [[ ! -f "$REC" ]]; then
+            echo "committed confirmatory execution record $REC is missing" \
+              | tee ci-logs/manifest.log
+            exit 1
+          fi
+          # Numerical comparison of the committed execution record against the
+          # manifest at a strict tolerance (serialized copies of one run, not a
+          # rerun). Schema-only mode is no longer sufficient for the release.
+          python experiments/confirmatory/check_against_manifest.py \
+            "$REC" --tol 0.05 2>&1 | tee ci-logs/manifest.log
 
       - name: Verify novel experiments
         id: novel
