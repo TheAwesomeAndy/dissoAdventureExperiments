@@ -245,8 +245,10 @@ def main():
     parser.add_argument(
         "--tol",
         type=float,
-        default=1.5,
-        help="absolute tolerance in percentage points",
+        default=0.05,
+        help="absolute tolerance in percentage points; the committed record and "
+             "the manifest are serialized copies of one run, so the default is "
+             "strict (0.05)",
     )
     args = parser.parse_args()
 

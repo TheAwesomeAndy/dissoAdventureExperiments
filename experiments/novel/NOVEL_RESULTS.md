@@ -19,20 +19,28 @@ Balanced accuracy, 5×5 participant-grouped fold-local CV; SRP vs a **fold-local
 | 64 | 64.3% | 60.0% | **+4.4 pp** | [1.5, 7.2] |
 
 **The interval excludes zero at every dimension**: the fixed random projection is
-significantly *more accurate* than an optimally fitted, leak-free PCA. SRP-64
+significantly *more accurate* than a data-fitted, leak-free fold-local PCA. SRP-64
 across 10 random seeds: **64.0% ± 1.0** (range 3.3pp), so the result is not a
 lucky seed.
 
-*Interpretation.* On subject-entangled EEG, PCA's variance-maximizing directions
-capture subject nuisance (ρ≈10, see N3) rather than condition. An isotropic
-random projection has no such bias, so it is both leak-free by construction and
-more discriminative. This is a concrete argument against the default PCA step in
-grouped clinical-EEG pipelines.
+*Interpretation.* An isotropic random projection is leak-free by construction and,
+on these representations, empirically more discriminative than fold-local PCA — a
+concrete argument for it over a default PCA step in grouped clinical-EEG
+pipelines. The *why* is deliberately scoped: the gross "PCA captures subject
+nuisance" story (ρ≈10, see N3) is demonstrated for **global** compression, but the
+**blockwise** per-electrode operator used here does not show that alignment (M2
+blockwise, `NUISANCE_RESULTS.md`), so the accuracy gap is reported as a
+mild-regime + leak-safety result rather than a consequence of gross nuisance
+alignment.
 
-### Cross-granularity replication (four categories, N=210 / 840)
+### Cross-granularity consistency (four categories, N=210 / 840)
 
-All three N-results replicate on the independent four-category labelling
-(`novel_results_4class.json`):
+All three N-results hold across the four-category labelling
+(`novel_results_4class.json`). This is a **cross-granularity consistency check
+within the SHAPE study — not an independent-cohort replication**: the two label
+sets share the same participants, acquisition, and preprocessing, so they cannot
+establish external generalization (see `experiments/external/` for the genuine
+independent-cohort test).
 
 | Result | Three-condition | Four-category |
 |---|---|---|
@@ -49,25 +57,36 @@ dimension (interval excludes zero), reproducibility is decision-level not
 feature-level, and temporal-bin order is the most necessary factor. The findings
 are not an artefact of the three-condition labelling.
 
-## N2 — Reservoir as an instrument: decision-level reproducibility, not feature-level
+## N2 — Reservoir as an instrument: preliminary, with an explicit design caveat
 
-- **Cross-seed feature ICC(2,1): median ≈ 0.003** over 2,176 features. Individual
-  SRP coordinates are *not* reproducible across reservoir seeds — expected for a
-  random projection, and reported honestly rather than hidden.
-- **Decision-level reproducibility is high:** 64.0% ± 1.0 across projection seeds
-  (above), consistent with the confirmatory seed sweep.
-- **Transfer function:** total spike output vs input amplitude is perfectly
-  monotonic (Spearman ρ = 1.0), dynamic-range ratio 2.24 — a calibratable
-  dose–response.
-- **Noise robustness:** under additive noise up to 1 SD, BSC6/SRP-64 accuracy is
-  near-flat (64.3 → 62.8 → 64.1%), while raw ERP-16 declines (69.6 → 68.2 →
-  66.8%). Under 30% channel dropout both degrade comparably (BSC6/SRP 64.3 →
-  57.5%, raw 69.6 → 58.9%).
+N2 is **preliminary** and its two reproducibility measurements are along
+*different* axes — they are reported separately, not combined into a single
+"stable across projection and reservoir seeds" claim:
 
-*Interpretation.* The fixed nonlinear transform gives an instrument-style
-guarantee at the level that matters for use — the readout — with monotonic
-calibration and low noise sensitivity, even though no individual random feature
-is privileged.
+- **Feature ICC(2,1): median ≈ 0.003** over 2,176 features, computed across
+  **reservoir seeds 7/42/99 with the SRP matrix held fixed**. This measures
+  *reservoir-realization dependence after a fixed projection* — i.e. how much the
+  reservoir state itself changes each feature — not merely "absence of a
+  privileged random coordinate."
+- **Decision stability: 64.0% ± 1.0**, computed across **SRP seeds with the
+  reservoir fixed at seed 42**. This measures projection-seed sensitivity of the
+  readout, not reservoir-seed sensitivity.
+- A complete instrument-reproducibility claim needs the full crossed design
+  (reservoir seed × projection seed × CV repeat) with variance components for
+  balanced accuracy, prediction agreement, and margin. That crossed run is **not
+  yet done**; until it is, N2 states only the two single-axis measurements above.
+- **Transfer function:** total spike output rises monotonically (Spearman ρ =
+  1.0) with input amplitude for **one template — the first channel of the first
+  observation**. This is a controlled single-template amplitude-response
+  demonstration, **not** a calibrated transfer function across participants,
+  channels, conditions, or reservoir seeds.
+- **Degradation:** BSC6/SRP-64 vs raw ERP-16 under one fixed perturbation
+  realization per level (channel dropout, additive noise). Reported as an
+  illustrative single-seed curve; noise-insensitivity / graceful-degradation
+  claims would require multiple perturbation seeds and bootstrap intervals.
+
+*Interpretation.* N2 motivates an instrument framing but does not yet establish
+it. The claims are restricted to what the single-axis measurements support.
 
 ## N3 — Necessity map: temporal order is load-bearing; destruction inflates entanglement
 
@@ -91,13 +110,19 @@ in the dissertation and the IEEE SPL submission.
 ## Positioning for acceptance
 
 - **Lead with N1.** "A parameter-free random projection outperforms data-fitted
-  PCA on grouped clinical EEG, because PCA fits the subject nuisance" is a crisp,
-  general, testable methods claim with a mechanism (N3's ρ) and a leakage-safety
-  argument. It stands independent of ARSPI-Net's absolute accuracy.
-- **N3 supplies the mechanism** for N1 and quantifies interpretability as
-  *necessity*, not saliency.
-- **N2 defends the architecture** honestly (instrument at the decision level)
-  without overclaiming feature reliability.
+  PCA on grouped clinical EEG, on leakage-safety grounds and empirically by
+  +4.36pp" is a crisp, general, testable methods claim. Note the *mechanism*
+  qualifier: the gross "PCA fits the subject nuisance" story holds only under
+  aggressive global compression, **not** under N1's per-electrode operator (see
+  the blockwise M2 result in `NUISANCE_RESULTS.md`), so N1's advantage is
+  presented as a mild-regime + leak-safety result, not as a consequence of gross
+  nuisance alignment. It stands independent of ARSPI-Net's absolute accuracy.
+- **N3 quantifies interpretability as *necessity*** (which structural factors,
+  once destroyed, cost condition accuracy), not saliency. It characterizes the
+  representation's subject/condition entanglement (ρ); it is not claimed to be
+  the causal explanation of the N1 accuracy gap.
+- **N2** is preliminary support only (see the design caveat above); it is not
+  yet an established instrument-reproducibility result.
 
 ## Reproduce / extend
 
@@ -108,6 +133,14 @@ python experiments/novel/run_novel_experiments.py \
     --data4 ./categories --granularity four_category --out novel_results_4class.json
 ```
 
-Open items: run the full (non-fast) sweep including dim 128, run the
-four-category cohort, and add an external-cohort replication for N1 before any
-strong generality claim.
+**Provenance:** these primary numbers are from a **`--fast` run** (compression
+dims 16/32/64, 10 SRP seeds, no dim-128). The four-category cohort **is** run
+(see the cross-granularity table above) and the external-cohort replication
+**is** committed under `experiments/external/` — the earlier "pending" wording is
+obsolete.
+
+Open items: run the full (non-fast) sweep including dim 128; complete the N2
+crossed-design instrument experiment. The blockwise M2 geometry matching the N1
+per-electrode operator **is now run** (both granularities) and reported in
+`NUISANCE_RESULTS.md`; its verdict is that the gross nuisance-alignment does not
+transfer to N1's operator, so the causal claim is scoped accordingly.

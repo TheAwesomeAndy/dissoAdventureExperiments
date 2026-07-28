@@ -92,12 +92,24 @@
     },
     "M2_geometry": {
       "rho_ambient": 11.407,
-      "rho_pca_compressed": 44.412,
+      "rho_pca_compressed": 43.554,
       "rho_srp_compressed": 7.336,
-      "pca_min_angle_to_subject_deg": 1.32,
-      "pca_min_angle_to_condition_deg": 3.32,
+      "pca_min_angle_to_subject_deg": 1.33,
+      "pca_min_angle_to_condition_deg": 3.21,
       "pca_mean_angle_to_subject_deg": 3.96,
-      "pca_mean_angle_to_condition_deg": 10.26
+      "pca_mean_angle_to_condition_deg": 10.17
+    },
+    "M2_geometry_blockwise": {
+      "operator": "blockwise_per_electrode",
+      "n_components_per_electrode": 64,
+      "total_compressed_dims": 2176,
+      "rho_ambient": 11.407,
+      "rho_pca_compressed": 7.159,
+      "rho_srp_compressed": 9.816,
+      "pca_min_angle_to_subject_deg": 23.9,
+      "pca_min_angle_to_condition_deg": 28.83,
+      "pca_mean_angle_to_subject_deg": 51.02,
+      "pca_mean_angle_to_condition_deg": 39.29
     },
     "M5_disentanglement": {
       "raw_erp16_rho": 8.679,
@@ -105,5 +117,5 @@
       "bsc6_srp64_rho": 9.816
     }
   },
-  "note": "Fast-mode run. Synthetic M1a/M1b/M3 need no data; M2/M5 on SHAPE three-condition. Summary statistics only; exploratory."
+  "granularity": "three_condition"
 }

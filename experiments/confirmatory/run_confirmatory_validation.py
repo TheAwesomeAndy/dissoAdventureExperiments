@@ -15,10 +15,14 @@ verification of the machinery is provided by verify_confirmatory.py.
 """
 
 import argparse
+import hashlib
 import json
 import os
+import platform
 import re
+import subprocess
 import sys
+from datetime import datetime, timezone
 
 import numpy as np
 from scipy.signal import butter, decimate, filtfilt
@@ -383,7 +387,100 @@ def run_granularity(name, raw_data, y, groups, base_seed):
     }
 
 
+def _sha256_file(path):
+    try:
+        h = hashlib.sha256()
+        with open(path, "rb") as fh:
+            for chunk in iter(lambda: fh.read(65536), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    except OSError:
+        return "unavailable"
+
+
+def _git(args):
+    try:
+        return subprocess.run(
+            ["git", "-C", _REPO, *args],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        return "unknown"
+
+
+def _pkg_version(name):
+    try:
+        mod = __import__(name)
+        return getattr(mod, "__version__", "unknown")
+    except Exception:  # noqa: BLE001 - version probing must never abort a run
+        return "unknown"
+
+
+def _count_files(path, suffix=".txt"):
+    if not path or not os.path.isdir(path):
+        return None
+    n = 0
+    for _root, _dirs, files in os.walk(path):
+        n += sum(1 for f in files if f.endswith(suffix))
+    return n
+
+
+def build_provenance(args, results, cohorts, started_iso):
+    """Automatic execution-provenance block: distinguishes a reproducible run
+    from an unexplained output file. Emitted by the runner, not hand-entered.
+
+    `results_sha256` hashes the scientific payload (protocol + granularities)
+    with sorted keys, so it excludes the provenance block itself and is stable
+    across reruns of identical code and data.
+    """
+    dirty = _git(["status", "--porcelain"])
+    payload = json.dumps(
+        {"protocol": results["protocol"], "granularities": results["granularities"]},
+        sort_keys=True, ensure_ascii=False,
+    ).encode("utf-8")
+    return {
+        "generated_by": "experiments/confirmatory/run_confirmatory_validation.py",
+        "git_commit": _git(["rev-parse", "HEAD"]),
+        "git_working_tree": "dirty" if dirty and dirty != "unknown" else (
+            "unknown" if dirty == "unknown" else "clean"),
+        "command_line": "run_confirmatory_validation.py "
+                        f"--data3 {args.data3} --data4 {args.data4}"
+                        + (" --skip4" if args.skip4 else ""),
+        "python_version": platform.python_version(),
+        "platform": platform.platform(),
+        "package_versions": {
+            "numpy": _pkg_version("numpy"),
+            "scipy": _pkg_version("scipy"),
+            "sklearn": _pkg_version("sklearn"),
+        },
+        "code_sha256": {
+            "experiments/confirmatory/run_confirmatory_validation.py":
+                _sha256_file(os.path.join(_HERE, "run_confirmatory_validation.py")),
+            "experiments/confirmatory/confirmatory_pipeline.py":
+                _sha256_file(os.path.join(_HERE, "confirmatory_pipeline.py")),
+            # the reservoir + BSC6 encoder are imported from chapter5Experiments
+            "chapter5Experiments/experiment_zero.py":
+                _sha256_file(os.path.join(_REPO, "chapter5Experiments", "experiment_zero.py")),
+        },
+        "input_file_counts": {
+            "three_condition": _count_files(args.data3),
+            "four_category": None if args.skip4 else _count_files(args.data4),
+        },
+        "cohorts": cohorts,
+        "seeds": {
+            "srp_seed": cp.SRP_SEED,
+            "reservoir_seeds": list(cp.RESERVOIR_SEEDS),
+            "base_seed_three_condition": 0,
+            "base_seed_four_category": 100,
+        },
+        "started_utc": started_iso,
+        "completed_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "results_sha256": hashlib.sha256(payload).hexdigest(),
+    }
+
+
 def main():
+    started_iso = datetime.now(timezone.utc).isoformat(timespec="seconds")
     parser = argparse.ArgumentParser()
     parser.add_argument("--data3", default="./batch_data")
     parser.add_argument("--data4", default="./categories")
@@ -433,20 +530,32 @@ def main():
         "granularities": {},
     }
 
+    cohorts = {}
     raw3, y3, groups3 = load_3class(args.data3)
+    cohorts["three_condition"] = {
+        "participants": int(len(np.unique(groups3))),
+        "observations": int(len(y3)),
+    }
     results["granularities"]["three_condition"] = run_granularity(
         "three_condition", raw3, y3, groups3, base_seed=0
     )
 
     if not args.skip4:
         raw4, y4, groups4 = load_4class(args.data4)
+        cohorts["four_category"] = {
+            "participants": int(len(np.unique(groups4))),
+            "observations": int(len(y4)),
+        }
         results["granularities"]["four_category"] = run_granularity(
             "four_category", raw4, y4, groups4, base_seed=100
         )
 
+    results["provenance"] = build_provenance(args, results, cohorts, started_iso)
+
     with open(args.out, "w", encoding="utf-8") as handle:
         json.dump(results, handle, indent=2, sort_keys=True)
     print(f"\nWrote {args.out}")
+    print(f"results_sha256={results['provenance']['results_sha256']}")
 
 
 if __name__ == "__main__":

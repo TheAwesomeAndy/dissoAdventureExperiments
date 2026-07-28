@@ -21,6 +21,10 @@ jobs:
       MPLBACKEND: "Agg"
     steps:
       - uses: actions/checkout@v4
+        with:
+          # full history so validate_provenance.py can verify the execution
+          # record's generating commit is an ancestor of HEAD
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -139,7 +143,26 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          python experiments/confirmatory/check_against_manifest.py 2>&1 | tee ci-logs/manifest.log
+          REC=experiments/confirmatory/confirmatory_results.json
+          if [[ ! -f "$REC" ]]; then
+            echo "committed confirmatory execution record $REC is missing" \
+              | tee ci-logs/manifest.log
+            exit 1
+          fi
+          # Numerical comparison of the committed execution record against the
+          # manifest at a strict tolerance (serialized copies of one run, not a
+          # rerun). Schema-only mode is no longer sufficient for the release.
+          python experiments/confirmatory/check_against_manifest.py \
+            "$REC" --tol 0.05 2>&1 | tee ci-logs/manifest.log
+
+      - name: Validate confirmatory execution-record provenance
+        id: provenance
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/confirmatory/validate_provenance.py \
+            experiments/confirmatory/confirmatory_results.json \
+            2>&1 | tee ci-logs/provenance.log
 
       - name: Verify novel experiments
         id: novel
@@ -154,6 +177,20 @@ jobs:
         run: |
           set -o pipefail
           python experiments/novel/verify_nuisance.py 2>&1 | tee ci-logs/nuisance.log
+
+      - name: Verify external-replication harness
+        id: external
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/external/verify_external.py 2>&1 | tee ci-logs/external.log
+
+      - name: Check novel/exploratory results against manifest
+        id: novelmanifest
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python experiments/novel/check_novel_manifest.py 2>&1 | tee ci-logs/novelmanifest.log
 
       - name: Check repository and dissertation consistency
         id: claims
@@ -181,8 +218,10 @@ jobs:
             "${{ steps.ch7util.outcome }}" "${{ steps.fourcat.outcome }}"
             "${{ steps.threecond.outcome }}" "${{ steps.ablation.outcome }}"
             "${{ steps.validators.outcome }}" "${{ steps.confirmatory.outcome }}"
-            "${{ steps.manifest.outcome }}" "${{ steps.claims.outcome }}"
+            "${{ steps.manifest.outcome }}" "${{ steps.provenance.outcome }}"
+            "${{ steps.claims.outcome }}"
             "${{ steps.novel.outcome }}" "${{ steps.nuisance.outcome }}"
+            "${{ steps.external.outcome }}" "${{ steps.novelmanifest.outcome }}"
           )
           printf 'Verifier outcomes: %s\n' "${outcomes[*]}"
           for outcome in "${outcomes[@]}"; do
